@@ -2,8 +2,43 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-01 12:25:50Z, sha f094b257fe33; эти две строки ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-01 18:01:59Z, sha 4bf583013e3b; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<script id="dash-promoter-links">
+/* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
+(function () {
+  'use strict';
+  var apply = Reflect.apply, code = String.prototype.charCodeAt, Str = String, enc = encodeURIComponent,
+      freeze = Object.freeze, define = Object.defineProperty;
+  function wa() {
+    var w = window.Telegram && window.Telegram.WebApp;
+    if (!w) throw new Error('dunnLinks: Telegram WebApp недоступен');
+    return w;
+  }
+  function notionId(v) {  /* 32 hex, дефисы из UUID выбрасываем; без RegExp и методов строк */
+    var s = Str(v), out = '', i, c;
+    for (i = 0; i < s.length; i++) {
+      c = apply(code, s, [i]);
+      if (c === 45) continue;
+      if (!((c >= 48 && c <= 57) || (c >= 97 && c <= 102))) return null;
+      out += s[i];
+    }
+    return out.length === 32 ? out : null;
+  }
+  define(window, 'dunnLinks', {value: freeze({
+    notion: function (id) {
+      var n = notionId(id);
+      if (n === null) throw new Error('dunnLinks.notion: нужен id страницы Notion (32 hex)');
+      var w = wa(); apply(w.openLink, w, ['https://www.notion.so/' + n]);
+    },
+    bot: function (text) {
+      var t = Str(text);
+      if (t.length < 1 || t.length > 500) throw new Error('dunnLinks.bot: текст от 1 до 500 символов');
+      var w = wa(); apply(w.openTelegramLink, w, ['https://t.me/doneichen_bot?text=' + enc(t)]);
+    }
+  })});
+})();
+</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Dunn</title>
 <link rel="icon" href="data:,">
@@ -48,10 +83,10 @@ svg{width:100%;height:auto;display:block}
 /* вкладки */
 .tab[hidden]{display:none}
 nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:536px;
-  display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:6px;background:rgba(11,20,32,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:6px;background:rgba(11,20,32,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   border:1px solid var(--line);border-radius:22px;box-shadow:0 6px 24px rgba(0,0,0,.5);z-index:4}
 nav[hidden]{display:none}
-nav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;border-radius:16px;color:var(--mut);font-size:11px;-webkit-tap-highlight-color:transparent}
+nav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;border-radius:16px;color:var(--mut);font-size:10.5px;-webkit-tap-highlight-color:transparent}
 nav button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav button.on{color:var(--cy);background:rgba(0,225,255,.09)}
 /* экран блокировки */
@@ -74,6 +109,39 @@ nav button.on{color:var(--cy);background:rgba(0,225,255,.09)}
 #err.ok{color:var(--ok)}
 header .lockbtn{all:unset;cursor:pointer;margin-left:auto;padding:6px;color:var(--mut);-webkit-tap-highlight-color:transparent}
 header .lockbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+header .lockbtn{margin-left:0}
+header .addbtn{all:unset;cursor:pointer;margin-left:auto;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--cy);color:var(--cy);display:grid;place-items:center;font:700 22px/1 ui-monospace,Menlo,monospace;box-shadow:0 0 10px rgba(0,225,255,.3);-webkit-tap-highlight-color:transparent}
+header .addbtn:active{background:rgba(0,225,255,.15)}
+/* кликабельные задачи → Notion */
+li.go{cursor:pointer;-webkit-tap-highlight-color:transparent}
+li.go:active{background:rgba(0,225,255,.06)}
+li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
+.tile.wide{grid-column:1/-1}
+/* тренировки */
+.weeks{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 12px}
+.weeks div{text-align:center;font:11px ui-monospace,Menlo,monospace;color:var(--mut)}
+.weeks i{display:block;height:34px;border-radius:6px;background:#0e2233;margin-bottom:3px;display:grid;place-items:center;font:700 14px ui-monospace,Menlo,monospace;color:var(--tx);font-style:normal}
+.weeks i.w1{background:rgba(0,225,255,.25)}.weeks i.w2{background:rgba(0,225,255,.5)}.weeks i.w3{background:rgba(0,225,255,.8);color:#001a22}
+.wo{border-top:1px solid #0f2537;padding:10px 0}
+.wo:first-of-type{border-top:0}
+.wo .kind{font-weight:600}
+.wo .meta{font:12px ui-monospace,Menlo,monospace;color:var(--mut)}
+.wo details{margin-top:6px}
+.wo summary{cursor:pointer;color:var(--cyd);font-size:13px}
+.wo pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;margin:6px 0 0;color:var(--tx)}
+.wo .note{font-size:13px;color:var(--amb);margin-top:6px}
+/* «+»: черновик в чат бота */
+#add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
+#add[hidden]{display:none}
+#add .sheet{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+#add .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
+#add .chips button{all:unset;cursor:pointer;padding:7px 12px;border-radius:16px;border:1px solid var(--line);color:var(--mut);font-size:13px}
+#add .chips button.on{border-color:var(--cy);color:var(--cy);background:rgba(0,225,255,.09)}
+#add input,#add textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--cyd);background:#07111b;color:var(--tx);font-size:16px;margin:0 0 8px;font-family:inherit}
+#add textarea{height:84px;resize:none}
+#add .send{width:100%;padding:12px;border:0;border-radius:10px;background:var(--cy);color:#001a22;font-weight:700;font-size:15px;margin-top:4px}
+#add .hint{color:var(--mut);font-size:12px;margin-top:8px;min-height:16px}
+#add .x{all:unset;cursor:pointer;float:right;color:var(--mut);font-size:20px;line-height:1;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -106,18 +174,31 @@ header .lockbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-
 </div></div>
 
 <div class="wrap" id="app" hidden>
-  <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
+  <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="card" id="food"></div><div class="card" id="meals"></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div></section>
+  <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tasks"></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div></section>
 </div>
+
+<div id="add" hidden><div class="sheet">
+  <button class="x" id="add-x" aria-label="закрыть">×</button>
+  <h2 style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.15em;color:var(--cyd);margin:2px 0 0;text-transform:uppercase">Записать Дану</h2>
+  <div class="chips" id="add-kind">
+    <button data-k="w">Вес</button><button data-k="s">Шаги</button><button data-k="f">Еда</button><button data-k="m">Трата</button><button data-k="g">Тренировка</button><button data-k="i">В Inbox</button>
+  </div>
+  <div id="add-f"></div>
+  <button class="send" id="add-go">Открыть чат с фразой</button>
+  <div class="hint" id="add-hint"></div>
+</div></div>
 
 <nav id="nav" hidden>
   <button data-tab="home"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/></svg>Обзор</button>
   <button data-tab="food"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 4-3.5 7.5V13H17"/></svg>Еда</button>
   <button data-tab="body"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>Вес</button>
+  <button data-tab="gym"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Трени</button>
   <button data-tab="tasks"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Задачи</button>
   <button data-tab="money"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10h19M6.5 15h3"/></svg>Деньги</button>
 </nav>
@@ -210,13 +291,17 @@ function render(d) {
   // ── Обзор: плитки, тап ведёт на вкладку
   const tile = (tab, key, val, sub, extra = '') => `<div class="tile" data-go="${tab}"><div class="k">${key}</div><div class="v">${val}</div><div class="s">${sub}</div>${extra}</div>`;
   const nextTask = k.calendar[0] || k.next[0];
+  const wk = d.workouts || [], lastW = wk[0], today = d.date || new Date().toISOString().slice(0, 10);
+  const days = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+  const sinceW = lastW ? days(lastW.d, today) : null;
   $('tiles').innerHTML =
     tile('food', 'Калории', `${f.kcal}<small> / ${t.kcal}</small>`, left < 0 ? `<span class="bad">перебор ${-left}</span>` : `осталось ${left}`, mini(f.kcal, t.kcal, f.kcal > t.kcal * 1.05)) +
     tile('food', 'Белок', `${f.p}<small> / ${t.p} г</small>`, f.p >= t.p ? '<span class="ok">норма закрыта</span>' : `ещё ${t.p - f.p} г`, mini(f.p, t.p)) +
     tile('body', 'Вес · 7 дн', `${last ? last.avg : '—'}<small> кг</small>`, df ? `<span class="${df.kcal < 0 ? 'bad' : 'ok'}">${df.kcal > 0 ? 'дефицит' : 'профицит'} ${Math.abs(df.kcal)}</span>` : (last ? 'последний ' + dm(last.d) : '')) +
     tile('food', 'Шаги', `${a.steps ?? '—'}`, `база ${a.steps_base}`, a.steps != null ? mini(a.steps, a.steps_base) : '') +
     tile('tasks', 'Задачи', `${k.calendar.length + k.next.length}`, nextTask ? esc(nextTask.t) : 'пусто', '') +
-    tile('money', 'Баланс', `<span class="${m.balance < 0 ? 'bad' : ''}">${fmt(m.balance)}</span><small> ₽</small>`, `сегодня ${fmt(m.today)} ₽`);
+    tile('gym', 'Тренировка', lastW ? `${sinceW}<small> дн назад</small>` : '—', lastW ? esc(dm(lastW.d) + ' · ' + (lastW.kind || []).join(', ')) : 'за 8 недель пусто') +
+    tile('money', 'Баланс', `<span class="${m.balance < 0 ? 'bad' : ''}">${fmt(m.balance)}</span><small> ₽</small>`, `сегодня ${fmt(m.today)} ₽`).replace('class="tile"', 'class="tile wide"');
 
   // ── Еда
   $('food').innerHTML = `<h2>Питание · ${esc(a.type)}</h2>
@@ -235,10 +320,31 @@ function render(d) {
     ${df ? `<div class="lbl" style="margin-top:8px"><span>Неделя с ${dm(df.from)}</span><span class="${df.kcal < 0 ? 'bad' : 'ok'}"><b>${df.kcal > 0 ? 'дефицит ' : 'профицит '}${Math.abs(df.kcal)} ккал</b> · ${Math.abs(df.kg)} кг</span></div>` : ''}`;
 
   // ── Задачи
-  const li = (x, right) => `<li><span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`;
+  // тап по задаче открывает её страницу в Notion (dunnLinks.notion, id из build.py)
+  const okId = id => /^[0-9a-f]{32}$/i.test(String(id || '').replace(/-/g, ''));
+  const li = (x, right) => { const go = okId(x.id);
+    return `<li${go ? ` class="go" data-id="${esc(x.id)}"` : ''}><span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
   $('tasks').innerHTML = `<h2>Сегодня</h2><ul>${k.calendar.map(x => li(x)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
     <h2 style="margin-top:14px">Дейлики</h2><ul>${k.daily.map(x => li(x)).join('')}</ul>
-    <h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => li({time: '', t: x.t}, dm(x.due))).join('')}</ul>`;
+    <h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => li({time: '', t: x.t, id: x.id}, dm(x.due))).join('')}</ul>
+    <div class="sub" style="margin-top:10px">↗ тап по задаче открывает её в Notion</div>`;
+
+  // ── Тренировки: 8 недель, новые сверху
+  const monday = s => { const t = new Date(s + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
+  const w0 = monday(today), weeks = [];
+  for (let i = 7; i >= 0; i--) { const t = new Date(w0 + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 7 * i); weeks.push(t.toISOString().slice(0, 10)); }
+  const per = Object.fromEntries(weeks.map(x => [x, 0]));
+  wk.forEach(x => { const m0 = monday(x.d); if (m0 in per) per[m0]++; });
+  const val = v => v !== null && v !== undefined && v !== '';
+  $('workouts').innerHTML = `<h2>Тренировки · 8 недель</h2>
+    <div class="row"><div class="big">${wk.length}<small> за 8 нед</small></div><div class="sub">${lastW ? 'последняя ' + dm(lastW.d) + ' · ' + sinceW + ' дн назад' : ''}</div></div>
+    <div class="weeks">${weeks.map(x => `<div><i class="w${Math.min(3, per[x])}">${per[x] || ''}</i>${dm(x)}</div>`).join('')}</div>
+    ${wk.length ? wk.map(x => `<div class="wo">
+      <div class="row"><span class="kind">${esc(dm(x.d))} · ${esc((x.kind || []).join(', ') || 'тренировка')}</span>
+      <span class="meta">${[val(x.min) ? x.min + ' мин' : '', val(x.rpe) ? 'RPE ' + esc(x.rpe) : '', val(x.kg) ? esc(x.kg) + ' кг' : ''].filter(Boolean).join(' · ')}</span></div>
+      ${val(x.ex) ? `<details><summary>упражнения</summary><pre>${esc(x.ex)}</pre></details>` : '<div class="meta" style="margin-top:4px">состав не записан</div>'}
+      ${val(x.note) ? `<div class="note">${esc(x.note)}</div>` : ''}</div>`).join('') : '<div class="sub">за 8 недель тренировок не записано</div>'}
+    <div class="sub" style="margin-top:10px">Новая тренировка: «+» → Тренировка, распишу в Активность.</div>`;
 
   // ── Деньги
   $('money').innerHTML = `<h2>Деньги</h2>
@@ -255,7 +361,7 @@ function render(d) {
 }
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
-const TABS = ['home', 'food', 'body', 'tasks', 'money'];
+const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
 function show(tab) {
   if (!TABS.includes(tab)) tab = 'home';
   document.querySelectorAll('.tab').forEach(s => s.hidden = s.dataset.tab !== tab);
@@ -265,6 +371,40 @@ function show(tab) {
 }
 $('nav').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.tab); };
 $('tiles').onclick = e => { const x = e.target.closest('[data-go]'); if (x) show(x.dataset.go); };
+// задача → Notion. Вызов прямо в обработчике нажатия: Telegram открывает ссылки только в ответ на действие
+$('tasks').onclick = e => { const x = e.target.closest('li[data-id]'); if (!x) return;
+  try { window.dunnLinks.notion(x.dataset.id); } catch (err) { /* нет dunnLinks или id не тот — ничего не открываем */ } };
+
+// ── «+»: Данич заполняет форму, фраза уходит черновиком в чат с ботом, отправляет он сам.
+// В фразу идёт только то, что он ввёл; данные витрины туда не попадают.
+const ADD = {
+  w: {f: '<input id="a1" inputmode="decimal" placeholder="вес, кг (83.2)">', mk: () => num('a1') && 'Вес ' + num('a1')},
+  s: {f: '<input id="a1" inputmode="numeric" placeholder="шаги за день">', mk: () => num('a1') && 'Шаги ' + num('a1')},
+  f: {f: '<textarea id="a1" placeholder="что съел, сколько (или опиши фото, его кинешь в чат)"></textarea>', mk: () => txt('a1') && 'Съел: ' + txt('a1')},
+  m: {f: '<input id="a1" inputmode="decimal" placeholder="сумма, ₽"><input id="a2" placeholder="на что (Пятёрочка, такси…)">', mk: () => num('a1') && (txt('a2') ? txt('a2') + ' ' : '') + '-' + num('a1')},
+  g: {f: '<textarea id="a1" placeholder="что делал: упражнения, веса, подходы; минуты; RPE; где болело"></textarea>', mk: () => txt('a1') && 'Тренировка: ' + txt('a1')},
+  i: {f: '<textarea id="a1" placeholder="мысль, задача, идея — как есть"></textarea>', mk: () => txt('a1') && 'В инбокс: ' + txt('a1')},
+};
+const txt = id => ($(id) ? $(id).value : '').trim().slice(0, 450);
+const num = id => { const v = txt(id).replace(',', '.').replace(/\s/g, ''); return /^\d+(\.\d+)?$/.test(v) ? v : ''; };
+let addKind = 'w';
+function addPick(k) {
+  addKind = k; $('add-f').innerHTML = ADD[k].f; $('add-hint').textContent = '';
+  document.querySelectorAll('#add-kind button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  const first = $('a1'); first && first.focus();
+}
+$('addbtn').onclick = () => { $('add').hidden = false; addPick(addKind); };
+$('add-x').onclick = () => { $('add').hidden = true; };
+$('add').onclick = e => { if (e.target.id === 'add') $('add').hidden = true; };
+$('add-kind').onclick = e => { const b = e.target.closest('button'); if (b) addPick(b.dataset.k); };
+$('add-go').onclick = () => {
+  const phrase = ADD[addKind].mk();
+  if (!phrase) { $('add-hint').textContent = addKind === 'w' || addKind === 's' || addKind === 'm' ? 'Нужно число.' : 'Пусто.'; return; }
+  // страховка: фраза ещё и в буфере обмена — если Telegram не подставит черновик, просто вставь
+  try { navigator.clipboard && navigator.clipboard.writeText(phrase).catch(() => {}); } catch (e) {}
+  try { window.dunnLinks.bot(phrase); $('add-hint').textContent = 'Фраза в поле ввода (и в буфере). Нажми «отправить».'; }
+  catch (e) { $('add-hint').textContent = 'Не открылось. Фраза в буфере обмена — вставь в чат сам.'; }
+};
 
 // ── экран входа: wait → setup (ключа ещё нет) | unlock; key — показать DUNN-KEY для Дана
 let K = null;        // зашифрованный фразой ключ Данича из CloudStorage
