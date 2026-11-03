@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-01 18:01:59Z, sha 4bf583013e3b; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 05:48:30Z, sha d9401d76d886; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -190,7 +190,7 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
     <button data-k="w">Вес</button><button data-k="s">Шаги</button><button data-k="f">Еда</button><button data-k="m">Трата</button><button data-k="g">Тренировка</button><button data-k="i">В Inbox</button>
   </div>
   <div id="add-f"></div>
-  <button class="send" id="add-go">Открыть чат с фразой</button>
+  <button class="send" id="add-go">Скопировать и открыть чат</button>
   <div class="hint" id="add-hint"></div>
 </div></div>
 
@@ -400,9 +400,9 @@ $('add-kind').onclick = e => { const b = e.target.closest('button'); if (b) addP
 $('add-go').onclick = () => {
   const phrase = ADD[addKind].mk();
   if (!phrase) { $('add-hint').textContent = addKind === 'w' || addKind === 's' || addKind === 'm' ? 'Нужно число.' : 'Пусто.'; return; }
-  // страховка: фраза ещё и в буфере обмена — если Telegram не подставит черновик, просто вставь
+  // черновик ?text= боту Telegram не подставляет (проверено 03.11 на телефоне Данича) — работает буфер обмена
   try { navigator.clipboard && navigator.clipboard.writeText(phrase).catch(() => {}); } catch (e) {}
-  try { window.dunnLinks.bot(phrase); $('add-hint').textContent = 'Фраза в поле ввода (и в буфере). Нажми «отправить».'; }
+  try { window.dunnLinks.bot(phrase); $('add-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить.'; }
   catch (e) { $('add-hint').textContent = 'Не открылось. Фраза в буфере обмена — вставь в чат сам.'; }
 };
 
