@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:18:20Z, sha 7dd63ffb4742; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:45:53Z, sha c588b7087281; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -170,6 +170,40 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .selrow b{color:var(--tx);font:700 20px ui-monospace,Menlo,monospace}
 #weight .dnav,#steps .dnav{margin:2px 0 10px}
 #steps svg rect.b{cursor:pointer}
+/* дневник тренировок */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#07111b;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg button{all:unset;cursor:pointer;text-align:center;padding:8px 0;border-radius:9px;font:600 13px ui-monospace,Menlo,monospace;color:var(--mut);-webkit-tap-highlight-color:transparent}
+.seg button.on{background:rgba(0,225,255,.12);color:var(--cy)}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mhead b{font:600 15px ui-monospace,Menlo,monospace}
+.mhead button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);color:var(--cy);display:grid;place-items:center;font:700 18px ui-monospace,Menlo,monospace}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .wd{text-align:center;font:11px ui-monospace,Menlo,monospace;color:var(--mut);padding-bottom:2px}
+.cal button{all:unset;cursor:pointer;aspect-ratio:1;border-radius:9px;display:grid;place-items:center;font:13px ui-monospace,Menlo,monospace;color:var(--mut);background:#07111b;border:1px solid transparent;-webkit-tap-highlight-color:transparent;position:relative}
+.cal button.has{background:rgba(0,225,255,.22);color:var(--tx);font-weight:700}
+.cal button.today{border-color:var(--cyd)}
+.cal button.on{border-color:var(--cy);box-shadow:0 0 8px rgba(0,225,255,.4)}
+.cal button.out{visibility:hidden}
+.ses{margin-top:12px}
+.ses .ex{padding:8px 0;border-top:1px solid #0f2537}
+.ses .ex:first-of-type{border-top:0}
+.ses .ex .n{font-weight:600}
+.ses .ex .v{font:13px ui-monospace,Menlo,monospace;color:var(--cy);margin-top:2px}
+.ses .ex .nt{font-size:12.5px;color:var(--amb);margin-top:2px}
+.fsel,.finp{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px}
+.fex{border-top:1px solid #0f2537;padding:10px 0}
+.fex .n{font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.fex .n small{color:var(--mut);font:12px ui-monospace,Menlo,monospace;font-weight:400}
+.fex .g{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:6px;margin-top:6px}
+.fex .g input{width:100%;box-sizing:border-box;padding:9px 6px;border-radius:9px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;text-align:center}
+.fex .g input:first-child{text-align:left}
+.fex .lbls{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:6px;font:10.5px ui-monospace,Menlo,monospace;color:var(--mut);margin-top:6px}
+.fex .rm{all:unset;cursor:pointer;color:var(--mut);font-size:13px}
+.fex input.note{width:100%;box-sizing:border-box;margin-top:6px;padding:8px;border-radius:9px;border:1px dashed var(--line);background:transparent;color:var(--tx);font-size:14px}
+.btn{all:unset;cursor:pointer;display:block;text-align:center;padding:12px;border-radius:12px;background:var(--cy);color:#001a22;font-weight:700;margin-top:12px}
+.btn.ghost{background:transparent;border:1px solid var(--cyd);color:var(--cy)}
+.hint{font-size:13px;color:var(--ok);margin-top:8px;min-height:18px}
+.pt{font:12px ui-monospace,Menlo,monospace}
 .wline{font-size:13px;color:var(--mut);margin-top:8px}.wline b{color:var(--tx);font-weight:600}
 /* «+»: черновик в чат бота */
 #add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
@@ -372,22 +406,9 @@ function render(d) {
     <h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => li({time: '', t: x.t, id: x.id}, dm(x.due))).join('')}</ul>
     <div class="sub" style="margin-top:10px">↗ тап по задаче открывает её в Notion</div>`;
 
-  // ── Тренировки: 8 недель, новые сверху
-  const monday = s => { const t = new Date(s + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
-  const w0 = monday(today), weeks = [];
-  for (let i = 7; i >= 0; i--) { const t = new Date(w0 + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 7 * i); weeks.push(t.toISOString().slice(0, 10)); }
-  const per = Object.fromEntries(weeks.map(x => [x, 0]));
-  wk.forEach(x => { const m0 = monday(x.d); if (m0 in per) per[m0]++; });
-  const val = v => v !== null && v !== undefined && v !== '';
-  $('workouts').innerHTML = `<h2>Тренировки · 8 недель</h2>
-    <div class="row"><div class="big">${wk.length}<small> за 8 нед</small></div><div class="sub">${lastW ? 'последняя ' + dm(lastW.d) + ' · ' + sinceW + ' дн назад' : ''}</div></div>
-    <div class="weeks">${weeks.map(x => `<div><i class="w${Math.min(3, per[x])}">${per[x] || ''}</i>${dm(x)}</div>`).join('')}</div>
-    ${wk.length ? wk.map(x => `<div class="wo">
-      <div class="row"><span class="kind">${esc(dm(x.d))} · ${esc((x.kind || []).join(', ') || 'тренировка')}</span>
-      <span class="meta">${[val(x.min) ? x.min + ' мин' : '', val(x.rpe) ? 'RPE ' + esc(x.rpe) : '', val(x.kg) ? esc(x.kg) + ' кг' : ''].filter(Boolean).join(' · ')}</span></div>
-      ${val(x.ex) ? `<details><summary>упражнения</summary><pre>${esc(x.ex)}</pre></details>` : '<div class="meta" style="margin-top:4px">состав не записан</div>'}
-      ${val(x.note) ? `<div class="note">${esc(x.note)}</div>` : ''}</div>`).join('') : '<div class="sub">за 8 недель тренировок не записано</div>'}
-    <div class="sub" style="margin-top:10px">Новая тренировка: «+» → Тренировка, распишу в Активность.</div>`;
+  // ── Тренировки: дневник
+  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || []};
+  renderGym();
 
   // ── Деньги
   $('money').innerHTML = `<h2>Деньги</h2>
@@ -502,6 +523,145 @@ $('steps').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
   const r = e.target.closest('rect.b'); if (r) { ssel = Number(r.dataset.i); renderSteps(); hap(); return; }
   const b = e.target.closest('button'); if (b && !b.disabled && b.dataset.step) { ssel = Math.max(0, Math.min(FD.length - 1, ssel - Number(b.dataset.step))); renderSteps(); hap(); } };
 $('steps').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) { ssel = i; renderSteps(); hap(); } };
+
+// ── Тренировки: дневник (календарь · прогресс · новая)
+let GD = null, gv = store.get('dunn_gv') || 'cal', gMonth = null, gSel = null, gEx = null;
+const WDS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+const MON = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
+const setStr = x => [x.s1, x.s2].filter(v => v != null && v !== '').join(', ') || '—';
+function sessions() {  // дата → {rows, act}
+  const m = {};
+  GD.log.forEach(x => { (m[x.d] = m[x.d] || {rows: [], act: null}).rows.push(x); });
+  GD.wk.forEach(w => { (m[w.d] = m[w.d] || {rows: [], act: null}).act = w; });
+  return m;
+}
+function lastOf(ex) { for (let i = GD.log.length - 1; i >= 0; i--) if (GD.log[i].ex === ex) return GD.log[i]; return null; }
+function gymCal() {
+  const S = sessions(), dates = Object.keys(S).sort();
+  if (!gMonth) gMonth = GD.today.slice(0, 7);
+  if (!gSel) gSel = dates.length ? dates[dates.length - 1] : GD.today;
+  const [Y, Mo] = gMonth.split('-').map(Number), first = new Date(Date.UTC(Y, Mo - 1, 1)), off = (first.getUTCDay() + 6) % 7;
+  const nd = new Date(Date.UTC(Y, Mo, 0)).getUTCDate();
+  let cells = WDS.map(w => `<div class="wd">${w}</div>`).join('');
+  for (let i = 0; i < off; i++) cells += '<button class="out"></button>';
+  let cnt = 0;
+  for (let dd = 1; dd <= nd; dd++) { const ds = `${gMonth}-${String(dd).padStart(2, '0')}`, has = !!S[ds]; if (has) cnt++;
+    cells += `<button data-d="${ds}" class="${has ? 'has' : ''}${ds === GD.today ? ' today' : ''}${ds === gSel ? ' on' : ''}">${dd}</button>`; }
+  const s = S[gSel];
+  let ses = `<div class="sub">${esc(dm(gSel))}: тренировки нет</div>`;
+  if (s) {
+    const a = s.act, type = (s.rows[0] && s.rows[0].type) || (a && (a.kind || []).join(', ')) || 'тренировка';
+    ses = `<div class="row"><b>${esc(wd(gSel))}, ${esc(dm(gSel))} · ${esc(type)}</b><span class="sub">${a ? [a.min ? a.min + ' мин' : '', a.rpe ? 'RPE ' + esc(a.rpe) : ''].filter(Boolean).join(' · ') : ''}</span></div>`
+      + (s.rows.length ? s.rows.map(x => `<div class="ex"><div class="n">${esc(x.ex)}</div><div class="v">${esc(x.load || '—')} × ${esc(setStr(x))}${x.rpe != null ? ' · RPE ' + esc(x.rpe) : ''}</div>${x.note ? `<div class="nt">${esc(x.note)}</div>` : ''}</div>`).join('')
+        : (a && a.ex ? `<pre style="white-space:pre-wrap;font:13px/1.45 system-ui;margin:6px 0 0">${esc(a.ex)}</pre>` : '<div class="sub">состав не записан</div>'))
+      + (a && a.note ? `<div class="nt" style="color:var(--amb);font-size:13px;margin-top:6px">${esc(a.note)}</div>` : '');
+  }
+  return `<div class="mhead"><button data-m="-1">‹</button><b>${MON[Mo - 1]} ${Y} · ${cnt} трен.</b><button data-m="1">›</button></div><div class="cal">${cells}</div><div class="ses">${ses}</div>`;
+}
+function gymProg() {
+  const freq = {}; GD.log.forEach(x => { if (x.ex) freq[x.ex] = (freq[x.ex] || 0) + 1; });
+  const names = Object.keys(freq).sort((a, b) => freq[b] - freq[a]);
+  if (!names.length) return '<div class="sub">пока нет записей</div>';
+  if (!gEx || !freq[gEx]) gEx = names[0];
+  const rows = GD.log.filter(x => x.ex === gEx);
+  const rr = (() => { for (const t of GD.tpl) for (const e of t.exercises || []) if (e.name === gEx && e.reps) return e.reps; return ''; })();
+  const [lo, hi] = (rr.match(/\d+/g) || []).map(Number);
+  const last = rows[rows.length - 1], sets = [last.s1, last.s2].filter(v => v != null);
+  let tip = '';
+  if (hi && sets.length) tip = sets.every(v => v >= hi) ? `<span class="ok">Все подходы на ${hi}+ → пора резину/вес тяжелее 💪</span>`
+    : sets.every(v => v >= lo) ? `<span>В диапазоне ${rr}: добивай подходы до ${hi}</span>` : `<span class="warn">Ниже ${lo}: нагрузка тяжеловата, держи и набирай повторы</span>`;
+  // график: сумма повторов за сессию, подписи — смена нагрузки
+  const W = 520, Hh = 170, P = 26, n = rows.length, vals = rows.map(x => (x.s1 || 0) + (x.s2 || 0)), mx = Math.max(10, ...vals) * 1.15;
+  const X = i => P + (n < 2 ? (W - P) / 2 : i / (n - 1) * (W - P - 10)), Yv = v => 10 + (1 - v / mx) * (Hh - 40);
+  let path = '', marks = '', prevLoad = null;
+  rows.forEach((x, i) => { path += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Yv(vals[i]).toFixed(1);
+    marks += `<circle cx="${X(i).toFixed(1)}" cy="${Yv(vals[i]).toFixed(1)}" r="3.2" fill="#00e1ff"/>`;
+    const nl = (x.load || '').toUpperCase().replace(/[\s.]/g, '');
+    if (nl !== prevLoad) { marks += `<line x1="${X(i).toFixed(1)}" x2="${X(i).toFixed(1)}" y1="10" y2="${Hh - 30}" stroke="#ffbe3c" stroke-dasharray="2 3" opacity=".6"/><text x="${(X(i) + 3).toFixed(1)}" y="${Hh - 32}" fill="#ffbe3c" font-size="10">${esc((x.load || '—').slice(0, 14))}</text>`; prevLoad = nl; } });
+  const chartSvg = `<svg viewBox="0 0 ${W} ${Hh}"><line x1="${P}" x2="${W}" y1="${Hh - 30}" y2="${Hh - 30}" stroke="#12324a"/>${marks}<path d="${path}" fill="none" stroke="#00e1ff" stroke-width="2.2"/><text x="${P}" y="${Hh - 10}" fill="#6f93a6" font-size="11">${dm(rows[0].d)}</text><text x="${W - 40}" y="${Hh - 10}" fill="#6f93a6" font-size="11">${dm(last.d)}</text><text x="0" y="16" fill="#6f93a6" font-size="10">повт.</text></svg>`;
+  return `<select class="fsel" id="g-ex">${names.map(n => `<option${n === gEx ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
+    <div class="selrow"><span>последний раз <b style="font-size:15px">${esc(last.load || '—')} × ${esc(setStr(last))}</b></span><span class="sub">${esc(dm(last.d))}</span></div>
+    ${rr ? `<div class="sub">диапазон ${esc(rr)} · ${tip}</div>` : ''}
+    ${chartSvg}<div class="sub" style="margin:4px 0 8px">Линия — сумма повторов за 2 подхода, жёлтым — смена резины/веса</div>
+    <ul>${rows.slice(-12).reverse().map(x => `<li><span class="t">${esc(dm(x.d))}</span><span>${esc(x.load || '—')}</span><span class="due">${esc(setStr(x))}${x.rpe != null ? ' · ' + esc(x.rpe) : ''}</span></li>`).join('')}</ul>`;
+}
+// черновик формы хранится на устройстве, чтобы заполнять по ходу тренировки
+const gDraft = () => { try { return JSON.parse(store.get('dunn_wdraft') || 'null'); } catch (e) { return null; } };
+function newDraft(tplName) {
+  const t = GD.tpl.find(x => x.name === tplName) || GD.tpl[0];
+  return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '',
+          ex: (t ? t.exercises : []).map(e => { const l = lastOf(e.name); return {name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''}; })};
+}
+function gymNew() {
+  let f = gDraft();
+  if (!f) { f = newDraft(GD.tpl.length ? (GD.tpl.find(t => t.name === 'Базовый минимум') || GD.tpl[0]).name : ''); store.set('dunn_wdraft', JSON.stringify(f)); }
+  const allEx = [...new Set([...GD.log.map(x => x.ex), ...GD.tpl.flatMap(t => (t.exercises || []).map(e => e.name))])].filter(Boolean).sort();
+  return `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
+      <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
+    <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. Черновик сохраняется сам.</div>
+    ${f.ex.map((e, i) => `<div class="fex" data-i="${i}"><div class="n"><span>${i + 1}. ${esc(e.name)}${e.reps ? ` <small>${esc(e.reps)}</small>` : ''}</span><button class="rm" data-rm="${i}">✕</button></div>
+      ${e.last ? `<div class="sub pt">было: ${esc(e.last)}</div>` : ''}
+      <div class="lbls"><span>резина / вес</span><span>подх 1</span><span>подх 2</span><span>RPE</span></div>
+      <div class="g"><input data-k="load" value="${esc(e.load)}" placeholder="ГФ 4.5 + К1"><input data-k="s1" inputmode="numeric" value="${esc(e.s1)}" placeholder="${esc(e.p1 || '—')}"><input data-k="s2" inputmode="numeric" value="${esc(e.s2)}" placeholder="${esc(e.p2 || '—')}"><input data-k="rpe" inputmode="decimal" value="${esc(e.rpe)}" placeholder="—"></div>
+      <input class="note" data-k="note" value="${esc(e.note)}" placeholder="заметка (техника, ощущения)"></div>`).join('')}
+    <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px"><select class="fsel" id="w-add"><option value="">+ добавить упражнение…</option>${allEx.map(n => `<option>${esc(n)}</option>`).join('')}</select><button class="btn ghost" id="w-addc" style="margin:0;padding:10px 12px">свое</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px"><input class="finp" id="w-min" inputmode="numeric" placeholder="длительность, мин" value="${esc(f.min)}"><input class="finp" id="w-rpe" inputmode="decimal" placeholder="RPE за тренировку" value="${esc(f.rpe)}"></div>
+    <input class="finp" id="w-note" style="margin-top:6px" placeholder="общая заметка / боль" value="${esc(f.note)}">
+    <button class="btn" id="w-save">Скопировать и открыть чат</button>
+    <button class="btn ghost" id="w-reset">Сбросить черновик</button>
+    <div class="hint" id="w-hint"></div>`;
+}
+function gymText(f) {
+  const lines = [`Тренировка ${dm(f.date)} · ${f.tpl}`];
+  f.ex.forEach((e, i) => { const s = [e.s1, e.s2].filter(v => String(v).trim() !== '').join(', ');
+    if (!s && !e.note) return;
+    lines.push(`${i + 1}. ${e.name}: ${e.load || '—'} × ${s || '—'}${String(e.rpe).trim() ? ' · RPE ' + e.rpe : ''}${e.note ? ' · ' + e.note : ''}`); });
+  if (String(f.min).trim()) lines.push(`Длительность: ${f.min} мин`);
+  if (String(f.rpe).trim()) lines.push(`RPE тренировки: ${f.rpe}`);
+  if (f.note) lines.push(`Заметка: ${f.note}`);
+  return lines.join('\n');
+}
+function renderGym() {
+  if (!GD) return;
+  const dr = gDraft();  // отправленный черновик сбрасывается сам, когда тренировка этого дня появилась в данных
+  if (dr && dr.saved && GD.log.some(x => x.d === dr.date)) store.del('dunn_wdraft');
+  const body = gv === 'prog' ? gymProg() : gv === 'new' ? gymNew() : gymCal();
+  $('workouts').innerHTML = `<h2>Дневник тренировок</h2><div class="seg"><button data-gv="cal" class="${gv === 'cal' ? 'on' : ''}">Календарь</button><button data-gv="prog" class="${gv === 'prog' ? 'on' : ''}">Прогресс</button><button data-gv="new" class="${gv === 'new' ? 'on' : ''}">＋ Новая</button></div>${body}`;
+}
+function saveDraftFromDom() {
+  const f = gDraft(); if (!f) return null;
+  document.querySelectorAll('#workouts .fex').forEach(el => { const e = f.ex[Number(el.dataset.i)]; if (!e) return;
+    el.querySelectorAll('[data-k]').forEach(inp => { e[inp.dataset.k] = inp.value; }); });
+  const v = id => { const el = $(id); return el ? el.value : ''; };
+  f.date = v('w-date') || f.date; f.min = v('w-min'); f.rpe = v('w-rpe'); f.note = v('w-note');
+  store.set('dunn_wdraft', JSON.stringify(f)); return f;
+}
+$('workouts').addEventListener('input', () => { if (gv === 'new') saveDraftFromDom(); });
+$('workouts').addEventListener('change', e => {
+  if (e.target.id === 'g-ex') { gEx = e.target.value; renderGym(); return; }
+  if (e.target.id === 'w-tpl') { const cur = saveDraftFromDom(), touched = cur && cur.ex.some(x => String(x.s1 || x.s2).trim());
+    if (touched && !confirm('Сменить шаблон? Введённые цифры пропадут.')) { e.target.value = cur.tpl; return; }
+    const f = newDraft(e.target.value); if (cur) f.date = cur.date; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
+  if (e.target.id === 'w-add' && e.target.value) { const f = saveDraftFromDom(), n = e.target.value, l = lastOf(n);
+    f.ex.push({name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''});
+    store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); }
+});
+$('workouts').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.gv) { gv = b.dataset.gv; store.set('dunn_gv', gv); renderGym(); hap(); return; }
+  if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
+  if (b.dataset.d) { gSel = b.dataset.d; renderGym(); hap(); return; }
+  if (b.dataset.rm) { const f = saveDraftFromDom(); f.ex.splice(Number(b.dataset.rm), 1); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
+  if (b.id === 'w-addc') { const n = (prompt('Название упражнения') || '').trim(); if (!n) return; const f = saveDraftFromDom();
+    f.ex.push({name: n, reps: '', load: '', s1: '', s2: '', rpe: '', note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
+  if (b.id === 'w-reset') { if (!confirm('Сбросить черновик тренировки?')) return; store.del('dunn_wdraft'); renderGym(); return; }
+  if (b.id === 'w-save') { const f = saveDraftFromDom(), txt = gymText(f); f.saved = true; store.set('dunn_wdraft', JSON.stringify(f));
+    if (txt.split('\n').length < 2) { $('w-hint').textContent = 'Заполни хотя бы одно упражнение'; return; }
+    try { await navigator.clipboard.writeText(txt); } catch (err) {}
+    try { window.dunnLinks.bot('Тренировка ' + dm(f.date)); $('w-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Черновик сброшу, когда запишу в Notion.'; }
+    catch (err) { $('w-hint').textContent = 'Текст в буфере, открой чат с ботом и вставь.'; } }
+});
 
 function pickDay(i) {
   if (i < 0 || i >= FD.length || i === fdi) return;
