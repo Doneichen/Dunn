@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:45:53Z, sha c588b7087281; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:55:04Z, sha 78cb4116dde9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -599,15 +599,15 @@ function gymNew() {
   return `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
-    <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. Черновик сохраняется сам.</div>
+    <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. Заметки к упражнениям — по желанию, общая внизу. Черновик сохраняется сам.</div>
     ${f.ex.map((e, i) => `<div class="fex" data-i="${i}"><div class="n"><span>${i + 1}. ${esc(e.name)}${e.reps ? ` <small>${esc(e.reps)}</small>` : ''}</span><button class="rm" data-rm="${i}">✕</button></div>
       ${e.last ? `<div class="sub pt">было: ${esc(e.last)}</div>` : ''}
       <div class="lbls"><span>резина / вес</span><span>подх 1</span><span>подх 2</span><span>RPE</span></div>
       <div class="g"><input data-k="load" value="${esc(e.load)}" placeholder="ГФ 4.5 + К1"><input data-k="s1" inputmode="numeric" value="${esc(e.s1)}" placeholder="${esc(e.p1 || '—')}"><input data-k="s2" inputmode="numeric" value="${esc(e.s2)}" placeholder="${esc(e.p2 || '—')}"><input data-k="rpe" inputmode="decimal" value="${esc(e.rpe)}" placeholder="—"></div>
-      <input class="note" data-k="note" value="${esc(e.note)}" placeholder="заметка (техника, ощущения)"></div>`).join('')}
+      ${e.note || e.showNote ? `<input class="note" data-k="note" value="${esc(e.note)}" placeholder="заметка к упражнению">` : `<button class="rm" data-note="${i}" style="margin-top:6px;font-size:12px;color:var(--cyd)">＋ заметка</button>`}</div>`).join('')}
     <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px"><select class="fsel" id="w-add"><option value="">+ добавить упражнение…</option>${allEx.map(n => `<option>${esc(n)}</option>`).join('')}</select><button class="btn ghost" id="w-addc" style="margin:0;padding:10px 12px">свое</button></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px"><input class="finp" id="w-min" inputmode="numeric" placeholder="длительность, мин" value="${esc(f.min)}"><input class="finp" id="w-rpe" inputmode="decimal" placeholder="RPE за тренировку" value="${esc(f.rpe)}"></div>
-    <input class="finp" id="w-note" style="margin-top:6px" placeholder="общая заметка / боль" value="${esc(f.note)}">
+    <textarea class="finp" id="w-note" rows="2" style="margin-top:6px;resize:vertical" placeholder="заметка по тренировке: как прошла, самочувствие, боль">${esc(f.note)}</textarea>
     <button class="btn" id="w-save">Скопировать и открыть чат</button>
     <button class="btn ghost" id="w-reset">Сбросить черновик</button>
     <div class="hint" id="w-hint"></div>`;
@@ -652,6 +652,7 @@ $('workouts').addEventListener('click', async e => {
   if (b.dataset.gv) { gv = b.dataset.gv; store.set('dunn_gv', gv); renderGym(); hap(); return; }
   if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
   if (b.dataset.d) { gSel = b.dataset.d; renderGym(); hap(); return; }
+  if (b.dataset.note) { const f = saveDraftFromDom(); f.ex[Number(b.dataset.note)].showNote = true; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); const el = document.querySelector(`.fex[data-i="${b.dataset.note}"] input.note`); el && el.focus(); return; }
   if (b.dataset.rm) { const f = saveDraftFromDom(); f.ex.splice(Number(b.dataset.rm), 1); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-addc') { const n = (prompt('Название упражнения') || '').trim(); if (!n) return; const f = saveDraftFromDom();
     f.ex.push({name: n, reps: '', load: '', s1: '', s2: '', rpe: '', note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
