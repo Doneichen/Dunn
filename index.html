@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:16:00Z, sha ad695cd1c9da; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:18:20Z, sha 7dd63ffb4742; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -165,6 +165,11 @@ details.ml .bju{font:11.5px ui-monospace,Menlo,monospace;color:var(--mut);margin
 details.ml li{padding:6px 0 6px 10px;border-top:1px dashed #0f2537;flex-wrap:wrap}
 details.ml li .nm{flex:1;min-width:0}
 details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--mut);margin-top:1px}
+/* вес и шаги: выбор дня */
+.selrow{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:10px 0 2px;font-size:13px;color:var(--mut)}
+.selrow b{color:var(--tx);font:700 20px ui-monospace,Menlo,monospace}
+#weight .dnav,#steps .dnav{margin:2px 0 10px}
+#steps svg rect.b{cursor:pointer}
 .wline{font-size:13px;color:var(--mut);margin-top:8px}.wline b{color:var(--tx);font-weight:600}
 /* «+»: черновик в чат бота */
 #add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
@@ -213,7 +218,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
-  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div></section>
+  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tasks"></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div></section>
@@ -313,7 +318,7 @@ function bar(label, v, t, unit, k) {
 // мини-полоска для плиток: те же цвета, что и на вкладке (перебор — красный, < 80 % — жёлтый)
 const mini = (v, t, over) => `<div class="bar"><i class="${over ? 'over' : (t && v < t * .8 ? 'low' : '')}" style="width:${t ? Math.min(100, v / t * 100) : 0}%"></i></div>`;
 
-function chart(pts) {
+function chart(pts, sel) {
   if (pts.length < 2) return '<div class="sub">мало данных</div>';
   const W = 520, H = 170, P = 28, ks = pts.flatMap(p => [p.kg, p.avg]);
   const lo = Math.floor(Math.min(...ks) - .3), hi = Math.ceil(Math.max(...ks) + .3);
@@ -322,7 +327,8 @@ function chart(pts) {
   const line = key => pts.map((p, i) => (i ? 'L' : 'M') + x(p.d).toFixed(1) + ' ' + y(p[key]).toFixed(1)).join(' ');
   let grid = '';
   for (let k = lo; k <= hi; k++) grid += `<line x1="${P}" x2="${W}" y1="${y(k)}" y2="${y(k)}" stroke="#12324a"/><text x="2" y="${y(k) + 4}" fill="#6f93a6" font-size="11">${k}</text>`;
-  const dots = pts.map(p => `<circle cx="${x(p.d)}" cy="${y(p.kg)}" r="2.6" fill="#6f93a6"/>`).join('');
+  const dots = pts.map(p => `<circle cx="${x(p.d)}" cy="${y(p.kg)}" r="2.6" fill="#6f93a6"/>`).join('')
+    + (sel != null && pts[sel] ? `<line x1="${x(pts[sel].d)}" x2="${x(pts[sel].d)}" y1="8" y2="${H - 22}" stroke="#0a7f99" stroke-dasharray="3 3"/><circle cx="${x(pts[sel].d)}" cy="${y(pts[sel].kg)}" r="6" fill="none" stroke="#00e1ff" stroke-width="2"/>` : '');
   return `<svg viewBox="0 0 ${W} ${H}">${grid}${dots}<path d="${line('avg')}" fill="none" stroke="#00e1ff" stroke-width="2.5"/>
     <text x="${P}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[0].d)}</text><text x="${W - 40}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[pts.length - 1].d)}</text></svg>`;
 }
@@ -353,10 +359,8 @@ function render(d) {
   renderFood();
 
   // ── Вес
-  $('weight').innerHTML = `<h2>Вес · средняя за 7 дней</h2>
-    <div class="row"><div class="big">${last ? last.avg : '—'}<small> кг</small></div><div class="sub">последний: ${last ? last.kg + ' · ' + dm(last.d) : '—'}</div></div>
-    ${chart(w)}
-    ${df ? `<div class="lbl" style="margin-top:8px"><span>Неделя с ${dm(df.from)}</span><span class="${df.kcal < 0 ? 'bad' : 'ok'}"><b>${df.kcal > 0 ? 'дефицит ' : 'профицит '}${Math.abs(df.kcal)} ккал</b> · ${Math.abs(df.kg)} кг</span></div>` : ''}`;
+  WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
+  renderWeight(); renderSteps();
 
   // ── Задачи
   // тап по задаче открывает её страницу в Notion (dunnLinks.notion, id из build.py)
@@ -442,6 +446,63 @@ function mealsHtml(meals, f) {
     ${order.map(sec).join('')}
     <div class="sub" style="margin-top:8px">Всего включает псиллиум (60 ккал, У 16). Тап по приёму сворачивает его.</div>`;
 }
+// ── Вес и шаги: свой выбранный день у каждой карточки
+let WPTS = [], wsel = null, ssel = 0, DF = null;
+const dnav = (lbl, sub, min, max, val, prevOk, nextOk) => `<div class="dnav"><button data-step="-1" ${prevOk ? '' : 'disabled'} aria-label="назад">‹</button>
+  <div class="dl">${lbl}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${sub}</small>
+  <input type="date" aria-label="выбрать дату" min="${esc(min)}" max="${esc(max)}" value="${esc(val)}"></div>
+  <button data-step="1" ${nextOk ? '' : 'disabled'} aria-label="вперёд">›</button></div>`;
+function renderWeight() {
+  const w = WPTS, df = DF, last = w[w.length - 1], p = w[wsel], prev = w[wsel - 1];
+  const delta = p && prev ? Math.round((p.kg - prev.kg) * 100) / 100 : null;
+  $('weight').innerHTML = `<h2>Вес · средняя за 7 дней</h2>
+    <div class="row"><div class="big">${last ? last.avg : '—'}<small> кг</small></div><div class="sub">последний: ${last ? last.kg + ' · ' + dm(last.d) : '—'}</div></div>
+    ${p ? dnav(`${esc(wd(p.d))}, ${esc(dm(p.d))}`, 'взвешивание', w[0].d, last.d, p.d, wsel > 0, wsel < w.length - 1) : ''}
+    ${p ? `<div class="selrow"><span><b>${p.kg}</b> кг</span><span>средняя <b style="font-size:15px">${p.avg}</b>${delta != null ? ` · <span class="${delta > 0 ? 'warn' : 'ok'}">${delta > 0 ? '+' : ''}${delta}</span> к ${esc(dm(prev.d))}` : ''}</span></div>` : ''}
+    ${chart(w, wsel)}
+    <div class="sub" id="wnote"></div>
+    ${df ? `<div class="lbl" style="margin-top:8px"><span>Неделя с ${dm(df.from)}</span><span class="${df.kcal < 0 ? 'bad' : 'ok'}"><b>${df.kcal > 0 ? 'дефицит ' : 'профицит '}${Math.abs(df.kcal)} ккал</b> · ${Math.abs(df.kg)} кг</span></div>` : ''}`;
+}
+function stepsChart(days, sel) {
+  // days: старые слева → новые справа; столбик = шаги, чёрточка = база дня
+  const W = 520, H = 160, P = 30, n = days.length, bw = (W - P - 4) / n;
+  const mx = Math.max(10000, ...days.map(x => Math.max(x.steps || 0, x.base || 0))) * 1.08;
+  const y = v => 8 + (1 - v / mx) * (H - 30);
+  let g = '';
+  for (let k = 0; k <= mx; k += 10000) g += `<line x1="${P}" x2="${W}" y1="${y(k)}" y2="${y(k)}" stroke="#12324a"/><text x="0" y="${y(k) + 4}" fill="#6f93a6" font-size="11">${k / 1000}k</text>`;
+  const bars = days.map((x, i) => { const X = P + i * bw + 1.5, wdt = bw - 3, v = x.steps || 0;
+    const c = x.steps == null ? '#0e2233' : (v >= x.base ? '#3ee08f' : (v >= x.base * .8 ? '#ffbe3c' : '#ff4652'));
+    return `<rect class="b" data-i="${x.i}" x="${X}" y="${x.steps == null ? H - 24 : y(v)}" width="${wdt}" height="${x.steps == null ? 2 : Math.max(2, H - 22 - y(v))}" rx="2" fill="${c}" opacity="${x.i === sel ? 1 : .55}"/>`
+      + `<rect class="b" data-i="${x.i}" x="${X - 1.5}" y="0" width="${bw}" height="${H - 18}" fill="transparent"/>`
+      + (x.base ? `<line x1="${X - 1}" x2="${X + wdt + 1}" y1="${y(x.base)}" y2="${y(x.base)}" stroke="#d8f6ff" stroke-width="1.5" opacity=".6"/>` : '')
+      + (x.i === sel ? `<rect x="${X - 1.5}" y="4" width="${bw}" height="${H - 24}" rx="3" fill="none" stroke="#00e1ff" stroke-width="1.5"/>` : ''); }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">${g}${bars}<text x="${P}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(days[0].d)}</text><text x="${W - 40}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(days[n - 1].d)}</text></svg>`;
+}
+function renderSteps() {
+  if (!FD.length) { $('steps').innerHTML = ''; return; }
+  if (ssel >= FD.length) ssel = 0;
+  const x = FD[ssel], base = x.steps_base, days = FD.map((y, i) => ({d: y.d, steps: y.steps, base: y.steps_base, i})).reverse();
+  const avg = n => { const v = FD.slice(0, n).map(y => y.steps).filter(v => v != null); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
+  const a7 = avg(7), a30 = avg(30);
+  $('steps').innerHTML = `<h2>Шаги · 30 дней</h2>
+    ${dnav(`${esc(wd(x.d))}, ${esc(dm(x.d))}${ssel === 0 ? ' · сегодня' : ''}`, esc(x.type || ''), FD[FD.length - 1].d, FD[0].d, x.d, ssel < FD.length - 1, ssel > 0)}
+    <div class="selrow"><span><b>${x.steps != null ? fmt(x.steps) : '—'}</b>${base ? ' / ' + fmt(base) : ''}</span><span>${x.steps == null ? 'не записаны' : (base ? (x.steps >= base ? '<span class="ok">база есть</span>' : `<span class="warn">до базы ${fmt(base - x.steps)}</span>`) : '')}</span></div>
+    ${stepsChart(days, ssel)}
+    <div class="lbl" style="margin-top:6px"><span>Среднее 7 дн <b>${a7 != null ? fmt(a7) : '—'}</b></span><span>30 дн <b>${a30 != null ? fmt(a30) : '—'}</b></span></div>
+    <div class="sub" style="margin-top:6px">Чёрточка — база дня (смена ${fmt(21000)}, выходной ${fmt(5000)}). Тап по столбику — этот день.</div>`;
+}
+function hap() { try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {} }
+$('weight').onclick = e => { const b = e.target.closest('button'); if (e.target.type === 'date') { try { e.target.showPicker(); } catch (err) {} return; }
+  if (b && !b.disabled && b.dataset.step) { wsel = Math.max(0, Math.min(WPTS.length - 1, wsel + Number(b.dataset.step))); renderWeight(); hap(); } };
+$('weight').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const v = e.target.value;
+  let k = -1; WPTS.forEach((p, i) => { if (p.d <= v) k = i; }); if (k < 0) k = 0;
+  wsel = k; renderWeight(); hap();
+  if (WPTS[k].d !== v) $('wnote').textContent = `${dm(v)} не взвешивался — показываю ближайшее раньше: ${dm(WPTS[k].d)}`; };
+$('steps').onclick = e => { if (e.target.type === 'date') { try { e.target.showPicker(); } catch (err) {} return; }
+  const r = e.target.closest('rect.b'); if (r) { ssel = Number(r.dataset.i); renderSteps(); hap(); return; }
+  const b = e.target.closest('button'); if (b && !b.disabled && b.dataset.step) { ssel = Math.max(0, Math.min(FD.length - 1, ssel - Number(b.dataset.step))); renderSteps(); hap(); } };
+$('steps').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) { ssel = i; renderSteps(); hap(); } };
+
 function pickDay(i) {
   if (i < 0 || i >= FD.length || i === fdi) return;
   fdi = i; renderFood();
