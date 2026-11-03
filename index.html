@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:55:04Z, sha 78cb4116dde9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 17:36:29Z, sha 130b79887a6a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -119,6 +119,11 @@ li.go{cursor:pointer;-webkit-tap-highlight-color:transparent}
 li.go:active{background:rgba(0,225,255,.06)}
 li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .tile.wide{grid-column:1/-1}
+.sdots{display:flex;gap:5px;margin-top:8px}
+.sdots span{flex:1;text-align:center;font:600 10px ui-monospace,Menlo,monospace;color:var(--mut)}
+.sdots i{display:block;height:8px;border-radius:4px;background:var(--line);margin-bottom:3px}
+.sdots .ok i{background:var(--ok)}.sdots .over i{background:var(--red)}.sdots .none i{background:#2a3b48}
+.sdots .today i{background:transparent;box-shadow:inset 0 0 0 2px var(--cy)}
 /* тренировки */
 .weeks{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 12px}
 .weeks div{text-align:center;font:11px ui-monospace,Menlo,monospace;color:var(--mut)}
@@ -367,6 +372,17 @@ function chart(pts, sel) {
     <text x="${P}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[0].d)}</text><text x="${W - 40}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[pts.length - 1].d)}</text></svg>`;
 }
 
+function streakTile(s) {
+  if (!s || !s.days) return '';
+  const wd = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], st = {};
+  s.days.forEach((x, i) => st[i] = x);
+  const dots = wd.map((n, i) => { const x = st[i]; return `<span class="${x ? x.st : ''}" title="${x ? x.kcal + ' / ' + x.target : ''}"><i></i>${n}</span>`; }).join('');
+  const td = s.days[s.days.length - 1] || {}, L = s.today_left;
+  const sub = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} — серия с нуля</span>`
+    : `сегодня в норме: осталось ${L} → станет ${s.cur + 1}`;
+  return `<div class="tile wide" data-go="food"><div class="k">🔥 Ударный режим</div><div class="v">${s.cur}<small> дн подряд · рекорд недели ${s.best}</small></div><div class="s">${sub}</div><div class="sdots">${dots}</div></div>`;
+}
+
 function render(d) {
   $('upd').textContent = 'обновлено ' + d.updated;
   const f = d.food, a = d.activity, t = a.target, left = t.kcal - f.kcal;
@@ -381,6 +397,7 @@ function render(d) {
   $('tiles').innerHTML =
     tile('food', 'Калории', `${f.kcal}<small> / ${t.kcal}</small>`, left < 0 ? `<span class="bad">перебор ${-left}</span>` : `осталось ${left}`, mini(f.kcal, t.kcal, f.kcal > t.kcal * 1.05)) +
     tile('food', 'Белок', `${f.p}<small> / ${t.p} г</small>`, f.p >= t.p ? '<span class="ok">норма закрыта</span>' : `ещё ${t.p - f.p} г`, mini(f.p, t.p)) +
+    streakTile(d.streak) +
     tile('body', 'Вес · 7 дн', `${last ? last.avg : '—'}<small> кг</small>`, df ? `<span class="${df.kcal < 0 ? 'bad' : 'ok'}">${df.kcal > 0 ? 'дефицит' : 'профицит'} ${Math.abs(df.kcal)}</span>` : (last ? 'последний ' + dm(last.d) : '')) +
     tile('food', 'Шаги', `${a.steps ?? '—'}`, `база ${a.steps_base}`, a.steps != null ? mini(a.steps, a.steps_base) : '') +
     tile('tasks', 'Задачи', `${k.calendar.length + k.next.length}`, nextTask ? esc(nextTask.t) : 'пусто', '') +
