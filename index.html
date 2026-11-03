@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:08:29Z, sha dbd255409191; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:16:00Z, sha ad695cd1c9da; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -149,6 +149,22 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .strip button i{display:block;height:4px;border-radius:2px;margin:5px 6px 0;background:#0e2233}
 .strip button i.ok{background:var(--ok)}.strip button i.over{background:var(--red)}.strip button i.low{background:var(--amb)}
 .strip button.on{border-color:var(--cy);box-shadow:0 0 8px rgba(0,225,255,.35);color:var(--cy)}
+/* еда: приёмы пищи */
+.mtot{display:flex;justify-content:space-between;gap:8px;font:13px ui-monospace,Menlo,monospace;color:var(--mut);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#07111b;margin-bottom:6px}
+.mtot b{color:var(--cy)}
+details.ml{border-top:1px solid #0f2537}
+details.ml:first-of-type{border-top:0}
+details.ml summary{list-style:none;cursor:pointer;padding:10px 0 8px;display:flex;align-items:baseline;gap:8px;-webkit-tap-highlight-color:transparent}
+details.ml summary::-webkit-details-marker{display:none}
+details.ml summary .sl{font-weight:600;color:var(--tx)}
+details.ml summary .tm{font:12px ui-monospace,Menlo,monospace;color:var(--cyd)}
+details.ml summary .kc{margin-left:auto;font:600 14px ui-monospace,Menlo,monospace;color:var(--cy);white-space:nowrap}
+details.ml summary .ch{color:var(--cyd);font-size:11px;transition:transform .15s}
+details.ml[open] summary .ch{transform:rotate(90deg)}
+details.ml .bju{font:11.5px ui-monospace,Menlo,monospace;color:var(--mut);margin:-4px 0 6px}
+details.ml li{padding:6px 0 6px 10px;border-top:1px dashed #0f2537;flex-wrap:wrap}
+details.ml li .nm{flex:1;min-width:0}
+details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--mut);margin-top:1px}
 .wline{font-size:13px;color:var(--mut);margin-top:8px}.wline b{color:var(--tx);font-weight:600}
 /* «+»: черновик в чат бота */
 #add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
@@ -237,7 +253,7 @@ const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { ret
                 del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
 const tg = () => window.Telegram && Telegram.WebApp;
 // скрипт Telegram теперь defer → он выполнится до DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => { try { const t = tg(); t && (t.ready(), t.expand()); } catch (e) {} boot(); });
+document.addEventListener('DOMContentLoaded', () => { try { const t = tg(); t && (t.ready(), t.expand(), t.disableVerticalSwipes && t.disableVerticalSwipes()); } catch (e) {} boot(); });
 
 // ── Ключи (схема v2). Данные шифруются открытым ключом Данича: ECDH P-256 → HKDF-SHA256 → AES-256-GCM.
 // Пара ключей создаётся здесь, в его браузере. Закрытый ключ хранится только зашифрованным его фразой
@@ -406,9 +422,25 @@ function renderFood() {
     <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
     ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
     ${!isToday ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
-  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length
-    ? '<ul>' + meals.map(m => `<li><span>${esc(m.name)}</span><span class="due">${m.kcal}</span></li>`).join('') + '</ul>'
-    : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`);
+  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`);
+}
+const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус': '🍎', 'Ужин': '🌙', 'Без времени': '🕓'};
+const r1 = v => Math.round((v || 0) * 10) / 10;
+function mealsHtml(meals, f) {
+  // группы по slot в порядке первого появления; старые записи без поля slot — одной группой
+  const order = [], by = {};
+  meals.forEach(m => { const k = m.slot || 'Без времени'; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(m); });
+  const onlyNoTime = order.length === 1 && order[0] === 'Без времени';
+  const sumOf = arr => arr.reduce((a, m) => ({kcal: a.kcal + (m.kcal || 0), p: a.p + (m.p || 0), f: a.f + (m.f || 0), c: a.c + (m.c || 0)}), {kcal: 0, p: 0, f: 0, c: 0});
+  const sec = k => { const arr = by[k], s = sumOf(arr), ts = arr.map(m => m.t).filter(Boolean);
+    const tm = ts.length ? (ts[0] === ts[ts.length - 1] ? ts[0] : ts[0] + '–' + ts[ts.length - 1]) : '';
+    const hasM = arr.some(m => m.p != null);
+    return `<details class="ml" open><summary><span class="ch">▶</span><span class="sl">${SLOT_ICO[k] || '·'} ${esc(onlyNoTime ? 'За день' : k)}</span><span class="tm">${esc(tm)}</span><span class="kc">${Math.round(s.kcal)} ккал</span></summary>
+      ${hasM ? `<div class="bju">Б ${r1(s.p)} · Ж ${r1(s.f)} · У ${r1(s.c)}</div>` : ''}
+      <ul>${arr.map(m => `<li><span class="nm">${esc(m.name)}</span><span class="due">${m.kcal}</span>${m.p != null ? `<span class="mm">${m.t ? esc(m.t) + ' · ' : ''}Б ${r1(m.p)} Ж ${r1(m.f)} У ${r1(m.c)}</span>` : ''}</li>`).join('')}</ul></details>`; };
+  return `<div class="mtot"><span>Всего <b>${f.kcal}</b> ккал</span><span>Б ${f.p} · Ж ${f.f} · У ${f.c}</span></div>
+    ${order.map(sec).join('')}
+    <div class="sub" style="margin-top:8px">Всего включает псиллиум (60 ккал, У 16). Тап по приёму сворачивает его.</div>`;
 }
 function pickDay(i) {
   if (i < 0 || i >= FD.length || i === fdi) return;
