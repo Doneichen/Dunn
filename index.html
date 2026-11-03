@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 15:59:11Z, sha 5c0285c77ad5; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:07:49Z, sha 638f440c7393; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -138,6 +138,9 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .dnav button:active{background:rgba(0,225,255,.12)}
 .dnav button:disabled{opacity:.3;cursor:default}
 .dnav .dl{flex:1;text-align:center;font:600 15px ui-monospace,Menlo,monospace;color:var(--tx)}
+.dnav .dl{position:relative}
+.dnav .dl input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0;font-size:16px}
+.dnav .dl .cal{display:inline-block;width:14px;height:14px;vertical-align:-1px;margin-left:6px;fill:none;stroke:var(--cyd);stroke-width:2;stroke-linecap:round}
 .dnav .dl small{display:block;font-size:11px;color:var(--mut);font-weight:400;margin-top:2px}
 .strip{display:flex;gap:6px;overflow-x:auto;margin:12px -4px 0;padding:2px 4px 4px;scrollbar-width:none;direction:rtl}
 .strip::-webkit-scrollbar{display:none}
@@ -392,7 +395,8 @@ function renderFood() {
   const base = isToday && D.activity ? D.activity.steps_base : null;
   const wo = (D.workouts || []).find(w => w.d === x.d);
   $('fdays').innerHTML = `<div class="dnav"><button data-step="1" ${fdi >= FD.length - 1 ? 'disabled' : ''} aria-label="день назад">‹</button>
-    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<small>${esc(x.type || '')}</small></div>
+    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${esc(x.type || '')} · тап — выбрать дату</small>
+    <input type="date" aria-label="выбрать дату" min="${esc(FD[FD.length - 1].d)}" max="${esc(FD[0].d)}" value="${esc(x.d)}"></div>
     <button data-step="-1" ${isToday ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
     <div class="strip">${FD.map((y, i) => `<button data-i="${i}" class="${i === fdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${esc(wd(y.d))}<i class="${kcls(y)}"></i></button>`).join('')}</div>`;
   $('food').innerHTML = `<h2>Питание · ${esc(x.type || '')}</h2>
@@ -412,7 +416,10 @@ function pickDay(i) {
   try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {}
   const on = document.querySelector('#fdays .strip button.on'); on && on.scrollIntoView({block: 'nearest', inline: 'center'});
 }
-$('fdays').onclick = e => { const b = e.target.closest('button'); if (!b || b.disabled) return;
+$('fdays').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return;
+  const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) pickDay(i); else renderFood(); };
+$('fdays').onclick = e => { if (e.target.type === 'date') { try { e.target.showPicker(); } catch (err) {} return; }
+ const b = e.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.step) pickDay(fdi + Number(b.dataset.step)); else if (b.dataset.i) pickDay(Number(b.dataset.i)); };
 // свайп по карточкам еды: вправо — день назад, влево — вперёд
 (() => { let x0 = null, y0 = 0; const el = document.querySelector('[data-tab="food"]');
