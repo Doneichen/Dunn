@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 16:07:49Z, sha 638f440c7393; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 16:08:29Z, sha dbd255409191; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -395,7 +395,7 @@ function renderFood() {
   const base = isToday && D.activity ? D.activity.steps_base : null;
   const wo = (D.workouts || []).find(w => w.d === x.d);
   $('fdays').innerHTML = `<div class="dnav"><button data-step="1" ${fdi >= FD.length - 1 ? 'disabled' : ''} aria-label="день назад">‹</button>
-    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${esc(x.type || '')} · тап — выбрать дату</small>
+    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${esc(x.type || '')}</small>
     <input type="date" aria-label="выбрать дату" min="${esc(FD[FD.length - 1].d)}" max="${esc(FD[0].d)}" value="${esc(x.d)}"></div>
     <button data-step="-1" ${isToday ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
     <div class="strip">${FD.map((y, i) => `<button data-i="${i}" class="${i === fdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${esc(wd(y.d))}<i class="${kcls(y)}"></i></button>`).join('')}</div>`;
