@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 15:58:30Z, sha 5c5a04184790; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 15:59:11Z, sha 5c0285c77ad5; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -132,6 +132,21 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .wo summary{cursor:pointer;color:var(--cyd);font-size:13px}
 .wo pre{white-space:pre-wrap;word-break:break-word;font:13px/1.45 -apple-system,system-ui,Segoe UI,Roboto,sans-serif;margin:6px 0 0;color:var(--tx)}
 .wo .note{font-size:13px;color:var(--amb);margin-top:6px}
+/* еда: листалка дней */
+.dnav{display:flex;align-items:center;gap:8px}
+.dnav button{all:unset;cursor:pointer;width:38px;height:38px;border-radius:12px;border:1px solid var(--line);color:var(--cy);display:grid;place-items:center;font:700 20px/1 ui-monospace,Menlo,monospace;-webkit-tap-highlight-color:transparent}
+.dnav button:active{background:rgba(0,225,255,.12)}
+.dnav button:disabled{opacity:.3;cursor:default}
+.dnav .dl{flex:1;text-align:center;font:600 15px ui-monospace,Menlo,monospace;color:var(--tx)}
+.dnav .dl small{display:block;font-size:11px;color:var(--mut);font-weight:400;margin-top:2px}
+.strip{display:flex;gap:6px;overflow-x:auto;margin:12px -4px 0;padding:2px 4px 4px;scrollbar-width:none;direction:rtl}
+.strip::-webkit-scrollbar{display:none}
+.strip button{all:unset;direction:ltr;cursor:pointer;flex:0 0 46px;text-align:center;padding:6px 0;border-radius:10px;border:1px solid var(--line);background:#07111b;font:11px ui-monospace,Menlo,monospace;color:var(--mut);-webkit-tap-highlight-color:transparent}
+.strip button b{display:block;font-size:14px;color:var(--tx);margin-bottom:2px}
+.strip button i{display:block;height:4px;border-radius:2px;margin:5px 6px 0;background:#0e2233}
+.strip button i.ok{background:var(--ok)}.strip button i.over{background:var(--red)}.strip button i.low{background:var(--amb)}
+.strip button.on{border-color:var(--cy);box-shadow:0 0 8px rgba(0,225,255,.35);color:var(--cy)}
+.wline{font-size:13px;color:var(--mut);margin-top:8px}.wline b{color:var(--tx);font-weight:600}
 /* «+»: черновик в чат бота */
 #add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
 #add[hidden]{display:none}
@@ -178,7 +193,7 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="card" id="food"></div><div class="card" id="meals"></div></section>
+  <section class="tab" data-tab="food" hidden><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tasks"></div></section>
@@ -313,15 +328,10 @@ function render(d) {
     tile('gym', 'Тренировка', lastW ? `${sinceW}<small> дн назад</small>` : '—', lastW ? esc(dm(lastW.d) + ' · ' + (lastW.kind || []).join(', ')) : 'за 8 недель пусто') +
     tile('money', 'Баланс', `<span class="${m.balance < 0 ? 'bad' : ''}">${fmt(m.balance)}</span><small> ₽</small>`, `сегодня ${fmt(m.today)} ₽`).replace('class="tile"', 'class="tile wide"');
 
-  // ── Еда
-  $('food').innerHTML = `<h2>Питание · ${esc(a.type)}</h2>
-    <div class="row"><div class="big">${f.kcal}<small> / ${t.kcal} ккал</small></div><div class="${left < 0 ? 'bad' : 'ok'}">${left < 0 ? 'перебор ' + (-left) : 'осталось ' + left}</div></div>
-    <div class="bar"><i class="${f.kcal > t.kcal * 1.05 ? 'over' : ''}" style="width:${Math.min(100, f.kcal / t.kcal * 100)}%"></i></div>
-    ${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
-    <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${a.steps ?? '—'}</b> · база ${a.steps_base}</span></div>`;
-  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (d.meals.length
-    ? '<ul>' + d.meals.map(x => `<li><span>${esc(x.name)}</span><span class="due">${x.kcal}</span></li>`).join('') + '</ul>'
-    : '<div class="sub">сегодня ещё ничего</div>');
+  // ── Еда: листалка по дням (food_days, сегодня первым)
+  D = d; FD = (d.food_days && d.food_days.length) ? d.food_days : [{d: today, food: f, meals: d.meals, type: a.type, steps: a.steps, target: t}];
+  if (fdi >= FD.length) fdi = 0;
+  renderFood();
 
   // ── Вес
   $('weight').innerHTML = `<h2>Вес · средняя за 7 дней</h2>
@@ -369,6 +379,46 @@ function render(d) {
     ${r.recent.length ? '<div class="sub" style="margin-top:8px">недавно вышло</div><ul>' + r.recent.map(ri).join('') + '</ul>' : ''}
     ${r.later.length ? '<div class="sub" style="margin-top:8px">ждём</div><ul>' + r.later.map(ri).join('') + '</ul>' : ''}`;
 }
+
+// ── Еда: выбранный день (0 = сегодня). Не запоминается: при открытии всегда сегодня.
+let D = null, FD = [], fdi = 0;
+const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+const wd = s => WD[new Date(s + 'T00:00:00Z').getUTCDay()];
+const kcls = (x) => { const k = x.food && x.food.kcal, tk = x.target && x.target.kcal;
+  return !k ? '' : (k > tk * 1.05 ? 'over' : (k < tk * .8 ? 'low' : 'ok')); };
+function renderFood() {
+  const x = FD[fdi], f = x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}, t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
+  const left = t.kcal - f.kcal, isToday = fdi === 0, meals = x.meals || [];
+  const base = isToday && D.activity ? D.activity.steps_base : null;
+  const wo = (D.workouts || []).find(w => w.d === x.d);
+  $('fdays').innerHTML = `<div class="dnav"><button data-step="1" ${fdi >= FD.length - 1 ? 'disabled' : ''} aria-label="день назад">‹</button>
+    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<small>${esc(x.type || '')}</small></div>
+    <button data-step="-1" ${isToday ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
+    <div class="strip">${FD.map((y, i) => `<button data-i="${i}" class="${i === fdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${esc(wd(y.d))}<i class="${kcls(y)}"></i></button>`).join('')}</div>`;
+  $('food').innerHTML = `<h2>Питание · ${esc(x.type || '')}</h2>
+    <div class="row"><div class="big">${f.kcal}<small> / ${t.kcal} ккал</small></div><div class="${left < 0 ? 'bad' : 'ok'}">${left < 0 ? 'перебор ' + (-left) : (isToday ? 'осталось ' : 'недобор ') + left}</div></div>
+    <div class="bar"><i class="${f.kcal > t.kcal * 1.05 ? 'over' : ''}" style="width:${t.kcal ? Math.min(100, f.kcal / t.kcal * 100) : 0}%"></i></div>
+    ${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
+    <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
+    ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
+    ${!isToday ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
+  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length
+    ? '<ul>' + meals.map(m => `<li><span>${esc(m.name)}</span><span class="due">${m.kcal}</span></li>`).join('') + '</ul>'
+    : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`);
+}
+function pickDay(i) {
+  if (i < 0 || i >= FD.length || i === fdi) return;
+  fdi = i; renderFood();
+  try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {}
+  const on = document.querySelector('#fdays .strip button.on'); on && on.scrollIntoView({block: 'nearest', inline: 'center'});
+}
+$('fdays').onclick = e => { const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.step) pickDay(fdi + Number(b.dataset.step)); else if (b.dataset.i) pickDay(Number(b.dataset.i)); };
+// свайп по карточкам еды: вправо — день назад, влево — вперёд
+(() => { let x0 = null, y0 = 0; const el = document.querySelector('[data-tab="food"]');
+  el.addEventListener('touchstart', e => { if (e.target.closest('.strip')) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive: true});
+  el.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) pickDay(fdi + (dx > 0 ? 1 : -1)); }, {passive: true}); })();
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
 const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
