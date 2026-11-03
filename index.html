@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 17:36:29Z, sha 130b79887a6a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-03 18:22:26Z, sha 84a0aaa03960; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -124,6 +124,15 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .sdots i{display:block;height:8px;border-radius:4px;background:var(--line);margin-bottom:3px}
 .sdots .ok i{background:var(--ok)}.sdots .over i{background:var(--red)}.sdots .none i{background:#2a3b48}
 .sdots .today i{background:transparent;box-shadow:inset 0 0 0 2px var(--cy)}
+.sbig{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.sbig div{background:#08111b;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font:600 10px ui-monospace,Menlo,monospace;color:var(--mut)}
+.sbig div b{display:block;font-size:12px;margin-top:3px;color:var(--tx)}
+.sbig .ok{border-color:#1f7a52;background:#0b2219}.sbig .ok b{color:var(--ok)}
+.sbig .over{border-color:#7a1f28;background:#220b0f}.sbig .over b{color:var(--red)}
+.sbig .today{border-color:var(--cy)}.sbig .none b{color:#3d5566}
+.shist{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.shist span{font:600 11px ui-monospace,Menlo,monospace;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:4px 7px}
+.shist span b{color:var(--amb)}
 /* тренировки */
 .weeks{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin:4px 0 12px}
 .weeks div{text-align:center;font:11px ui-monospace,Menlo,monospace;color:var(--mut)}
@@ -256,7 +265,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
+  <section class="tab" data-tab="food" hidden><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tasks"></div></section>
@@ -372,6 +381,28 @@ function chart(pts, sel) {
     <text x="${P}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[0].d)}</text><text x="${W - 40}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[pts.length - 1].d)}</text></svg>`;
 }
 
+function streakCard(s, fd) {
+  if (!s || !s.days) return '';
+  const wdn = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const cells = wdn.map((n, i) => { const x = s.days[i];
+    return x ? `<div class="${x.st}">${n}<b>${x.st === 'none' ? '—' : x.kcal}</b></div>` : `<div>${n}<b>·</b></div>`; }).join('');
+  const td = s.days[s.days.length - 1] || {}, L = s.today_left;
+  const st = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} ккал — серия с нуля, завтра день 1</span>`
+    : `<span class="ok">сегодня пока в норме: осталось ${L} ккал → станет ${s.cur + 1}</span>`;
+  // прошлые недели: рекорд по тем же правилам, считается из food_days (30 дней)
+  const wk = {}, mon = d => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
+  [...fd].reverse().forEach(x => { const m = mon(x.d); if (m >= s.week_start) return; (wk[m] = wk[m] || []).push(x); });
+  const hist = Object.keys(wk).sort().reverse().slice(0, 4).map(m => { let c = 0, b = 0;
+    wk[m].forEach(x => { const k = x.food ? x.food.kcal : 0; c = k && k <= x.target.kcal ? c + 1 : 0; b = Math.max(b, c); });
+    return `<span>${dm(m)} <b>${b}</b></span>`; }).join('');
+  return `<h2>🔥 Ударный режим</h2>
+    <div class="row"><div class="big">${s.cur}<small> дн подряд</small></div><div class="sub">рекорд недели <b>${s.best}</b></div></div>
+    <div class="sbig">${cells}</div>
+    <div class="s" style="margin-top:8px;font-size:13px">${st}</div>
+    ${hist ? `<div class="sub" style="margin-top:10px">рекорды прошлых недель (с пн)</div><div class="shist">${hist}</div>` : ''}
+    <div class="sub" style="margin-top:8px">засчитан день ≤ цели ккал (с шагами); перебор или пустой день — с нуля; каждый пн заново</div>`;
+}
+
 function streakTile(s) {
   if (!s || !s.days) return '';
   const wd = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'], st = {};
@@ -407,6 +438,7 @@ function render(d) {
   // ── Еда: листалка по дням (food_days, сегодня первым)
   D = d; FD = (d.food_days && d.food_days.length) ? d.food_days : [{d: today, food: f, meals: d.meals, type: a.type, steps: a.steps, target: t}];
   if (fdi >= FD.length) fdi = 0;
+  $('fstreak').innerHTML = streakCard(d.streak, FD); $('fstreak').hidden = !d.streak;
   renderFood();
 
   // ── Вес
