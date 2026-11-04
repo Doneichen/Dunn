@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-04 12:09:50Z, sha 4f6b679f3036; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-04 12:10:30Z, sha 9aacd96392e9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -744,7 +744,7 @@ $('fdays').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
 
 // ── Деньги: сводка, прогноз до зарплаты, история по дням, категории, долги, последние траты
 let M = null, mdi = 0, mcv = 'same';
-const MON = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'], mon = ym => MON[Number(String(ym).slice(5, 7)) - 1] || '';
+const MSH = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'], monS = ym => MSH[Number(String(ym).slice(5, 7)) - 1] || '';
 const rub = n => fmt(Math.round(n || 0)) + ' ₽';
 const daysTo = d => Math.round((new Date(d + 'T00:00:00Z') - new Date((D && D.date || '') + 'T00:00:00Z')) / 864e5);
 const inDays = n => n <= 0 ? 'сегодня' : n === 1 ? 'завтра' : 'через ' + n + ' дн';
@@ -785,8 +785,8 @@ function renderMoney() {
   const keys = [...new Set([...Object.keys(cur), ...Object.keys(ref)])].sort((a, b) => (cur[b] || 0) - (cur[a] || 0) || (ref[b] || 0) - (ref[a] || 0)).slice(0, 10);
   const mx = Math.max(1, ...keys.map(k => Math.max(cur[k] || 0, ref[k] || 0)));
   const tot = o => Object.values(o).reduce((a, b) => a + b, 0);
-  $('mcats').innerHTML = `<h2>Категории · ${esc(mon(c.cur_label))}</h2>
-    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs ${esc(mon(c.prev_label))} на ${esc(c.same_day)}-е</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc(mon(c.prev_label))}</button></div>
+  $('mcats').innerHTML = `<h2>Категории · ${esc(monS(c.cur_label))}</h2>
+    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs ${esc(monS(c.prev_label))} на ${esc(c.same_day)}-е</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc(monS(c.prev_label))}</button></div>
     <div class="lbl"><span>Итого <b>${rub(tot(cur))}</b></span><span>${mcv === 'same' ? 'тогда' : 'весь месяц'} <b>${rub(tot(ref))}</b></span></div>
     ${keys.map(k => { const a = cur[k] || 0, r = ref[k] || 0, dlt = mcv === 'same' && r ? Math.round((a - r) / r * 100) : null;
       return `<div class="cat"><div class="lbl"><span>${esc(k)}${dlt !== null && Math.abs(dlt) >= 10 ? `<span class="dl2 ${dlt > 0 ? 'up' : 'down'}">${dlt > 0 ? '+' : ''}${dlt}%</span>` : ''}</span><span><b>${rub(a)}</b> / ${rub(r)}</span></div>
