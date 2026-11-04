@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-04 16:11:02Z, sha 46ff8bc73ff3; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-04 17:46:50Z, sha cdd18306faf7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -132,6 +132,9 @@ li .cn{display:block;font-size:11px;color:var(--mut)}
 /* кликабельные задачи → Notion */
 li.go{cursor:pointer;-webkit-tap-highlight-color:transparent}
 li.go:active{background:rgba(0,225,255,.06)}
+li button.ck{all:unset;flex:none;min-width:26px;height:26px;padding:0 6px;box-sizing:border-box;border-radius:8px;border:1px solid var(--line);color:var(--cyd);display:grid;place-items:center;font:700 13px ui-monospace,Menlo,monospace;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:-3px}
+li button.ck.arm{color:#06121c;background:var(--amb);border-color:var(--amb);font-size:11px}
+li button.ck.sent{color:#06121c;background:var(--ok);border-color:var(--ok)}
 li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .tile.wide{grid-column:1/-1}
 .sdots{display:flex;gap:5px;margin-top:8px}
@@ -463,12 +466,13 @@ function render(d) {
   // ── Задачи
   // тап по задаче открывает её страницу в Notion (dunnLinks.notion, id из build.py)
   const okId = id => /^[0-9a-f]{32}$/i.test(String(id || '').replace(/-/g, ''));
-  const li = (x, right) => { const go = okId(x.id);
-    return `<li${go ? ` class="go" data-id="${esc(x.id)}"` : ''}><span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
-  $('tasks').innerHTML = `<h2>Сегодня</h2><ul>${k.calendar.map(x => li(x)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
+  const li = (x, right, ck) => { const go = okId(x.id), cid = go ? String(x.id).replace(/-/g, '').toLowerCase() : '';
+    const btn = ck && go ? `<button class="ck${CLOSED[cid] ? ' sent' : ''}" data-cid="${esc(cid)}" data-ct="${esc(x.t)}" aria-label="закрыть задачу">✓</button>` : '';
+    return `<li${go ? ` class="go" data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
+  $('tasks').innerHTML = `<h2>Сегодня</h2><ul>${k.calendar.map(x => li(x, '', true)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
     <h2 style="margin-top:14px">Дейлики</h2><ul>${k.daily.map(x => li(x)).join('')}</ul>
-    <h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => li({time: '', t: x.t, id: x.id}, dm(x.due))).join('')}</ul>
-    <div class="sub" style="margin-top:10px">↗ тап по задаче открывает её в Notion</div>`;
+    <h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => li({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('')}</ul>
+    <div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа)</div>`;
 
   // ── Тренировки: дневник
   GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || []};
@@ -844,7 +848,21 @@ function show(tab) {
 $('nav').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.tab); };
 $('tiles').onclick = e => { const x = e.target.closest('[data-go]'); if (x) show(x.dataset.go); };
 // задача → Notion. Вызов прямо в обработчике нажатия: Telegram открывает ссылки только в ответ на действие
-$('tasks').onclick = e => { const x = e.target.closest('li[data-id]'); if (!x) return;
+// ✓ закрыть задачу (разрешил Al 04.11): фраза строго «✓ закрыть «<название>» #<id>», в буфер + чат с ботом, отправляет Данич сам
+const CLOSED = {};
+let ckArm = null;
+const ckPhrase = (t, id) => { let n = String(t || '').replace(/\s+/g, ' ').trim(); if (n.length > 100) n = n.slice(0, 99) + '…'; return `✓ закрыть «${n}» #${id}`; };
+$('tasks').onclick = e => { const c = e.target.closest('button.ck');
+  if (c) { e.stopPropagation(); const id = c.dataset.cid; if (!/^[0-9a-f]{32}$/.test(id)) return;
+    if (ckArm !== id) { document.querySelectorAll('#tasks button.ck.arm').forEach(b => { b.classList.remove('arm'); b.textContent = '✓'; });
+      ckArm = id; c.classList.add('arm'); c.textContent = 'закрыть?'; $('ck-hint').textContent = 'Ещё раз ✓ — фраза уйдёт в буфер и откроется чат с ботом.'; return; }
+    ckArm = null; const ph = ckPhrase(c.dataset.ct, id);
+    try { navigator.clipboard && navigator.clipboard.writeText(ph).catch(() => {}); } catch (err) {}
+    try { window.dunnLinks.bot(ph); CLOSED[id] = 1; c.classList.remove('arm'); c.classList.add('sent'); c.textContent = '✓';
+      $('ck-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить. Закрою и отвечу.'; }
+    catch (err) { $('ck-hint').textContent = 'Не открылся чат. Фраза в буфере — вставь её боту сам.'; }
+    return; }
+  const x = e.target.closest('li[data-id]'); if (!x) return;
   try { window.dunnLinks.notion(x.dataset.id); } catch (err) { /* нет dunnLinks или id не тот — ничего не открываем */ } };
 
 // ── «+»: Данич заполняет форму, фраза уходит черновиком в чат с ботом, отправляет он сам.
