@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-04 12:10:30Z, sha 9aacd96392e9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-04 12:32:03Z, sha 7e3a30b1f209; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -122,7 +122,7 @@ header .addbtn:active{background:rgba(0,225,255,.15)}
 #money .big{font-size:26px;white-space:nowrap}
 .cat{margin:6px 0 2px}.cat .lbl span:first-child{color:var(--tx)}
 .cat .bar{height:6px;margin:3px 0 0;position:relative}
-.cat .bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--amb);border-radius:1px}
+.cat .lbl span:last-child{white-space:nowrap}.cat .bar.r{height:4px;margin:3px 0 1px;opacity:.85}.cat .bar.r i{background:var(--amb)}.cat .sub{font-size:11px}
 .dl2{font-size:12px;margin-left:6px}.up{color:var(--red)}.down{color:var(--ok)}
 .debt{margin:10px 0 0}.debt .bar{height:7px;margin:4px 0 2px}.debt .bar i{background:var(--ok)}
 li.go .s{margin-left:auto;font:600 13px ui-monospace,Menlo,monospace;color:var(--tx);white-space:nowrap}
@@ -780,18 +780,25 @@ function renderMoney() {
     <button data-step="-1" ${mdi === 0 ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
     <div class="strip">${ds.map((y, i) => `<button data-i="${i}" class="${i === mdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${y.sum ? esc(Math.round(y.sum) >= 1000 ? (y.sum / 1000).toFixed(1) + 'к' : Math.round(y.sum)) : '—'}<i class="${dcls(y)}"></i></button>`).join('')}</div>
     <ul style="margin-top:8px">${(x.items || []).length ? x.items.map(mItem).join('') : '<li><span class="sub">трат нет</span></li>'}</ul>`;
-  // категории
+  // категории: голубая полоса — этот месяц, жёлтая под ней — прошлый (за те же дни или целиком)
   const c = m.cats || {}, cur = c.cur || {}, ref = (mcv === 'same' ? c.prev_same : c.prev_full) || {};
   const keys = [...new Set([...Object.keys(cur), ...Object.keys(ref)])].sort((a, b) => (cur[b] || 0) - (cur[a] || 0) || (ref[b] || 0) - (ref[a] || 0)).slice(0, 10);
   const mx = Math.max(1, ...keys.map(k => Math.max(cur[k] || 0, ref[k] || 0)));
   const tot = o => Object.values(o).reduce((a, b) => a + b, 0);
-  $('mcats').innerHTML = `<h2>Категории · ${esc(monS(c.cur_label))}</h2>
-    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs ${esc(monS(c.prev_label))} на ${esc(c.same_day)}-е</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc(monS(c.prev_label))}</button></div>
-    <div class="lbl"><span>Итого <b>${rub(tot(cur))}</b></span><span>${mcv === 'same' ? 'тогда' : 'весь месяц'} <b>${rub(tot(ref))}</b></span></div>
-    ${keys.map(k => { const a = cur[k] || 0, r = ref[k] || 0, dlt = mcv === 'same' && r ? Math.round((a - r) / r * 100) : null;
-      return `<div class="cat"><div class="lbl"><span>${esc(k)}${dlt !== null && Math.abs(dlt) >= 10 ? `<span class="dl2 ${dlt > 0 ? 'up' : 'down'}">${dlt > 0 ? '+' : ''}${dlt}%</span>` : ''}</span><span><b>${rub(a)}</b> / ${rub(r)}</span></div>
-      <div class="bar"><i style="width:${a / mx * 100}%"></i><em style="left:${r / mx * 100}%"></em></div></div>`; }).join('')}
-    <div class="sub" style="margin-top:8px">жёлтая черта — прошлый месяц; платежи по долгам не входят</div>`;
+  const GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  const NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  const mi = ym => Number(String(ym || '').slice(5, 7)) - 1;
+  const curL = (NOM[mi(c.cur_label)] || '') + ' 1–' + c.same_day, refL = mcv === 'same' ? '1–' + c.same_day + ' ' + (GEN[mi(c.prev_label)] || '') : 'весь ' + (NOM[mi(c.prev_label)] || '').toLowerCase();
+  $('mcats').innerHTML = `<h2>Куда уходят деньги</h2>
+    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs 1–${esc(c.same_day)} ${esc(GEN[mi(c.prev_label)] || '')}</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc((NOM[mi(c.prev_label)] || '').toLowerCase())}</button></div>
+    <div class="mrow"><span><span style="color:var(--cy)">▬</span> ${esc(curL)}</span><b>${rub(tot(cur))}</b></div>
+    <div class="mrow"><span><span style="color:var(--amb)">▬</span> ${esc(refL)}</span><b>${rub(tot(ref))}</b></div>
+    ${keys.map(k => { const a = cur[k] || 0, r = ref[k] || 0;
+      const tag = mcv !== 'same' ? '' : !r && a ? '<span class="dl2 up">новое</span>' : r >= 500 && a ? (x => Math.abs(x) >= 15 ? `<span class="dl2 ${x > 0 ? 'up' : 'down'}">${x > 0 ? 'больше на ' : 'меньше на '}${Math.abs(x)}%</span>` : '')(Math.round((a - r) / r * 100)) : '';
+      return `<div class="cat"><div class="lbl"><span>${esc(k)}${tag}</span><span><b>${rub(a)}</b></span></div>
+      <div class="bar"><i style="width:${a / mx * 100}%"></i></div>
+      <div class="bar r"><i style="width:${r / mx * 100}%"></i></div><div class="sub">было ${rub(r)}</div></div>`; }).join('')}
+    <div class="sub" style="margin-top:8px">${mcv === 'same' ? 'сравниваю одинаковое число дней — так честно в начале месяца' : 'прошлый месяц целиком: видно, сколько ещё «влезет» по привычке'}. Платежи по кредитам сюда не входят — они во «Долгах»</div>`;
   // долги
   const db = m.debts || [], gl = db.reduce((a, d) => a + (d.goal || 0), 0), pdS = db.reduce((a, d) => a + (d.paid || 0), 0);
   const last = db.map(d => d.payoff).filter(Boolean).sort().pop();
