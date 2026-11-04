@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-04 12:32:03Z, sha 7e3a30b1f209; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-04 12:46:46Z, sha e48b29e39a96; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -788,9 +788,10 @@ function renderMoney() {
   const GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
   const NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
   const mi = ym => Number(String(ym || '').slice(5, 7)) - 1;
-  const curL = (NOM[mi(c.cur_label)] || '') + ' 1–' + c.same_day, refL = mcv === 'same' ? '1–' + c.same_day + ' ' + (GEN[mi(c.prev_label)] || '') : 'весь ' + (NOM[mi(c.prev_label)] || '').toLowerCase();
+  const curL = (NOM[mi(c.cur_label)] || '') + ', с 1 по ' + c.same_day + ' число', refL = mcv === 'same' ? (NOM[mi(c.prev_label)] || '') + ', с 1 по ' + c.same_day + ' число' : (NOM[mi(c.prev_label)] || '') + ' целиком';
   $('mcats').innerHTML = `<h2>Куда уходят деньги</h2>
-    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs 1–${esc(c.same_day)} ${esc(GEN[mi(c.prev_label)] || '')}</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc((NOM[mi(c.prev_label)] || '').toLowerCase())}</button></div>
+    <div class="sub" style="margin-bottom:6px">С чем сравнить ${esc((NOM[mi(c.cur_label)] || '').toLowerCase())}:</div>
+    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">те же дни ${esc(GEN[mi(c.prev_label)] || '')}</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">весь ${esc((NOM[mi(c.prev_label)] || '').toLowerCase())}</button></div>
     <div class="mrow"><span><span style="color:var(--cy)">▬</span> ${esc(curL)}</span><b>${rub(tot(cur))}</b></div>
     <div class="mrow"><span><span style="color:var(--amb)">▬</span> ${esc(refL)}</span><b>${rub(tot(ref))}</b></div>
     ${keys.map(k => { const a = cur[k] || 0, r = ref[k] || 0;
