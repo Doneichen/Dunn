@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-03 18:22:26Z, sha 84a0aaa03960; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-04 12:09:10Z, sha 60b41b638807; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -114,6 +114,20 @@ header .lockbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-
 header .lockbtn{margin-left:0}
 header .addbtn{all:unset;cursor:pointer;margin-left:auto;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--cy);color:var(--cy);display:grid;place-items:center;font:700 22px/1 ui-monospace,Menlo,monospace;box-shadow:0 0 10px rgba(0,225,255,.3);-webkit-tap-highlight-color:transparent}
 header .addbtn:active{background:rgba(0,225,255,.15)}
+/* Деньги v2 (04.11) */
+.mrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--mut);padding:5px 0;border-top:1px solid #0f2537}
+.mrow:first-child{border-top:0}.mrow b{color:var(--tx);font-weight:600;white-space:nowrap}
+.mres{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#07111b}
+.mres .big{font-size:24px}
+.cat{margin:6px 0 2px}.cat .lbl span:first-child{color:var(--tx)}
+.cat .bar{height:6px;margin:3px 0 0;position:relative}
+.cat .bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--amb);border-radius:1px}
+.dl2{font-size:12px;margin-left:6px}.up{color:var(--red)}.down{color:var(--ok)}
+.debt{margin:10px 0 0}.debt .bar{height:7px;margin:4px 0 2px}.debt .bar i{background:var(--ok)}
+li.go .s{margin-left:auto;font:600 13px ui-monospace,Menlo,monospace;color:var(--tx);white-space:nowrap}
+li .cn{display:block;font-size:11px;color:var(--mut)}
+.seg{display:flex;gap:6px;margin:0 0 8px}.seg button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:9px;border:1px solid var(--line);font:12px ui-monospace,Menlo,monospace;color:var(--mut)}
+.seg button.on{border-color:var(--cy);color:var(--cy)}
 /* кликабельные задачи → Notion */
 li.go{cursor:pointer;-webkit-tap-highlight-color:transparent}
 li.go:active{background:rgba(0,225,255,.06)}
@@ -269,7 +283,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tasks"></div></section>
-  <section class="tab" data-tab="money" hidden><div class="card" id="money"></div></section>
+  <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
 </div>
 
 <div id="add" hidden><div class="sheet">
@@ -459,11 +473,8 @@ function render(d) {
   GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || []};
   renderGym();
 
-  // ── Деньги
-  $('money').innerHTML = `<h2>Деньги</h2>
-    <div class="row"><div class="big ${m.balance < 0 ? 'bad' : ''}">${fmt(m.balance)}<small> ₽</small></div><div class="sub">до: ${esc(m.next_income || '—')}</div></div>
-    <div class="lbl"><span>Сегодня <b>${fmt(m.today)} ₽</b></span><span>Неделя <b>${fmt(m.week)} ₽</b></span></div>
-    <ul style="margin-top:8px">${m.debts.map(x => `<li><span class="${x.ok ? 'ok' : 'warn'}">${x.ok ? '✓' : '⏳'}</span><span>${esc(x.name)}</span><span class="due">${x.sum} ₽ · ${dm(x.due)}</span></li>`).join('')}</ul>`;
+  // ── Деньги (renderMoney ниже)
+  M = m; if (mdi >= ((m.days || []).length || 1)) mdi = 0; renderMoney();
 
   // ── Релизы (на обзоре, внизу)
   const r = d.releases, ri = x => `<li><span>${esc(x.ru)}</span><span class="due">${x.date ? dm(x.date) : esc(x.window)}</span></li>`;
@@ -729,6 +740,83 @@ $('fdays').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
   el.addEventListener('touchstart', e => { if (e.target.closest('.strip')) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive: true});
   el.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
     if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) pickDay(fdi + (dx > 0 ? 1 : -1)); }, {passive: true}); })();
+
+// ── Деньги: сводка, прогноз до зарплаты, история по дням, категории, долги, последние траты
+let M = null, mdi = 0, mcv = 'same';
+const rub = n => fmt(Math.round(n || 0)) + ' ₽';
+const daysTo = d => Math.round((new Date(d + 'T00:00:00Z') - new Date((D && D.date || '') + 'T00:00:00Z')) / 864e5);
+const inDays = n => n <= 0 ? 'сегодня' : n === 1 ? 'завтра' : 'через ' + n + ' дн';
+const mItem = x => { const go = /^[0-9a-f]{32}$/i.test(String(x.id || ''));
+  return `<li${go ? ` class="go" data-id="${esc(x.id)}"` : ''}><span>${esc(x.n || '—')}<span class="cn">${esc(x.cat || '')}${x.d ? ' · ' + esc(dm(x.d)) : ''}</span></span><span class="s">${rub(x.s)}${go ? '<span class="arr">↗</span>' : ''}</span></li>`; };
+function renderMoney() {
+  const m = M; if (!m) return;
+  const pc = m.pace || {}, fc = m.forecast || {}, pd = pc.per_day || 0;
+  const pctW = pc.week_allow ? Math.min(100, m.week / pc.week_allow * 100) : 0, pctD = pd ? Math.min(100, m.today / pd * 100) : 0;
+  $('money').innerHTML = `<h2>Деньги</h2>
+    <div class="row"><div class="big ${m.balance < 0 ? 'bad' : ''}">${fmt(m.balance)}<small> ₽</small></div><div class="sub">до: ${esc(m.next_income || '—')}${fc.income_date ? ' · ' + esc(inDays(daysTo(fc.income_date))) : ''}</div></div>
+    ${pd ? `<div class="lbl" style="margin-top:8px"><span>Сегодня <b class="${pc.today_over ? 'bad' : ''}">${rub(m.today)}</b></span><span>ориентир ${rub(pd)}/день</span></div>
+    <div class="bar"><i class="${pc.today_over ? 'over' : ''}" style="width:${pctD}%"></i></div>
+    <div class="lbl"><span>Неделя <b class="${pc.week_over ? 'bad' : ''}">${rub(m.week)}</b></span><span>норма к сегодня ${rub(pc.week_allow)}</span></div>
+    <div class="bar"><i class="${pc.week_over ? 'over' : ''}" style="width:${pctW}%"></i></div>
+    ${pc.today_over || pc.week_over ? `<div class="sub bad">⚠ выбиваешься из темпа${pc.week_over ? ': неделя +' + rub(m.week - pc.week_allow) : ''}</div>` : '<div class="sub ok">в темпе ✓</div>'}`
+    : `<div class="lbl"><span>Сегодня <b>${rub(m.today)}</b></span><span>Неделя <b>${rub(m.week)}</b></span></div>`}
+    <div class="wline">Кафе и фастфуд: неделя <b>${rub(pc.cafe_week)}</b> · месяц <b>${rub(pc.cafe_month)}</b></div>
+    <div class="sub" style="margin-top:6px">ориентир = (баланс + зарплата − платежи) ÷ 30 дней</div>`;
+  // прогноз
+  $('mfc').hidden = !fc.income_date;
+  if (fc.income_date) $('mfc').innerHTML = `<h2>Прогноз до ${esc(dm(fc.horizon))}</h2>
+    <div class="mrow"><span>Сейчас на счёте</span><b class="${m.balance < 0 ? 'bad' : ''}">${rub(m.balance)}</b></div>
+    <div class="mrow"><span>+ зарплата ${esc(dm(fc.income_date))} · ${esc(inDays(daysTo(fc.income_date)))}</span><b class="ok">+${rub(fc.income)}</b></div>
+    ${(fc.pays || []).map(x => `<div class="mrow"><span>− ${esc(x.name)} · ${esc(dm(x.d))} · ${esc(inDays(daysTo(x.d)))}</span><b>−${rub(x.sum)}</b></div>`).join('')}
+    <div class="mres"><span class="sub">останется на жизнь</span><span class="big ${fc.after < 0 ? 'bad' : ''}">${rub(fc.after)}</span></div>
+    <div class="sub" style="margin-top:6px">≈ ${rub(fc.per_day)} в день · каждая трата до зарплаты уменьшает эту сумму</div>`;
+  // история по дням
+  const ds = m.days || [], x = ds[mdi] || {d: D.date, sum: 0, items: []};
+  const dcls = y => !y.sum ? '' : pd && y.fl > pd ? 'over' : 'ok';
+  $('mdays').innerHTML = `<h2>Траты по дням</h2><div class="dnav"><button data-step="1" ${mdi >= ds.length - 1 ? 'disabled' : ''} aria-label="день назад">‹</button>
+    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${mdi === 0 ? ' · сегодня' : ''}<small>${rub(x.sum)}${x.fl !== x.sum ? ' · плавающие ' + rub(x.fl) : ''}</small></div>
+    <button data-step="-1" ${mdi === 0 ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
+    <div class="strip">${ds.map((y, i) => `<button data-i="${i}" class="${i === mdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${y.sum ? esc(Math.round(y.sum) >= 1000 ? (y.sum / 1000).toFixed(1) + 'к' : Math.round(y.sum)) : '—'}<i class="${dcls(y)}"></i></button>`).join('')}</div>
+    <ul style="margin-top:8px">${(x.items || []).length ? x.items.map(mItem).join('') : '<li><span class="sub">трат нет</span></li>'}</ul>`;
+  // категории
+  const c = m.cats || {}, cur = c.cur || {}, ref = (mcv === 'same' ? c.prev_same : c.prev_full) || {};
+  const keys = [...new Set([...Object.keys(cur), ...Object.keys(ref)])].sort((a, b) => (cur[b] || 0) - (cur[a] || 0) || (ref[b] || 0) - (ref[a] || 0)).slice(0, 10);
+  const mx = Math.max(1, ...keys.map(k => Math.max(cur[k] || 0, ref[k] || 0)));
+  const tot = o => Object.values(o).reduce((a, b) => a + b, 0);
+  $('mcats').innerHTML = `<h2>Категории · ${esc(c.cur_label || '')}</h2>
+    <div class="seg"><button data-cv="same" class="${mcv === 'same' ? 'on' : ''}">vs ${esc((c.prev_label || '').slice(5))} на ${esc(c.same_day)}-е</button><button data-cv="full" class="${mcv === 'full' ? 'on' : ''}">vs весь ${esc((c.prev_label || '').slice(5))}</button></div>
+    <div class="lbl"><span>Итого <b>${rub(tot(cur))}</b></span><span>${mcv === 'same' ? 'тогда' : 'весь месяц'} <b>${rub(tot(ref))}</b></span></div>
+    ${keys.map(k => { const a = cur[k] || 0, r = ref[k] || 0, dlt = mcv === 'same' && r ? Math.round((a - r) / r * 100) : null;
+      return `<div class="cat"><div class="lbl"><span>${esc(k)}${dlt !== null && Math.abs(dlt) >= 10 ? `<span class="dl2 ${dlt > 0 ? 'up' : 'down'}">${dlt > 0 ? '+' : ''}${dlt}%</span>` : ''}</span><span><b>${rub(a)}</b> / ${rub(r)}</span></div>
+      <div class="bar"><i style="width:${a / mx * 100}%"></i><em style="left:${r / mx * 100}%"></em></div></div>`; }).join('')}
+    <div class="sub" style="margin-top:8px">жёлтая черта — прошлый месяц; платежи по долгам не входят</div>`;
+  // долги
+  const db = m.debts || [], gl = db.reduce((a, d) => a + (d.goal || 0), 0), pdS = db.reduce((a, d) => a + (d.paid || 0), 0);
+  const last = db.map(d => d.payoff).filter(Boolean).sort().pop();
+  $('mdebts').innerHTML = `<h2>Долги</h2>
+    <div class="row"><div class="big">${rub(gl - pdS).replace(' ₽', '')}<small> ₽ осталось</small></div><div class="sub">${gl ? Math.round(pdS / gl * 100) : 0}% выплачено</div></div>
+    <div class="bar"><i style="width:${gl ? pdS / gl * 100 : 0}%;background:var(--ok)"></i></div>
+    ${last ? `<div class="sub">на минималках свободен к ${esc(dm(last))}.${esc(last.slice(2, 4))}</div>` : ''}
+    ${db.map(d => `<div class="debt"><div class="lbl"><span><span class="${d.ok ? 'ok' : 'warn'}">${d.ok ? '✓' : '⏳'}</span> <b>${esc(d.name)}</b></span><span>${rub(d.sum)} · ${esc(dm(d.due))}</span></div>
+      <div class="bar"><i style="width:${d.goal ? Math.min(100, d.paid / d.goal * 100) : 0}%"></i></div>
+      <div class="lbl"><span>${rub(d.paid)} из ${rub(d.goal)}</span><span>${d.payoff ? 'до ' + esc(dm(d.payoff)) + '.' + esc(d.payoff.slice(2, 4)) + ' · ' + d.months + ' пл.' : ''}</span></div></div>`).join('')}`;
+  // последние траты
+  $('mlast').innerHTML = `<h2>Последние траты</h2><ul>${(m.last || []).map(mItem).join('') || '<li><span class="sub">пусто</span></li>'}</ul>
+    <div class="sub" style="margin-top:6px">тап — открыть запись в Notion и поправить</div>`;
+}
+function pickMDay(i) {
+  if (!M || i < 0 || i >= (M.days || []).length || i === mdi) return;
+  mdi = i; renderMoney();
+  try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {}
+  const on = document.querySelector('#mdays .strip button.on'); on && on.scrollIntoView({block: 'nearest', inline: 'center'});
+}
+$('mdays').onclick = e => { const l = e.target.closest('li[data-id]');
+  if (l) { try { window.dunnLinks.notion(l.dataset.id); } catch (err) {} return; }
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.step) pickMDay(mdi + Number(b.dataset.step)); else if (b.dataset.i) pickMDay(Number(b.dataset.i)); };
+$('mlast').onclick = e => { const l = e.target.closest('li[data-id]'); if (!l) return;
+  try { window.dunnLinks.notion(l.dataset.id); } catch (err) {} };
+$('mcats').onclick = e => { const b = e.target.closest('button[data-cv]'); if (!b) return; mcv = b.dataset.cv; renderMoney(); };
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
 const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
