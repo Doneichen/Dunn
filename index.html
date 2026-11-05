@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-04 17:46:50Z, sha cdd18306faf7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-05 13:06:24Z, sha 865ecea04a63; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -403,14 +403,16 @@ function streakCard(s, fd) {
   if (!s || !s.days) return '';
   const wdn = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const cells = wdn.map((n, i) => { const x = s.days[i];
-    return x ? `<div class="${x.st}">${n}<b>${x.st === 'none' ? '—' : x.kcal}</b></div>` : `<div>${n}<b>·</b></div>`; }).join('');
+    return x ? `<div class="${x.st}">${n}<b>${x.st === 'none' ? '—' : x.kcal}${x.fix ? '↺' : x.tol ? '≈' : ''}</b></div>` : `<div>${n}<b>·</b></div>`; }).join('');
   const td = s.days[s.days.length - 1] || {}, L = s.today_left;
   const st = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} ккал — серия с нуля, завтра день 1</span>`
+    : L < 0 ? `<span class="ok">сегодня +${-L} ккал, но в допуске ${s.tol || 0} → станет ${s.cur + 1}</span>`
     : `<span class="ok">сегодня пока в норме: осталось ${L} ккал → станет ${s.cur + 1}</span>`;
   // прошлые недели: рекорд по тем же правилам, считается из food_days (30 дней)
   const wk = {}, mon = d => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - (t.getUTCDay() + 6) % 7); return t.toISOString().slice(0, 10); };
   [...fd].reverse().forEach(x => { const m = mon(x.d); if (m >= s.week_start) return; (wk[m] = wk[m] || []).push(x); });
-  const hist = Object.keys(wk).sort().reverse().slice(0, 4).map(m => { let c = 0, b = 0;
+  const hist = s.hist ? s.hist.map(h => `<span>${dm(h.week_start)} <b>${h.best}</b>${h.fixed ? '↺' : ''}</span>`).join('')
+  : Object.keys(wk).sort().reverse().slice(0, 4).map(m => { let c = 0, b = 0;
     wk[m].forEach(x => { const k = x.food ? x.food.kcal : 0; c = k && k <= x.target.kcal ? c + 1 : 0; b = Math.max(b, c); });
     return `<span>${dm(m)} <b>${b}</b></span>`; }).join('');
   return `<h2>🔥 Ударный режим</h2>
@@ -418,7 +420,7 @@ function streakCard(s, fd) {
     <div class="sbig">${cells}</div>
     <div class="s" style="margin-top:8px;font-size:13px">${st}</div>
     ${hist ? `<div class="sub" style="margin-top:10px">рекорды прошлых недель (с пн)</div><div class="shist">${hist}</div>` : ''}
-    <div class="sub" style="margin-top:8px">засчитан день ≤ цели ккал (с шагами); перебор или пустой день — с нуля; каждый пн заново</div>`;
+    <div class="sub" style="margin-top:8px">засчитан день ≤ цели ккал (с шагами) + ${s.tol || 0} допуска (≈); перебор больше или пустой день — с нуля; в конце недели, если за неделю съедено ≤ суммы целей, переборы прощаются (↺); каждый пн заново${s.week_plan ? ` · неделя пока ${s.week_eaten} / ${s.week_plan}` : ''}</div>`;
 }
 
 function streakTile(s) {
@@ -428,7 +430,7 @@ function streakTile(s) {
   const dots = wd.map((n, i) => { const x = st[i]; return `<span class="${x ? x.st : ''}" title="${x ? x.kcal + ' / ' + x.target : ''}"><i></i>${n}</span>`; }).join('');
   const td = s.days[s.days.length - 1] || {}, L = s.today_left;
   const sub = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} — серия с нуля</span>`
-    : `сегодня в норме: осталось ${L} → станет ${s.cur + 1}`;
+    : L < 0 ? `сегодня +${-L}, в допуске → станет ${s.cur + 1}` : `сегодня в норме: осталось ${L} → станет ${s.cur + 1}`;
   return `<div class="tile wide" data-go="food"><div class="k">🔥 Ударный режим</div><div class="v">${s.cur}<small> дн подряд · рекорд недели ${s.best}</small></div><div class="s">${sub}</div><div class="sdots">${dots}</div></div>`;
 }
 
