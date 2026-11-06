@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-06 15:14:34Z, sha c3101e2989c6; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-06 15:16:34Z, sha 8908ba69ef4f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -212,6 +212,9 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .seg button{all:unset;cursor:pointer;text-align:center;padding:8px 0;border-radius:9px;font:600 13px ui-monospace,Menlo,monospace;color:var(--mut);-webkit-tap-highlight-color:transparent}
 .seg button.on{background:rgba(0,225,255,.12);color:var(--cy)}
 #workouts .seg{grid-template-columns:repeat(4,1fr)}#workouts .seg button{font-size:12px}
+.kbt{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;padding-bottom:2px;scrollbar-width:none}.kbt::-webkit-scrollbar{display:none}
+.kbt button{all:unset;cursor:pointer;flex:none;padding:6px 12px;border-radius:16px;border:1px solid var(--line);color:var(--mut);font-size:13px;-webkit-tap-highlight-color:transparent}
+.kbt button.on{border-color:var(--cy);color:var(--cy);background:rgba(0,225,255,.08)}
 .kb{border-top:1px solid #0f2537;padding:10px 0 4px}.kb:first-child{border-top:0}.kb h3{margin:0 0 6px;font-size:14px}
 .bscale{position:relative;margin-top:8px;padding-bottom:16px}.bi{margin:8px 0}.bh{display:flex;gap:8px;align-items:center;font-size:13.5px}.bh b{margin-left:auto;white-space:nowrap}
 .bc{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;border-radius:6px;color:#05080e;font:700 12px ui-monospace,Menlo,monospace}
@@ -765,12 +768,17 @@ function gymText(f) {
   return lines.join('\n');
 }
 // база знаний (data.training.kb из /data/training/kb.json): резинки со шкалой кг + текстовые разделы
+let kbv = store.get('dunn_kbv') || 'bands';
 function gymKb() {
   const K = GD.kb;
   if (!K) return '<div class="sub">База пока пустая — напиши Дану «в базу: …»</div>';
-  let h = '';
-  const B = K.bands;
-  if (B && B.items) {
+  // подвкладки: «Резинки» + по одной на каждый раздел kb.json (имя кнопки — sc.tab или первое слово заголовка)
+  const B = K.bands, SC = K.sections || [], tabs = [];
+  if (B && B.items) tabs.push(['bands', B.tab || 'Резинки']);
+  SC.forEach((sc, i) => tabs.push(['s' + i, sc.tab || String(sc.title || '').split(/[\s,]+/)[0] || 'Раздел']));
+  if (!tabs.some(t => t[0] === kbv)) kbv = tabs.length ? tabs[0][0] : 'bands';
+  let h = tabs.length > 1 ? `<div class="kbt">${tabs.map(t => `<button data-kbv="${t[0]}" class="${t[0] === kbv ? 'on' : ''}">${esc(t[1])}</button>`).join('')}</div>` : '';
+  if (kbv === 'bands' && B && B.items) {
     const mx = B.scale_max || Math.max(...B.items.map(x => x.kg ? x.kg[1] : 0), 10);
     const ticks = [0, 10, 20, 30, 40, 50, 60].filter(t => t <= mx);
     h += `<div class="kb"><h3>${esc(B.title || 'Резинки')}</h3>${B.order ? `<div class="sub">по тяжести: <b style="color:var(--tx)">${esc(B.order)}</b></div>` : ''}
@@ -783,7 +791,7 @@ function gymKb() {
       ${B.pending ? `<div class="sub" style="color:var(--amb);margin-top:4px">⏳ ${esc(B.pending)}</div>` : ''}
       ${(B.rules || []).length ? `<ul class="kbl">${B.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>`;
   }
-  (K.sections || []).forEach(sc => { h += `<div class="kb"><h3>${esc(sc.title)}</h3><ul class="kbl">${(sc.items || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`; });
+  SC.forEach((sc, i) => { if (kbv !== 's' + i) return; h += `<div class="kb"><h3>${esc(sc.title)}</h3><ul class="kbl">${(sc.items || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`; });
   return h + '<div class="sub" style="margin-top:10px">Дописать или поправить — напиши Дану «в базу: …»</div>';
 }
 function renderGym() {
@@ -814,6 +822,7 @@ $('workouts').addEventListener('change', e => {
 $('workouts').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.gv) { gv = b.dataset.gv; store.set('dunn_gv', gv); renderGym(); hap(); return; }
+  if (b.dataset.kbv) { kbv = b.dataset.kbv; store.set('dunn_kbv', kbv); renderGym(); hap(); return; }
   if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
   if (b.dataset.d) { gSel = b.dataset.d; renderGym(); hap(); return; }
   if (b.dataset.note) { const f = saveDraftFromDom(); f.ex[Number(b.dataset.note)].showNote = true; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); const el = document.querySelector(`.fex[data-i="${b.dataset.note}"] input.note`); el && el.focus(); return; }
