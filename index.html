@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-06 12:48:58Z, sha cba07e091960; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-06 15:14:34Z, sha c3101e2989c6; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -297,7 +297,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
-  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="steps"></div></section>
+  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
@@ -307,7 +307,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
   <button class="x" id="add-x" aria-label="закрыть">×</button>
   <h2 style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.15em;color:var(--cyd);margin:2px 0 0;text-transform:uppercase">Записать Дану</h2>
   <div class="chips" id="add-kind">
-    <button data-k="w">Вес</button><button data-k="s">Шаги</button><button data-k="f">Еда</button><button data-k="m">Трата</button><button data-k="g">Тренировка</button><button data-k="i">В Inbox</button>
+    <button data-k="w">Вес</button><button data-k="z">Замеры</button><button data-k="s">Шаги</button><button data-k="f">Еда</button><button data-k="m">Трата</button><button data-k="g">Тренировка</button><button data-k="i">В Inbox</button>
   </div>
   <div id="add-f"></div>
   <button class="send" id="add-go">Скопировать и открыть чат</button>
@@ -317,7 +317,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 <nav id="nav" hidden>
   <button data-tab="home"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="9" rx="2"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2"/><rect x="3" y="15" width="7.5" height="6" rx="2"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2"/></svg>Обзор</button>
   <button data-tab="food"><svg viewBox="0 0 24 24"><path d="M7 3v8M4.5 3v5a2.5 2.5 0 0 0 5 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 4-3.5 7.5V13H17"/></svg>Еда</button>
-  <button data-tab="body"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>Вес</button>
+  <button data-tab="body"><svg viewBox="0 0 24 24"><path d="M3 17l5-5 4 3 8-8"/><path d="M15 7h5v5"/></svg>Тело</button>
   <button data-tab="gym"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>Трени</button>
   <button data-tab="tasks"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/></svg>Задачи</button>
   <button data-tab="money"><svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="13" rx="2.5"/><path d="M2.5 10h19M6.5 15h3"/></svg>Деньги</button>
@@ -476,7 +476,7 @@ function render(d) {
 
   // ── Вес
   WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
-  renderWeight(); renderSteps();
+  MEAS = Array.isArray(d.meas) ? d.meas : []; renderWeight(); renderMeas(); renderSteps();
 
   // ── Задачи
   TK = k; renderTasks();
@@ -598,6 +598,33 @@ function renderWeight() {
     ${chart(w, wsel)}
     <div class="sub" id="wnote"></div>
     ${df ? `<div class="lbl" style="margin-top:8px"><span>Неделя с ${dm(df.from)}</span><span class="${df.kcal < 0 ? 'bad' : 'ok'}"><b>${df.kcal > 0 ? 'дефицит ' : 'профицит '}${Math.abs(df.kcal)} ккал</b> · ${Math.abs(df.kg)} кг</span></div>` : ''}`;
+}
+// ── Замеры: талия в самом узком месте и на уровне пупка (см), из /data/body/measurements.json
+let MEAS = [];
+const MK = [{k: 'waist_min', n: 'Самое узкое', c: '#00e1ff'}, {k: 'waist_navel', n: 'На уровне пупка', c: '#ffbe3c'}];
+function measChart(pts) {
+  const W = 520, H = 170, P = 30, vs = pts.flatMap(p => MK.map(m => p[m.k]).filter(v => v != null));
+  const lo = Math.floor(Math.min(...vs) - 1), hi = Math.ceil(Math.max(...vs) + 1), st = hi - lo > 12 ? 5 : (hi - lo > 6 ? 2 : 1);
+  const t0 = Date.parse(pts[0].d), t1 = Date.parse(pts[pts.length - 1].d);
+  const x = d => P + (Date.parse(d) - t0) / (t1 - t0 || 1) * (W - P - 8), y = v => 8 + (hi - v) / (hi - lo || 1) * (H - 30);
+  let g = '';
+  for (let k = Math.ceil(lo / st) * st; k <= hi; k += st) g += `<line x1="${P}" x2="${W}" y1="${y(k)}" y2="${y(k)}" stroke="#12324a"/><text x="0" y="${y(k) + 4}" fill="#6f93a6" font-size="11">${k}</text>`;
+  const ln = MK.map(m => { const q = pts.filter(p => p[m.k] != null); if (!q.length) return '';
+    return `<path d="${q.map((p, i) => (i ? 'L' : 'M') + x(p.d).toFixed(1) + ' ' + y(p[m.k]).toFixed(1)).join(' ')}" fill="none" stroke="${m.c}" stroke-width="2.5"/>`
+      + q.map(p => `<circle cx="${x(p.d).toFixed(1)}" cy="${y(p[m.k]).toFixed(1)}" r="3" fill="${m.c}"/>`).join(''); }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}">${g}${ln}<text x="${P}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[0].d)}</text><text x="${W - 40}" y="${H - 4}" fill="#6f93a6" font-size="11">${dm(pts[pts.length - 1].d)}</text></svg>`;
+}
+function renderMeas() {
+  const m = MEAS.filter(p => p && /^\d{4}-\d\d-\d\d$/.test(p.d)).sort((a, b) => a.d < b.d ? -1 : 1);
+  const how = '<div class="sub" style="margin-top:6px">Мерить утром натощак, на выдохе, лента горизонтально и без натяга. Записать: ＋ → «Замеры».</div>';
+  if (!m.length) { $('meas').innerHTML = `<h2>Замеры · талия</h2><div class="sub">Пока пусто. Два числа, см: в самом узком месте и на уровне пупка.</div>${how}`; return; }
+  const sg = v => v == null ? '' : `<span class="${v > 0 ? 'warn' : 'ok'}">${v > 0 ? '+' : ''}${Math.round(v * 10) / 10}</span>`;
+  const rows = MK.map(k => { const q = m.filter(p => p[k.k] != null); if (!q.length) return '';
+    const L = q[q.length - 1], pv = q[q.length - 2], f = q[0];
+    return `<div class="selrow"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${k.c};margin-right:6px"></i>${k.n}</span><span><b>${L[k.k]}</b> см</span></div>${pv ? `<div class="sub" style="text-align:right;margin:-2px 0 6px">${sg(L[k.k] - pv[k.k])} к ${esc(dm(pv.d))}${q.length > 2 ? ` · ${sg(L[k.k] - f[k.k])} с ${esc(dm(f.d))}` : ''}</div>` : ''}`; }).join('');
+  const last = m.slice(-6).reverse().map(p => `<div class="lbl"><span>${esc(wd(p.d))}, ${esc(dm(p.d))}</span><span>${p.waist_min ?? '—'} / ${p.waist_navel ?? '—'} см</span></div>`).join('');
+  $('meas').innerHTML = `<h2>Замеры · талия</h2>${rows}${m.length > 1 ? measChart(m) : ''}
+    <details style="margin-top:6px"><summary class="sub">Последние замеры (узкое / пупок)</summary>${last}</details>${how}`;
 }
 function stepsChart(days, sel) {
   // days: старые слева → новые справа; столбик = шаги, чёрточка = база дня
@@ -954,6 +981,8 @@ $('tasks').onclick = e => { const c = e.target.closest('button.ck');
 // В фразу идёт только то, что он ввёл; данные витрины туда не попадают.
 const ADD = {
   w: {f: '<input id="a1" inputmode="decimal" placeholder="вес, кг (83.2)">', mk: () => num('a1') && 'Вес ' + num('a1')},
+  z: {f: '<input id="a1" inputmode="decimal" placeholder="талия в самом узком месте, см"><input id="a2" inputmode="decimal" placeholder="талия на уровне пупка, см">',
+     mk: () => (num('a1') || num('a2')) && 'Замеры: ' + [num('a1') && 'узкое ' + num('a1'), num('a2') && 'пупок ' + num('a2')].filter(Boolean).join(', ')},
   s: {f: '<input id="a1" inputmode="numeric" placeholder="шаги за день">', mk: () => num('a1') && 'Шаги ' + num('a1')},
   f: {f: '<textarea id="a1" placeholder="что съел, сколько (или опиши фото, его кинешь в чат)"></textarea>', mk: () => txt('a1') && 'Съел: ' + txt('a1')},
   m: {f: '<input id="a1" inputmode="decimal" placeholder="сумма, ₽"><input id="a2" placeholder="на что (Пятёрочка, такси…)">', mk: () => num('a1') && (txt('a2') ? txt('a2') + ' ' : '') + '-' + num('a1')},
@@ -974,7 +1003,7 @@ $('add').onclick = e => { if (e.target.id === 'add') $('add').hidden = true; };
 $('add-kind').onclick = e => { const b = e.target.closest('button'); if (b) addPick(b.dataset.k); };
 $('add-go').onclick = () => {
   const phrase = ADD[addKind].mk();
-  if (!phrase) { $('add-hint').textContent = addKind === 'w' || addKind === 's' || addKind === 'm' ? 'Нужно число.' : 'Пусто.'; return; }
+  if (!phrase) { $('add-hint').textContent = addKind === 'w' || addKind === 's' || addKind === 'm' || addKind === 'z' ? 'Нужно число.' : 'Пусто.'; return; }
   // черновик ?text= боту Telegram не подставляет (проверено 03.11 на телефоне Данича) — работает буфер обмена
   try { navigator.clipboard && navigator.clipboard.writeText(phrase).catch(() => {}); } catch (e) {}
   try { window.dunnLinks.bot(phrase); $('add-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить.'; }
