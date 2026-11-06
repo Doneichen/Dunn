@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-06 09:55:23Z, sha a61942f25e3e; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-06 12:48:58Z, sha cba07e091960; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -211,6 +211,14 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#07111b;border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
 .seg button{all:unset;cursor:pointer;text-align:center;padding:8px 0;border-radius:9px;font:600 13px ui-monospace,Menlo,monospace;color:var(--mut);-webkit-tap-highlight-color:transparent}
 .seg button.on{background:rgba(0,225,255,.12);color:var(--cy)}
+#workouts .seg{grid-template-columns:repeat(4,1fr)}#workouts .seg button{font-size:12px}
+.kb{border-top:1px solid #0f2537;padding:10px 0 4px}.kb:first-child{border-top:0}.kb h3{margin:0 0 6px;font-size:14px}
+.bscale{position:relative;margin-top:8px;padding-bottom:16px}.bi{margin:8px 0}.bh{display:flex;gap:8px;align-items:center;font-size:13.5px}.bh b{margin-left:auto;white-space:nowrap}
+.bc{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;border-radius:6px;color:#05080e;font:700 12px ui-monospace,Menlo,monospace}
+.btr{position:relative;height:8px;border-radius:4px;background:#0a1a28;margin:5px 0 2px}.btr i{position:absolute;top:0;bottom:0;border-radius:4px}
+.btk{position:absolute;left:0;right:0;bottom:0;height:14px}.btk span{position:absolute;transform:translateX(-50%);font-size:10px;color:var(--mut)}.btk span:first-child{transform:none}.btk span:last-child{transform:translateX(-100%)}
+.kbl{margin:6px 0 0;padding-left:18px;list-style:disc}.kbl li{display:list-item;padding:3px 0;font-size:13.5px;line-height:1.4;border:0}
+
 .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .mhead b{font:600 15px ui-monospace,Menlo,monospace}
 .mhead button{all:unset;cursor:pointer;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);color:var(--cy);display:grid;place-items:center;font:700 18px ui-monospace,Menlo,monospace}
@@ -474,7 +482,7 @@ function render(d) {
   TK = k; renderTasks();
 
   // ── Тренировки: дневник
-  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || []};
+  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || [], kb: (d.training && d.training.kb) || null};
   renderGym();
 
   // ── Деньги (renderMoney ниже)
@@ -729,12 +737,34 @@ function gymText(f) {
   if (f.note) lines.push(`Заметка: ${f.note}`);
   return lines.join('\n');
 }
+// база знаний (data.training.kb из /data/training/kb.json): резинки со шкалой кг + текстовые разделы
+function gymKb() {
+  const K = GD.kb;
+  if (!K) return '<div class="sub">База пока пустая — напиши Дану «в базу: …»</div>';
+  let h = '';
+  const B = K.bands;
+  if (B && B.items) {
+    const mx = B.scale_max || Math.max(...B.items.map(x => x.kg ? x.kg[1] : 0), 10);
+    const ticks = [0, 10, 20, 30, 40, 50, 60].filter(t => t <= mx);
+    h += `<div class="kb"><h3>${esc(B.title || 'Резинки')}</h3>${B.order ? `<div class="sub">по тяжести: <b style="color:var(--tx)">${esc(B.order)}</b></div>` : ''}
+      <div class="bscale">${B.items.map(x => { const [a, b] = x.kg || [0, 0];
+        return `<div class="bi"><div class="bh"><span class="bc" style="background:${esc(x.hex || '#888')}">${esc(x.code)}</span><span>${esc(x.name || '')}</span><b>${a}–${b} кг${x.approx ? '*' : ''}</b></div>
+        <div class="btr"><i style="left:${(a / mx * 100).toFixed(1)}%;width:${((b - a) / mx * 100).toFixed(1)}%;background:${esc(x.hex || '#888')}${x.approx ? ';opacity:.55' : ''}"></i></div>
+        <div class="sub">${[x.width, x.note].filter(Boolean).map(esc).join(' · ')}</div></div>`; }).join('')}
+      <div class="btk">${ticks.map(t => `<span style="left:${(t / mx * 100).toFixed(1)}%">${t}</span>`).join('')}</div></div>
+      ${B.items.some(x => x.approx) ? '<div class="sub">* оценка, бирки нет</div>' : ''}
+      ${B.pending ? `<div class="sub" style="color:var(--amb);margin-top:4px">⏳ ${esc(B.pending)}</div>` : ''}
+      ${(B.rules || []).length ? `<ul class="kbl">${B.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul>` : ''}</div>`;
+  }
+  (K.sections || []).forEach(sc => { h += `<div class="kb"><h3>${esc(sc.title)}</h3><ul class="kbl">${(sc.items || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`; });
+  return h + '<div class="sub" style="margin-top:10px">Дописать или поправить — напиши Дану «в базу: …»</div>';
+}
 function renderGym() {
   if (!GD) return;
   const dr = gDraft();  // отправленный черновик сбрасывается сам, когда тренировка этого дня появилась в данных
   if (dr && dr.saved && GD.log.some(x => x.d === dr.date)) store.del('dunn_wdraft');
-  const body = gv === 'prog' ? gymProg() : gv === 'new' ? gymNew() : gymCal();
-  $('workouts').innerHTML = `<h2>Дневник тренировок</h2><div class="seg"><button data-gv="cal" class="${gv === 'cal' ? 'on' : ''}">Календарь</button><button data-gv="prog" class="${gv === 'prog' ? 'on' : ''}">Прогресс</button><button data-gv="new" class="${gv === 'new' ? 'on' : ''}">＋ Новая</button></div>${body}`;
+  const body = gv === 'prog' ? gymProg() : gv === 'new' ? gymNew() : gv === 'kb' ? gymKb() : gymCal();
+  $('workouts').innerHTML = `<h2>Дневник тренировок</h2><div class="seg"><button data-gv="cal" class="${gv === 'cal' ? 'on' : ''}">Календарь</button><button data-gv="prog" class="${gv === 'prog' ? 'on' : ''}">Прогресс</button><button data-gv="new" class="${gv === 'new' ? 'on' : ''}">＋ Новая</button><button data-gv="kb" class="${gv === 'kb' ? 'on' : ''}">База</button></div>${body}`;
 }
 function saveDraftFromDom() {
   const f = gDraft(); if (!f) return null;
