@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-06 18:19:06Z, sha ed4addeb63ab; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-06 18:25:37Z, sha a44d9aed0dd3; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -243,6 +243,17 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .ses .ex .nt{font-size:12.5px;color:var(--amb);margin-top:2px}
 .fsel,.finp{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px}
 .fex{border-top:1px solid #0f2537;padding:10px 0}
+.wcard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0;background:rgba(0,225,255,.03)}
+.wcard .wh{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;margin-bottom:4px}
+.wcard .wh small{font:12px ui-monospace,Menlo,monospace;color:var(--mut);font-weight:400}
+.wcard .wh small.ok{color:var(--ok,#3ee08f)}
+.wu{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #0f2537}.wu:first-of-type{border-top:0}
+.wck{all:unset;cursor:pointer;flex:none;width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:15px;color:#061018;-webkit-tap-highlight-color:transparent}
+.wck.on{background:var(--cy);border-color:var(--cy)}
+.wu details{flex:1;min-width:0}.wu summary{cursor:pointer;line-height:26px;list-style:none}.wu summary::-webkit-details-marker{display:none}
+.wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
+.wu .wd{color:var(--mut);font-size:13.5px;line-height:1.45;margin:4px 0 2px;white-space:pre-line}
+.wu.done summary{color:var(--mut);text-decoration:line-through}
 .fex .n{font-weight:600;display:flex;justify-content:space-between;gap:8px}
 .fex .n small{color:var(--mut);font:12px ui-monospace,Menlo,monospace;font-weight:400}
 .fex .g{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr;gap:6px;margin-top:6px}
@@ -488,7 +499,7 @@ function render(d) {
   TK = k; renderTasks();
 
   // ── Тренировки: дневник
-  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || [], kb: (d.training && d.training.kb) || null};
+  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || [], kb: (d.training && d.training.kb) || null, warm: (d.training && d.training.warm) || null};
   renderGym();
 
   // ── Деньги (renderMoney ниже)
@@ -737,8 +748,19 @@ function gymProg() {
 const gDraft = () => { try { return JSON.parse(store.get('dunn_wdraft') || 'null'); } catch (e) { return null; } };
 function newDraft(tplName) {
   const t = GD.tpl.find(x => x.name === tplName) || GD.tpl[0];
-  return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '',
+  return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '', wu: {},
           ex: (t ? t.exercises : []).map(e => { const l = lastOf(e.name); return {name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''}; })};
+}
+// 🔥 разминка / 🧊 заминка: чек-листы из /data/training/warmup.json (одинаковые для всех шаблонов), тап по названию — описание
+function wuCount(f, key) { const L = (GD.warm && GD.warm[key]) || []; return [L.filter(x => f.wu && f.wu[x.id]).length, L.length]; }
+function wuCard(f, key, title) {
+  const W = GD.warm, L = (W && W[key]) || []; if (!L.length) return '';
+  const [n, all] = wuCount(f, key);
+  return `<div class="wcard"><div class="wh"><span>${title}</span><small class="${n === all ? 'ok' : ''}">${n}/${all}</small></div>
+    ${key === 'cooldown' && W.cooldown_intro ? `<div class="sub" style="margin:0 0 4px">${esc(W.cooldown_intro)}</div>` : ''}
+    ${L.map(x => { const on = !!(f.wu && f.wu[x.id]); return `<div class="wu${on ? ' done' : ''}"><button class="wck${on ? ' on' : ''}" data-wu="${esc(x.id)}" aria-label="отметить">${on ? '✓' : ''}</button>
+      <details><summary>${esc(x.name)}</summary><div class="wd">${esc(x.desc || '')}</div></details></div>`; }).join('')}
+    ${key === 'cooldown' && W.evening ? `<div class="sub" style="margin-top:6px">🌙 ${esc(W.evening)}</div>` : ''}</div>`;
 }
 function gymNew() {
   let f = gDraft();
@@ -748,11 +770,13 @@ function gymNew() {
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
     <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. Заметки к упражнениям — по желанию, общая внизу. Черновик сохраняется сам.</div>
+    ${wuCard(f, 'warmup', '🔥 Разминка')}
     ${f.ex.map((e, i) => `<div class="fex" data-i="${i}"><div class="n"><span>${i + 1}. ${esc(e.name)}${e.reps ? ` <small>${esc(e.reps)}</small>` : ''}</span><button class="rm" data-rm="${i}">✕</button></div>
       ${e.last ? `<div class="sub pt">было: ${esc(e.last)}</div>` : ''}
       <div class="lbls"><span>резина / вес</span><span>подх 1</span><span>подх 2</span><span>RPE</span></div>
       <div class="g"><input data-k="load" value="${esc(e.load)}" placeholder="ГФ 4.5 + К1"><input data-k="s1" inputmode="numeric" value="${esc(e.s1)}" placeholder="${esc(e.p1 || '—')}"><input data-k="s2" inputmode="numeric" value="${esc(e.s2)}" placeholder="${esc(e.p2 || '—')}"><input data-k="rpe" inputmode="decimal" value="${esc(e.rpe)}" placeholder="—"></div>
       ${e.note || e.showNote ? `<input class="note" data-k="note" value="${esc(e.note)}" placeholder="заметка к упражнению">` : `<button class="rm" data-note="${i}" style="margin-top:6px;font-size:12px;color:var(--cyd)">＋ заметка</button>`}</div>`).join('')}
+    ${wuCard(f, 'cooldown', '🧊 Заминка · растяжка')}
     <div style="display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:8px"><select class="fsel" id="w-add"><option value="">+ добавить упражнение…</option>${allEx.map(n => `<option>${esc(n)}</option>`).join('')}</select><button class="btn ghost" id="w-addc" style="margin:0;padding:10px 12px">свое</button></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px"><input class="finp" id="w-min" inputmode="numeric" placeholder="длительность, мин" value="${esc(f.min)}"><input class="finp" id="w-rpe" inputmode="decimal" placeholder="RPE за тренировку" value="${esc(f.rpe)}"></div>
     <textarea class="finp" id="w-note" rows="2" style="margin-top:6px;resize:vertical" placeholder="заметка по тренировке: как прошла, самочувствие, боль">${esc(f.note)}</textarea>
@@ -765,6 +789,7 @@ function gymText(f) {
   f.ex.forEach((e, i) => { const s = [e.s1, e.s2].filter(v => String(v).trim() !== '').join(', ');
     if (!s && !e.note) return;
     lines.push(`${i + 1}. ${e.name}: ${e.load || '—'} × ${s || '—'}${String(e.rpe).trim() ? ' · RPE ' + e.rpe : ''}${e.note ? ' · ' + e.note : ''}`); });
+  if (GD.warm) { const [a, A] = wuCount(f, 'warmup'), [c, C] = wuCount(f, 'cooldown'); lines.push(`Разминка ✓ ${a}/${A} · Заминка ✓ ${c}/${C}`); }
   if (String(f.min).trim()) lines.push(`Длительность: ${f.min} мин`);
   if (String(f.rpe).trim()) lines.push(`RPE тренировки: ${f.rpe}`);
   if (f.note) lines.push(`Заметка: ${f.note}`);
@@ -834,13 +859,15 @@ $('workouts').addEventListener('click', async e => {
   if (b.dataset.kbv !== undefined) { kbv = b.dataset.kbv; renderGym(); hap(); try { $('workouts').scrollIntoView({block: 'start'}); } catch (err) {} return; }
   if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
   if (b.dataset.d) { gSel = b.dataset.d; renderGym(); hap(); return; }
+  if (b.dataset.wu) { const f = saveDraftFromDom(); if (!f) return; f.wu = f.wu || {}; f.wu[b.dataset.wu] = !f.wu[b.dataset.wu]; store.set('dunn_wdraft', JSON.stringify(f));
+    const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (b.dataset.note) { const f = saveDraftFromDom(); f.ex[Number(b.dataset.note)].showNote = true; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); const el = document.querySelector(`.fex[data-i="${b.dataset.note}"] input.note`); el && el.focus(); return; }
   if (b.dataset.rm) { const f = saveDraftFromDom(); f.ex.splice(Number(b.dataset.rm), 1); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-addc') { const n = (prompt('Название упражнения') || '').trim(); if (!n) return; const f = saveDraftFromDom();
     f.ex.push({name: n, reps: '', load: '', s1: '', s2: '', rpe: '', note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-reset') { if (!confirm('Сбросить черновик тренировки?')) return; store.del('dunn_wdraft'); renderGym(); return; }
   if (b.id === 'w-save') { const f = saveDraftFromDom(), txt = gymText(f); f.saved = true; store.set('dunn_wdraft', JSON.stringify(f));
-    if (txt.split('\n').length < 2) { $('w-hint').textContent = 'Заполни хотя бы одно упражнение'; return; }
+    if (!f.ex.some(e => [e.s1, e.s2].some(v => String(v || '').trim()) || e.note)) { $('w-hint').textContent = 'Заполни хотя бы одно упражнение'; return; }
     try { await navigator.clipboard.writeText(txt); } catch (err) {}
     try { window.dunnLinks.bot('Тренировка ' + dm(f.date)); $('w-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Черновик сброшу, когда запишу в Notion.'; }
     catch (err) { $('w-hint').textContent = 'Текст в буфере, открой чат с ботом и вставь.'; } }
