@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 07:07:10Z, sha 92a1d8ed0d83; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 08:18:32Z, sha 9aef86754629; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -276,6 +276,11 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .vt .lbl .pc{font:600 12px ui-monospace,Menlo,monospace;margin-left:6px}.pc.ok{color:var(--ok)}.pc.lo{color:var(--amb)}.pc.no{color:var(--red)}
 .vgrp{color:var(--mut);font:12px ui-monospace,Menlo,monospace;margin-top:14px;border-top:1px solid #0f2537;padding-top:8px}
 #vits .seg{grid-template-columns:1fr 1fr;margin:8px 0 4px}
+#fseg button{font-size:11.5px;padding:8px 0;white-space:nowrap}
+.rtab{display:grid;grid-template-columns:auto repeat(3,1fr);gap:2px 8px;margin:10px 0 4px;font-size:13px;align-items:baseline}
+.rtab .h{color:var(--mut);font:11px ui-monospace,Menlo,monospace;text-align:right}.rtab .k{color:var(--mut)}.rtab .v{text-align:right;font:13px ui-monospace,Menlo,monospace;color:var(--tx)}.rtab .v.big{font-weight:700;color:var(--cy)}
+.ring{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid #0f2537;font-size:13.5px}.ring:first-child{border-top:0}.ring .sub{white-space:nowrap}
+.rsteps{margin:6px 0 0 20px;padding:0;font-size:14px;line-height:1.5}.rsteps li{margin:4px 0;list-style:decimal outside;display:list-item;border:0;padding:0 0 0 2px}.rsteps li::marker{color:var(--cy);font:600 13px ui-monospace,Menlo,monospace}
 .prmore{all:unset;cursor:pointer;color:var(--cy);font-size:13px;margin-top:8px;display:inline-block}
 .wu .wd{color:var(--mut);font-size:13.5px;line-height:1.45;margin:4px 0 2px;white-space:pre-line}
 .wu.done summary{color:var(--mut);text-decoration:line-through}
@@ -346,7 +351,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div></section>
+  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div></section>
@@ -1117,7 +1122,7 @@ $('add-go').onclick = () => {
 // ── Еда → «🥫 Мои продукты» (07.11, v2): переключатель «Дневник | Мои продукты» над разделом Еда.
 // Внутри меню-кнопки, как Трени → База: Частые / Все продукты (поиск) / Как записать; тап по продукту → граммы и КБЖУ порции.
 // Только просмотр: записывает он сам, сообщением «#p07 82 г» (в буфер/чат витрина ничего из данных не кладёт).
-let PR = [], prq = '', psel = null, fv = ['prod', 'vit'].includes(store.get('dunn_fv')) ? store.get('dunn_fv') : 'diary';
+let PR = [], prq = '', psel = null, fv = ['prod', 'vit', 'rec'].includes(store.get('dunn_fv')) ? store.get('dunn_fv') : 'diary';
 const pr1 = n => n == null ? '—' : fmt(Math.round(n * 10) / 10);
 const prBy = id => PR.find(x => x.id === id);
 function prCalc(x, g) {
@@ -1128,7 +1133,7 @@ function prCalc(x, g) {
 }
 const prPer = x => `${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}`;
 function applyFv() {
-  if (!['diary', 'prod', 'vit'].includes(fv)) fv = 'diary';
+  if (!['diary', 'prod', 'vit', 'rec'].includes(fv)) fv = 'diary';
   $('fseg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fv === fv));
   const diary = fv === 'diary', vit = fv === 'vit';
   $('fstreak').hidden = !diary || !(D && D.streak);
@@ -1136,7 +1141,9 @@ function applyFv() {
   ['food', 'meals'].forEach(i => $(i).hidden = !diary);
   $('prods').hidden = fv !== 'prod';
   $('vits').hidden = !vit;
+  $('recs').hidden = fv !== 'rec';
   if (vit) renderVits();
+  if (fv === 'rec') renderRecs();
 }
 $('fseg').addEventListener('click', e => {
   const b = e.target.closest('button[data-fv]'); if (!b) return;
@@ -1240,6 +1247,36 @@ function renderVits() {
 $('vits').addEventListener('click', e => {
   const b = e.target.closest('button[data-vm]'); if (!b) return;
   vmode = b.dataset.vm; store.set('dunn_vmode', vmode); renderVits();
+});
+
+// ── Еда → «📖 Рецепты» (07.11): из /data/food/recipes.json через collect.py (recipes[] с итогами).
+// Список кнопками, как База; внутри — КБЖУ на 100 г / порцию / всё блюдо, ингредиенты, способ приготовления.
+let rsel = null;
+function renderRecs() {
+  const R = (D && Array.isArray(D.recipes)) ? D.recipes : [];
+  const head = `<h2>📖 Рецепты</h2>`;
+  const r = R.find(x => x.id === rsel);
+  if (!r) {
+    rsel = null;
+    $('recs').innerHTML = head + (R.length ? `<div class="kbm" style="margin-top:8px">${R.map(x => `<button data-rid="${esc(x.id)}"><span class="tx"><b>${esc(x.name)}</b><small>${x.per100 ? `${Math.round(x.per100.kcal)} ккал на 100 г` : ''}${x.portion ? ` · порция ${Math.round(x.portion.kcal)} ккал` : ''}${x.date ? ` · ${esc(dm(x.date))}` : ''}</small></span><span class="ch">›</span></button>`).join('')}</div>` : '<div class="sub" style="margin-top:8px">Рецептов пока нет.</div>')
+      + '<div class="sub" style="margin-top:8px;line-height:1.45">Новый рецепт — пришли Дану ингредиенты с граммами, вес готового блюда, на сколько порций и как готовил.</div>';
+    return;
+  }
+  const col = (o, k) => o ? `<span class="v${k === 'kcal' ? ' big' : ''}">${pr1(k === 'kcal' ? Math.round(o[k]) : o[k])}</span>` : '<span class="v">—</span>';
+  const rows = [['kcal', 'Ккал'], ['p', 'Белки, г'], ['f', 'Жиры, г'], ['c', 'Углев., г']];
+  let h = `<button class="kbback" data-rid="">‹ Рецепты</button><h2 style="margin-top:0">${esc(r.name)}</h2>`
+    + `<div class="sub">${r.date ? esc(dm(r.date)) + ' · ' : ''}${r.cooked_g ? `готовое ${esc(r.cooked_g)} г` : `сырой вес ${esc(r.raw_g)} г (готовый не взвешен)`}${r.portions ? ` · ${esc(r.portions)} порц.` : ''}</div>`
+    + `<div class="rtab"><span></span><span class="h">100 г</span><span class="h">${r.portion ? `порция${r.portions && r.base_g ? ' ~' + Math.round(r.base_g / r.portions) + ' г' : ''}` : 'порция'}</span><span class="h">всё блюдо</span>`
+    + rows.map(([k, n]) => `<span class="k">${n}</span>${col(r.per100, k)}${col(r.portion, k)}${col(r.total, k)}`).join('') + `</div>`;
+  h += `<div class="vgrp">Ингредиенты · ${esc(r.raw_g)} г</div>` + r.ingredients.map(i => `<div class="ring"><span>${esc(i.name)}</span><span class="sub">${esc(i.g ?? '')}${i.g != null ? ' г · ' : ''}${Math.round(i.kcal || 0)} ккал</span></div>`).join('');
+  if ((r.steps || []).length) h += `<div class="vgrp">Как готовить</div><ol class="rsteps">${r.steps.map(x => `<li>${esc(x)}</li>`).join('')}</ol>`;
+  if (r.note) h += `<div class="sub" style="margin-top:10px;line-height:1.45">${esc(r.note)}</div>`;
+  h += `<div class="sub" style="margin-top:10px">Записать съеденное: напиши мне «${esc(r.name.toLowerCase())} 1 порция» или граммы.</div>`;
+  $('recs').innerHTML = h;
+}
+$('recs').addEventListener('click', e => {
+  const b = e.target.closest('[data-rid]'); if (!b) return;
+  rsel = b.dataset.rid || null; renderRecs(); $('recs').scrollIntoView({block: 'start'});
 });
 
 // ── экран входа: wait → setup (ключа ещё нет) | unlock; key — показать DUNN-KEY для Дана
