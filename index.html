@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 05:13:27Z, sha 3edf3cbf3aae; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 06:23:38Z, sha bb5db914a03a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -305,6 +305,14 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
     <input id="np1" type="password" placeholder="новая фраза" autocomplete="new-password">
     <input id="np2" type="password" placeholder="ещё раз" autocomplete="new-password">
     <button id="mk">Создать ключ</button>
+    <div class="links" id="implink"><button class="lnk" id="l-imp">у меня уже есть ключ — перенести</button></div>
+  </div>
+  <div id="v-imp" hidden>
+    <div class="note">Перенос ключа. Открой витрину кнопкой бота → «перенести на другое устройство» → «Скопировать» и вставь строку сюда. Потом введи свою фразу: ключ останется тот же, Дану ничего отправлять не нужно.</div>
+    <textarea id="imptxt" placeholder="DUNN-TRANSFER:…" autocomplete="off" spellcheck="false"></textarea>
+    <input id="imppw" type="password" placeholder="фраза-пароль" autocomplete="current-password">
+    <button id="impgo">Перенести ключ</button>
+    <label><input id="imprem" type="checkbox" style="width:auto;margin:0 6px 0 0">запомнить на этом устройстве</label>
   </div>
   <div id="v-key" hidden>
     <div class="note" id="k-note"></div>
@@ -313,7 +321,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
     <button id="done" class="ghost">Готово</button>
   </div>
   <div id="err"></div>
-  <div class="links" id="links" hidden><button class="lnk" id="l-change">сменить фразу</button><button class="lnk" id="l-reset">новый ключ</button></div>
+  <div class="links" id="links" hidden><button class="lnk" id="l-change">сменить фразу</button><button class="lnk" id="l-reset">новый ключ</button><br><button class="lnk" id="l-exp" style="margin-top:10px">перенести на другое устройство</button></div>
   <div class="links" id="back" hidden><button class="lnk" id="l-back">назад</button></div>
 </div></div>
 
@@ -1091,8 +1099,9 @@ $('add-go').onclick = () => {
 let K = null;        // зашифрованный фразой ключ Данича из CloudStorage
 let mode = 'setup';  // setup | change | reset
 function view(v) {
-  ['wait', 'unlock', 'setup', 'key'].forEach(n => $('v-' + n).hidden = n !== v);
-  $('links').hidden = v !== 'unlock'; $('back').hidden = !(v === 'setup' && K);
+  ['wait', 'unlock', 'setup', 'key', 'imp'].forEach(n => $('v-' + n).hidden = n !== v);
+  $('links').hidden = v !== 'unlock'; $('back').hidden = !((v === 'setup' && K) || v === 'imp');
+  $('implink').hidden = mode === 'change';
   $('lock').style.display = ''; $('app').hidden = true; $('nav').hidden = true;
 }
 function msg(text, ok) { $('err').textContent = text || ''; $('err').className = ok ? 'ok' : ''; }
@@ -1110,7 +1119,7 @@ function setup(m) {
     setup: 'Придумай фразу-пароль для витрины. Она останется только у тебя: ни Дан, ни хост её не знают, поэтому и восстановить её некому.',
     change: 'Смена фразы. Ключ остаётся прежним, Дану ничего отправлять не нужно.',
     reset: 'Новый ключ, если фраза забыта. Старый перестанет работать: после создания отправь новый ключ Дану, витрина откроется после его следующей публикации.',
-  }[m] + (cloud() ? '' : '<small>Витрина открыта не из Telegram: ключ сохранится только в этом браузере. Лучше открыть её кнопкой бота.</small>');
+  }[m] + (cloud() ? '' : '<small>Витрина открыта не из Telegram: ключ сохранится только в этом браузере. Лучше открыть её кнопкой бота. Если ключ в Telegram уже есть, новый не создавай — перенеси его: ссылка под кнопкой.</small>');
   view('setup');
 }
 
@@ -1161,7 +1170,32 @@ $('copy').onclick = async () => {
 $('done').onclick = () => { view('unlock'); msg(''); };
 $('l-change').onclick = () => setup('change');
 $('l-reset').onclick = () => setup('reset');
-$('l-back').onclick = () => { view('unlock'); msg(''); };
+$('l-back').onclick = () => { msg(''); if (K) view('unlock'); else setup(mode); };
+
+// ── перенос ключа на другое устройство (07.11). Строка DUNN-TRANSFER — тот же K, что лежит в CloudStorage:
+// закрытый ключ, зашифрованный фразой (PBKDF2 600 000). Без фразы она бесполезна, но и Дану её слать незачем.
+const XFER = 'DUNN-TRANSFER:';
+$('l-exp').onclick = () => {
+  if (!K) return;
+  $('k-note').innerHTML = 'Строка переноса: твой ключ, зашифрованный твоей фразой. Скопируй её и вставь на другом устройстве в «у меня уже есть ключ — перенести». <b>Никому не отправляй, Дану тоже</b> — ему она не нужна.';
+  $('keytxt').value = XFER + btoa(JSON.stringify(K)); msg(''); view('key');
+};
+$('l-imp').onclick = () => { $('imptxt').value = ''; $('imppw').value = ''; msg(''); view('imp'); };
+$('impgo').onclick = () => busy('impgo', async () => {
+  msg('');
+  const t = $('imptxt').value.replace(/\s+/g, '');
+  let k;
+  try { if (!t.startsWith(XFER)) throw 0; k = JSON.parse(atob(t.slice(XFER.length)));
+        if (!k || k.v !== 2 || !k.pub || !k.ct || !k.salt || !k.iv || !k.iter) throw 0; }
+  catch (e) { return msg('Это не строка переноса. Скопируй её целиком, вместе с DUNN-TRANSFER:'); }
+  let pk8;
+  try { pk8 = await unwrap(k, $('imppw').value.trim()); } catch (e) { return msg('Фраза не подошла к этому ключу.'); }
+  $('imppw').value = ''; $('imptxt').value = '';
+  K = k; await kset(KEY_ITEM, JSON.stringify(K));
+  const priv = await importPriv(pk8), kid = await kidOf(K.pub);
+  if ($('imprem').checked) await remSet({priv, kid}); else await remDel();
+  if (!await openWith(priv, kid)) return;
+});
 $('lockbtn').onclick = async () => { await remDel(); view('unlock'); msg(''); };
 
 async function boot() {
