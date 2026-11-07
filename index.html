@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 06:23:38Z, sha bb5db914a03a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 06:41:09Z, sha bf0e358f6ab0; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -259,6 +259,13 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .wu details{flex:1;min-width:0}.wu summary{cursor:pointer;line-height:26px;list-style:none}.wu summary::-webkit-details-marker{display:none}
 .wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
 .mhow{margin-top:8px;border-top:1px solid #0f2537;padding-top:6px}.mhow .wu{padding:2px 0}.mhow .wn{display:inline-block;width:20px;color:var(--cyd);font:12px ui-monospace,Menlo,monospace}
+.prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;margin:10px 0 4px}
+.pr{padding:8px 0;border-top:1px solid #0f2537;cursor:pointer}.pr:first-child{border-top:0}
+.prh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.prn{color:var(--tx);font-size:14px;min-width:0;overflow-wrap:anywhere}.pri{color:var(--cyd);font:12px ui-monospace,Menlo,monospace;white-space:nowrap}
+.pr.on .prn{color:var(--cy)}.prc{margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;cursor:default}
+.prg{width:84px;padding:8px;border-radius:9px;border:1px solid var(--cyd);background:#07111b;color:var(--tx);font-size:16px;text-align:center}
+.prv b{color:var(--tx)}.prc .sub{flex-basis:100%;line-height:1.4}
+.prmore{all:unset;cursor:pointer;color:var(--cy);font-size:13px;margin-top:8px;display:inline-block}
 .wu .wd{color:var(--mut);font-size:13.5px;line-height:1.45;margin:4px 0 2px;white-space:pre-line}
 .wu.done summary{color:var(--mut);text-decoration:line-through}
 .fex .n{font-weight:600;display:flex;justify-content:space-between;gap:8px}
@@ -328,7 +335,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div></section>
+  <section class="tab" data-tab="food" hidden><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div></section>
@@ -508,7 +515,7 @@ function render(d) {
 
   // ── Вес
   WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
-  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; renderWeight(); renderMeas(); renderSteps();
+  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; renderProds(); renderWeight(); renderMeas(); renderSteps();
 
   // ── Задачи
   TK = k; renderTasks();
@@ -1094,6 +1101,55 @@ $('add-go').onclick = () => {
   try { window.dunnLinks.bot(phrase); $('add-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить.'; }
   catch (e) { $('add-hint').textContent = 'Не открылось. Фраза в буфере обмена — вставь в чат сам.'; }
 };
+
+// ── Еда → «🥫 Мои продукты» (07.11): этикетки + частые продукты, на 100 г; тап → граммы → КБЖУ порции.
+// Только просмотр: записывает он сам, сообщением «#p07 82 г» (в буфер/чат витрина ничего из данных не кладёт).
+let PR = [], prq = '', pro = null, pmore = false;
+const pr1 = n => n == null ? '—' : fmt(Math.round(n * 10) / 10);
+function prCalc(x, g) {
+  g = +String(g).replace(',', '.');
+  if (!(g > 0)) return 'введи граммы';
+  const k = v => v == null ? '—' : pr1(v * g / 100);
+  return `<b>${Math.round(x.kcal * g / 100)} ккал</b> · Б ${k(x.p)} · Ж ${k(x.f)} · У ${k(x.c)}`;
+}
+function renderProds() {
+  const box = $('prods'); box.hidden = !PR.length;
+  if (!PR.length) return;
+  if (!$('prq')) {
+    box.innerHTML = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub" id="prcnt"></span></div><input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off"><div id="prl"></div>`;
+    $('prq').addEventListener('input', e => { prq = e.target.value; pro = null; renderPrList(); });
+  }
+  $('prcnt').textContent = `${PR.length} · на 100 г`;
+  renderPrList();
+}
+function renderPrList() {
+  const q = prq.trim().toLowerCase().replace(/^#/, '');
+  const all = q ? PR.filter(x => x.name.toLowerCase().includes(q) || x.id === q) : PR;
+  const lim = q || pmore ? all : all.slice(0, 10);
+  $('prl').innerHTML = (lim.length ? lim.map(x => {
+    const on = x.id === pro, g = x.g || 100;
+    const meta = [x.src === 'label' ? 'этикетка' : '', x.n ? `ел ${x.n}×` : ''].filter(Boolean).join(' · ');
+    return `<div class="pr${on ? ' on' : ''}" data-pid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}</span><span class="pri">#${esc(x.id)}</span></div>`
+      + `<div class="sub">${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}${meta ? ' · ' + meta : ''}</div>`
+      + (on ? `<div class="prc"><input class="prg" type="number" inputmode="decimal" min="1" step="1" value="${esc(Math.round(g))}"> г <span class="prv">${prCalc(x, g)}</span>`
+        + `<div class="sub">Записать: напиши мне «#${esc(x.id)} <span class="prgv">${esc(Math.round(g))}</span> г» — этикетку больше не диктуешь</div></div>` : '')
+      + `</div>`;
+  }).join('') : '<div class="sub" style="margin-top:6px">Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.</div>')
+    + (!q && !pmore && all.length > lim.length ? `<button class="prmore" id="prmore">ещё ${all.length - lim.length} ▾</button>` : '');
+}
+$('prods').addEventListener('click', e => {
+  if (e.target.id === 'prmore') { pmore = true; return renderPrList(); }
+  if (e.target.closest('.prc')) return;
+  const r = e.target.closest('.pr'); if (!r) return;
+  pro = pro === r.dataset.pid ? null : r.dataset.pid; renderPrList();
+  const i = $('prl').querySelector('.pr.on .prg'); if (i) { i.focus(); i.select(); }
+});
+$('prods').addEventListener('input', e => {
+  if (!e.target.classList.contains('prg')) return;
+  const r = e.target.closest('.pr'), x = PR.find(y => y.id === r.dataset.pid); if (!x) return;
+  r.querySelector('.prv').innerHTML = prCalc(x, e.target.value);
+  r.querySelector('.prgv').textContent = e.target.value || '…';
+});
 
 // ── экран входа: wait → setup (ключа ещё нет) | unlock; key — показать DUNN-KEY для Дана
 let K = null;        // зашифрованный фразой ключ Данича из CloudStorage
