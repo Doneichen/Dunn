@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 11:53:10Z, sha c5a64ea95b9f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 12:02:00Z, sha 40bcbf0cb8f9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -392,6 +392,7 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = n => (Math.round(n * 100) / 100).toLocaleString('ru-RU');
 const dm = d => d ? d.slice(8, 10) + '.' + d.slice(5, 7) : '';
+const dmy = d => d ? dm(d) + '.' + d.slice(2, 4) : '';
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const u64 = b => btoa(String.fromCharCode(...new Uint8Array(b)));
 const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
@@ -771,10 +772,10 @@ function gymCal() {
   for (let dd = 1; dd <= nd; dd++) { const ds = `${gMonth}-${String(dd).padStart(2, '0')}`, has = !!S[ds]; if (has) cnt++;
     cells += `<button data-d="${ds}" class="${has ? 'has' : ''}${ds === GD.today ? ' today' : ''}${ds === gSel ? ' on' : ''}">${dd}</button>`; }
   const s = S[gSel];
-  let ses = `<div class="sub">${esc(dm(gSel))}: тренировки нет</div>`;
+  let ses = `<div class="sub">${esc(dmy(gSel))}: тренировки нет</div>`;
   if (s) {
     const a = s.act, type = (s.rows[0] && s.rows[0].type) || (a && (a.kind || []).join(', ')) || 'тренировка';
-    ses = `<div class="row"><b>${esc(wd(gSel))}, ${esc(dm(gSel))} · ${esc(type)}</b><span class="sub">${a ? [a.min ? a.min + ' мин' : '', a.rpe ? 'RPE ' + esc(a.rpe) : ''].filter(Boolean).join(' · ') : ''}</span></div>`
+    ses = `<div class="row"><b>${esc(wd(gSel))}, ${esc(dmy(gSel))} · ${esc(type)}</b><span class="sub">${a ? [a.min ? a.min + ' мин' : '', a.rpe ? 'RPE ' + esc(a.rpe) : ''].filter(Boolean).join(' · ') : ''}</span></div>`
       + (s.rows.length ? s.rows.map(x => `<div class="ex"><div class="n">${esc(x.ex)}</div><div class="v">${esc(x.load || '—')} × ${esc(setStr(x))}${x.rpe != null ? ' · RPE ' + esc(x.rpe) : ''}</div>${x.note ? `<div class="nt">${esc(x.note)}</div>` : ''}</div>`).join('')
         : (a && a.ex ? `<pre style="white-space:pre-wrap;font:13px/1.45 system-ui;margin:6px 0 0">${esc(a.ex)}</pre>` : '<div class="sub">состав не записан</div>'))
       + (a && a.note ? `<div class="nt" style="color:var(--amb);font-size:13px;margin-top:6px">${esc(a.note)}</div>` : '');
@@ -805,9 +806,9 @@ function gymProg() {
   if (gPi == null || gPi < 0 || gPi >= n) gPi = n - 1;
   const sx = X(gPi).toFixed(1), sy = Yv(vals[gPi]).toFixed(1);
   marks += `<line x1="${sx}" x2="${sx}" y1="10" y2="${Hh - 30}" stroke="#00e1ff" opacity=".35"/><circle cx="${sx}" cy="${sy}" r="7" fill="none" stroke="#fff" stroke-width="2"/>`;
-  const chartSvg = `<svg id="g-chart" data-n="${n}" data-w="${W}" data-p="${P}" viewBox="0 0 ${W} ${Hh}"><line x1="${P}" x2="${W}" y1="${Hh - 30}" y2="${Hh - 30}" stroke="#12324a"/>${marks}<path d="${path}" fill="none" stroke="#00e1ff" stroke-width="2.2"/><text x="${P}" y="${Hh - 10}" fill="#6f93a6" font-size="11">${dm(rows[0].d)}</text><text x="${W - 40}" y="${Hh - 10}" fill="#6f93a6" font-size="11">${dm(last.d)}</text><text x="0" y="16" fill="#6f93a6" font-size="10">повт.</text></svg>`;
+  const chartSvg = `<svg id="g-chart" data-n="${n}" data-w="${W}" data-p="${P}" viewBox="0 0 ${W} ${Hh}"><line x1="${P}" x2="${W}" y1="${Hh - 30}" y2="${Hh - 30}" stroke="#12324a"/>${marks}<path d="${path}" fill="none" stroke="#00e1ff" stroke-width="2.2"/><text x="${P}" y="${Hh - 10}" fill="#6f93a6" font-size="11">${dmy(rows[0].d)}</text><text x="${W}" y="${Hh - 10}" fill="#6f93a6" font-size="11" text-anchor="end">${dmy(last.d)}</text><text x="0" y="16" fill="#6f93a6" font-size="10">повт.</text></svg>`;
   const pk = rows[gPi];
-  const pick = `<div class="ppick"><div class="row"><b>${esc(wd(pk.d))}, ${esc(dm(pk.d))}${pk.d.slice(0, 4) !== GD.today.slice(0, 4) ? ' ' + pk.d.slice(0, 4) : ''}</b><span class="sub">${esc(pk.type || '')}</span></div>
+  const pick = `<div class="ppick"><div class="row"><b>${esc(wd(pk.d))}, ${esc(dmy(pk.d))}</b><span class="sub">${esc(pk.type || '')}</span></div>
     <div class="v">${esc(pk.load || '—')} × ${esc(setStr(pk))}${pk.rpe != null ? ' · RPE ' + esc(pk.rpe) : ''}</div>${pk.note ? `<div class="nt">${esc(pk.note)}</div>` : ''}</div>`;
   // лучшее за всё время: больше всего повторов + лучший результат на каждой нагрузке (резины по кг не сравнить честно — см. «База»)
   const lk = x => (x.load || '—').toUpperCase().replace(/[\s.]/g, '');
@@ -818,28 +819,28 @@ function gymProg() {
   const tx = rows[top];
   // самая тяжёлая нагрузка: максимум loadScore, при равной — больше повторов, затем позже
   let hv = 0; rows.forEach((x, i) => { const d = loadScore(x.load) - loadScore(rows[hv].load); if (d > 0 || (d === 0 && vals[i] >= vals[hv])) hv = i; });
-  const hx = rows[hv], yr = d => d.slice(0, 4) !== GD.today.slice(0, 4) ? ' ' + d.slice(0, 4) : '';
+  const hx = rows[hv];
   const best = `<div class="pbest"><div class="bh">🏆 Лучшее за всё время</div>
-    <div class="top" data-pi="${hv}">🏋️ Самая тяжёлая нагрузка: <b>${esc(hx.load || '—')}</b> × ${esc(setStr(hx))} · ${esc(dm(hx.d))}${yr(hx.d)}</div>
-    <div class="top" data-pi="${top}" style="margin-top:4px">🔁 Больше всего повторов: <b>${esc(setStr(tx))}</b> на ${esc(tx.load || '—')} · ${esc(dm(tx.d))}${yr(tx.d)}</div>
-    ${perL.length > 1 ? `<details id="g-best"${gBest ? ' open' : ''}><summary>Рекорд на каждой нагрузке · ${perL.length} <span class="ar">▾</span></summary><div class="sub" style="margin:0 0 2px">сверху — самая тяжёлая. (x2) считаю тяжелее любой обычной намотки, дальше — по кг с бирок</div><ul class="pbl">${perL.map(c => { const x = rows[c.i]; return `<li data-pi="${c.i}"><span>${esc(x.load || '—')}</span><span class="rv">${esc(setStr(x))}</span><span class="due">${esc(dm(x.d))}</span></li>`; }).join('')}</ul></details>` : ''}</div>`;
-  const li = i => { const x = rows[i]; return `<li data-pi="${i}" class="${i === gPi ? 'on' : ''}"><span class="t">${esc(dm(x.d))}${x.d.slice(0, 4) !== GD.today.slice(0, 4) ? '.' + x.d.slice(2, 4) : ''}</span><span>${esc(x.load || '—')}</span><span class="due">${esc(setStr(x))}${x.rpe != null ? ' · ' + esc(x.rpe) : ''}</span></li>`; };
+    <div class="top" data-pi="${hv}">🏋️ Самая тяжёлая нагрузка: <b>${esc(hx.load || '—')}</b> × ${esc(setStr(hx))} · ${esc(dmy(hx.d))}</div>
+    <div class="top" data-pi="${top}" style="margin-top:4px">🔁 Больше всего повторов: <b>${esc(setStr(tx))}</b> на ${esc(tx.load || '—')} · ${esc(dmy(tx.d))}</div>
+    ${perL.length > 1 ? `<details id="g-best"${gBest ? ' open' : ''}><summary>Рекорд на каждой нагрузке · ${perL.length} <span class="ar">▾</span></summary><div class="sub" style="margin:0 0 2px">сверху — самая тяжёлая. (x2) считаю тяжелее любой обычной намотки, дальше — по кг с бирок</div><ul class="pbl">${perL.map(c => { const x = rows[c.i]; return `<li data-pi="${c.i}"><span>${esc(x.load || '—')}</span><span class="rv">${esc(setStr(x))}</span><span class="due">${esc(dmy(x.d))}</span></li>`; }).join('')}</ul></details>` : ''}</div>`;
+  const li = i => { const x = rows[i]; return `<li data-pi="${i}" class="${i === gPi ? 'on' : ''}"><span class="t">${esc(dmy(x.d))}</span><span>${esc(x.load || '—')}</span><span class="due">${esc(setStr(x))}${x.rpe != null ? ' · ' + esc(x.rpe) : ''}</span></li>`; };
   const idx = rows.map((x, i) => i).reverse();
   return `<select class="fsel" id="g-ex">${names.map(n => `<option${n === gEx ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
-    <div class="selrow"><span>последний раз <b style="font-size:15px">${esc(last.load || '—')} × ${esc(setStr(last))}</b></span><span class="sub">${esc(dm(last.d))}</span></div>
+    <div class="selrow"><span>последний раз <b style="font-size:15px">${esc(last.load || '—')} × ${esc(setStr(last))}</b></span><span class="sub">${esc(dmy(last.d))}</span></div>
     ${rr ? `<div class="sub">диапазон ${esc(rr)} · ${tip}</div>` : ''}
     ${chartSvg}<div class="sub" style="margin:4px 0 4px">Линия — сумма повторов за 2 подхода, жёлтым — смена резины/веса. Тапни по графику — покажу ту тренировку.</div>
     ${pick}${best}
     <div class="bh sub" style="margin-top:10px">История · ${n} ${n % 10 === 1 && n % 100 !== 11 ? 'запись' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'записи' : 'записей'}</div>
     <ul class="phl">${li(idx[0])}</ul>
-    ${n > 1 ? `<details id="g-hist"${gHist ? ' open' : ''}><summary>Все даты с ${esc(dm(rows[0].d))}${rows[0].d.slice(0, 4) !== GD.today.slice(0, 4) ? ' ' + rows[0].d.slice(0, 4) : ''} <span class="ar">▾</span></summary><ul class="phl">${idx.slice(1).map(li).join('')}</ul></details>` : ''}`;
+    ${n > 1 ? `<details id="g-hist"${gHist ? ' open' : ''}><summary>Все даты с ${esc(dmy(rows[0].d))} <span class="ar">▾</span></summary><ul class="phl">${idx.slice(1).map(li).join('')}</ul></details>` : ''}`;
 }
 // черновик формы хранится на устройстве, чтобы заполнять по ходу тренировки
 const gDraft = () => { try { return JSON.parse(store.get('dunn_wdraft') || 'null'); } catch (e) { return null; } };
 function newDraft(tplName) {
   const t = GD.tpl.find(x => x.name === tplName) || GD.tpl[0];
   return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '', wu: {},
-          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastOf(e.name); return {sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''}; })};
+          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastOf(e.name); return {sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}; })};
 }
 // порядок и замена: двигается/меняется само упражнение, а место в круге (sec/grp/rest/gi) остаётся за позицией
 const SLOT = ['sec', 'grp', 'rest', 'gi'];
@@ -957,10 +958,10 @@ $('workouts').addEventListener('change', e => {
   if (e.target.dataset && e.target.dataset.swsel !== undefined && e.target.value) { const f = saveDraftFromDom(), i = Number(e.target.dataset.swsel), n = e.target.value, l = lastOf(n), x = f.ex[i];
     const tE = GD.tpl.flatMap(t => t.exercises || []).find(y => y.name === n);
     Object.assign(x, {name: n, reps: tE ? tE.reps || '' : '', load: l ? l.load : (tE ? tE.load_hint || '' : ''), s1: '', s2: '', rpe: '', note: '', showNote: false,
-      p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''}); delete x.swap;
+      p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}); delete x.swap;
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); hap(); return; }
   if (e.target.id === 'w-add' && e.target.value) { const f = saveDraftFromDom(), n = e.target.value, l = lastOf(n);
-    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dm(l.d)}` : ''});
+    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''});
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); }
 });
 $('workouts').addEventListener('toggle', e => { if (e.target.id === 'g-hist') gHist = e.target.open; if (e.target.id === 'g-best') gBest = e.target.open; }, true);
