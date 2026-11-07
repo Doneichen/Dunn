@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 08:18:32Z, sha 9aef86754629; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 09:31:15Z, sha ceea7de84b3c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -281,6 +281,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .rtab .h{color:var(--mut);font:11px ui-monospace,Menlo,monospace;text-align:right}.rtab .k{color:var(--mut)}.rtab .v{text-align:right;font:13px ui-monospace,Menlo,monospace;color:var(--tx)}.rtab .v.big{font-weight:700;color:var(--cy)}
 .ring{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid #0f2537;font-size:13.5px}.ring:first-child{border-top:0}.ring .sub{white-space:nowrap}
 .rsteps{margin:6px 0 0 20px;padding:0;font-size:14px;line-height:1.5}.rsteps li{margin:4px 0;list-style:decimal outside;display:list-item;border:0;padding:0 0 0 2px}.rsteps li::marker{color:var(--cy);font:600 13px ui-monospace,Menlo,monospace}
+.prlog{all:unset;cursor:pointer;box-sizing:border-box;width:100%;text-align:center;margin-top:8px;padding:10px;border-radius:10px;background:var(--cy);color:#001a22;font-weight:700;font-size:14px}.prlog:disabled{opacity:.45;cursor:default}.prlog.sent{background:transparent;border:1px solid var(--ok);color:var(--ok)}
 .prmore{all:unset;cursor:pointer;color:var(--cy);font-size:13px;margin-top:8px;display:inline-block}
 .wu .wd{color:var(--mut);font-size:13.5px;line-height:1.45;margin:4px 0 2px;white-space:pre-line}
 .wu.done summary{color:var(--mut);text-decoration:line-through}
@@ -1184,8 +1185,8 @@ function renderPrSel() {
   const g = Math.round(x.g || 100);
   $('prsel').innerHTML = `<div class="box"><div class="prh"><span class="prn">${esc(x.name)}</span><span class="pri">#${esc(x.id)}</span></div>
     <div class="sub">на 100 г: ${prPer(x)}${x.src === 'label' ? ' · этикетка' : ''}</div>
-    <div class="prc"><input class="prg" type="number" inputmode="decimal" min="1" step="1" value="${esc(g)}"> г <span class="prv">${prCalc(x, g)}</span>
-    <div class="sub">Записать: напиши мне «#${esc(x.id)} <span class="prgv">${esc(g)}</span> г»</div></div></div>`;
+    <div class="prc"><input class="prg" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(g)}"> г <span class="prv">${prCalc(x, g)}</span>
+    <button class="prlog" data-log="1">🥫 Записать <span class="prgv">${esc(g)}</span> г</button><div class="sub" id="prlog-hint">Фраза уйдёт в буфер и откроется чат с ботом — вставишь и отправишь. Или напиши сам «#${esc(x.id)} ${esc(g)} г».</div></div></div>`;
 }
 function renderPrList() {
   let all;
@@ -1198,7 +1199,21 @@ function renderPrList() {
       + `<div class="sub">${prPer(x)}${x.src === 'label' ? ' · этикетка' : ''}${x.n ? ` · ел ${esc(x.n)}×` : ''}</div></div>`).join('')
     : '<div class="sub" style="margin-top:6px">Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.</div>';
 }
+// 🥫 записать (разрешил Al 07.11, /dash/README.md): фраза строго «🥫 записать #<id> <граммы> г», граммы — только то,
+// что он ввёл (целое 1–5000), id — products[].id. Названия и других данных витрины во фразе нет. В буфер + чат с ботом.
+const prPhrase = (id, g) => /^p\d+$/.test(id) && /^\d{1,4}$/.test(g) && +g >= 1 && +g <= 5000 ? `🥫 записать #${id} ${+g} г` : null;
 $('prods').addEventListener('click', e => {
+  const lb = e.target.closest('button[data-log]');
+  if (lb) {
+    const x = prBy(psel), inp = $('prsel').querySelector('.prg'); if (!x || !inp) return;
+    const ph = prPhrase(x.id, inp.value.trim());
+    if (!ph) { $('prlog-hint').textContent = 'Граммы — целое число от 1 до 5000.'; return; }
+    try { navigator.clipboard && navigator.clipboard.writeText(ph).catch(() => {}); } catch (err) {}
+    try { window.dunnLinks.bot(ph); lb.classList.add('sent'); lb.textContent = '✓ фраза в буфере';
+      $('prlog-hint').textContent = 'В чате зажми поле ввода → «Вставить» → отправить. Запишу и отвечу продуктом, граммами и ккал.'; }
+    catch (err) { $('prlog-hint').textContent = 'Чат не открылся. Фраза в буфере — вставь её боту сам.'; }
+    return;
+  }
   const v = e.target.closest('[data-pv]');
   if (v) { pv = v.dataset.pv; psel = null; renderProds(); $('prods').scrollIntoView({block: 'start'}); return; }
   if (e.target.closest('#prsel')) return;
@@ -1210,6 +1225,8 @@ $('prods').addEventListener('click', e => {
 $('prods').addEventListener('input', e => {
   if (!e.target.classList.contains('prg')) return;
   const x = prBy(psel); if (!x) return;
+  const clean = e.target.value.replace(/\D+/g, '').slice(0, 4); if (clean !== e.target.value) e.target.value = clean;
+  const lb = $('prsel').querySelector('.prlog'); if (lb) { const ok = !!prPhrase(x.id, clean); lb.disabled = !ok; lb.classList.remove('sent'); lb.innerHTML = `🥫 Записать <span class="prgv"></span> г`; }
   $('prsel').querySelector('.prv').innerHTML = prCalc(x, e.target.value);
   $('prsel').querySelector('.prgv').textContent = e.target.value || '…';
 });
