@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 11:34:59Z, sha 07a56a6b0fcd; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 11:53:10Z, sha c5a64ea95b9f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -239,7 +239,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 #g-chart{cursor:pointer;touch-action:manipulation;display:block}
 .ppick{border:1px solid #12324a;border-radius:10px;padding:8px 10px;margin:6px 0 8px;font-size:13px}
 .ppick .v{font:700 15px ui-monospace,Menlo,monospace;color:var(--cy)}.ppick .nt{color:var(--amb);font-size:12.5px;margin-top:3px}
-.pbest{margin:10px 0 4px}.pbest .bh{font-size:13px;color:var(--mut);margin-bottom:2px}.pbest .top{font-size:14px}.pbest .top b{color:var(--ok);font-family:ui-monospace,Menlo,monospace}
+.pbest{margin:10px 0 4px}.pbest .bh{font-size:13px;color:var(--mut);margin-bottom:2px}.pbest .top{font-size:14px}.pbest .top{cursor:pointer}.pbest .top b{color:var(--ok);font-family:ui-monospace,Menlo,monospace}
 .pbl li{font-size:13px}.pbl li span:first-child{flex:1}.pbl .rv{font-family:ui-monospace,Menlo,monospace;color:var(--tx)}
 .phl li{cursor:pointer}.phl li.on{background:#0b2233;border-radius:6px}
 #g-hist summary,#g-best summary{cursor:pointer;color:var(--cy);font-size:13px;padding:8px 0;list-style:none}#g-hist summary::-webkit-details-marker,#g-best summary::-webkit-details-marker{display:none}
@@ -743,6 +743,21 @@ function sessions() {  // дата → {rows, act}
   GD.wk.forEach(w => { (m[w.d] = m[w.d] || {rows: [], act: null}).act = w; });
   return m;
 }
+const BANDKG = {'ЭТ': 6, 'С-Я': 7, 'К1': 15, 'К2': 25, 'Ч': 29, 'Ф': 39, 'З': 59};
+function loadScore(load) {
+  let best = 0;
+  String(load || '').toUpperCase().replace(/Х/g, 'X').split('/').forEach(part => {
+    let kg = 0, x2 = 0;
+    const gk = part.match(/(\d+)\s*[×X]\s*(\d+(?:[.,]\d+)?)\s*КГ/);
+    if (gk) kg += Number(gk[1]) * parseFloat(gk[2].replace(',', '.'));
+    else (part.match(/\d+(?:[.,]\d+)?\s*КГ/g) || []).forEach(m => { kg += parseFloat(m.replace(',', '.')); });
+    const gf = part.match(/ГФ\s*(\d+(?:[.,]\d+)?)/); if (gf) kg += parseFloat(gf[1].replace(',', '.'));
+    part.replace(/ГФ\s*\d+(?:[.,]\d+)?/, ' ').split(/[+\s,]+/).forEach(t => { const m = t.match(/^(ЭТ|С-Я|К1|К2|Ч|Ф|З)(\(X2\))?$/);
+      if (m) { kg += BANDKG[m[1]] * (m[2] ? 2 : 1); if (m[2]) x2 = 1; } });
+    best = Math.max(best, x2 * 1000 + kg);
+  });
+  return best;
+}
 function lastOf(ex) { for (let i = GD.log.length - 1; i >= 0; i--) if (GD.log[i].ex === ex) return GD.log[i]; return null; }
 function gymCal() {
   const S = sessions(), dates = Object.keys(S).sort();
@@ -799,11 +814,15 @@ function gymProg() {
   let top = 0; rows.forEach((x, i) => { if (vals[i] >= vals[top]) top = i; });
   const per = {}; rows.forEach((x, i) => { const k = lk(x); const c = per[k];
     if (!c || vals[i] >= vals[c.i]) per[k] = {i, lastD: c ? (c.lastD > x.d ? c.lastD : x.d) : x.d, cnt: (c ? c.cnt : 0) + 1}; else { c.lastD = c.lastD > x.d ? c.lastD : x.d; c.cnt++; } });
-  const perL = Object.values(per).sort((a, b) => a.lastD < b.lastD ? 1 : -1);
+  const perL = Object.values(per).sort((a, b) => loadScore(rows[b.i].load) - loadScore(rows[a.i].load) || (a.lastD < b.lastD ? 1 : -1));
   const tx = rows[top];
+  // самая тяжёлая нагрузка: максимум loadScore, при равной — больше повторов, затем позже
+  let hv = 0; rows.forEach((x, i) => { const d = loadScore(x.load) - loadScore(rows[hv].load); if (d > 0 || (d === 0 && vals[i] >= vals[hv])) hv = i; });
+  const hx = rows[hv], yr = d => d.slice(0, 4) !== GD.today.slice(0, 4) ? ' ' + d.slice(0, 4) : '';
   const best = `<div class="pbest"><div class="bh">🏆 Лучшее за всё время</div>
-    <div class="top">Больше всего повторов: <b>${esc(setStr(tx))}</b> на ${esc(tx.load || '—')} · ${esc(dm(tx.d))}${tx.d.slice(0, 4) !== GD.today.slice(0, 4) ? ' ' + tx.d.slice(0, 4) : ''}</div>
-    ${perL.length > 1 ? `<details id="g-best"${gBest ? ' open' : ''}><summary>Рекорд на каждой нагрузке · ${perL.length} <span class="ar">▾</span></summary><div class="sub" style="margin:0 0 2px">сверху — что брал последним</div><ul class="pbl">${perL.map(c => { const x = rows[c.i]; return `<li data-pi="${c.i}"><span>${esc(x.load || '—')}</span><span class="rv">${esc(setStr(x))}</span><span class="due">${esc(dm(x.d))}</span></li>`; }).join('')}</ul></details>` : ''}</div>`;
+    <div class="top" data-pi="${hv}">🏋️ Самая тяжёлая нагрузка: <b>${esc(hx.load || '—')}</b> × ${esc(setStr(hx))} · ${esc(dm(hx.d))}${yr(hx.d)}</div>
+    <div class="top" data-pi="${top}" style="margin-top:4px">🔁 Больше всего повторов: <b>${esc(setStr(tx))}</b> на ${esc(tx.load || '—')} · ${esc(dm(tx.d))}${yr(tx.d)}</div>
+    ${perL.length > 1 ? `<details id="g-best"${gBest ? ' open' : ''}><summary>Рекорд на каждой нагрузке · ${perL.length} <span class="ar">▾</span></summary><div class="sub" style="margin:0 0 2px">сверху — самая тяжёлая. (x2) считаю тяжелее любой обычной намотки, дальше — по кг с бирок</div><ul class="pbl">${perL.map(c => { const x = rows[c.i]; return `<li data-pi="${c.i}"><span>${esc(x.load || '—')}</span><span class="rv">${esc(setStr(x))}</span><span class="due">${esc(dm(x.d))}</span></li>`; }).join('')}</ul></details>` : ''}</div>`;
   const li = i => { const x = rows[i]; return `<li data-pi="${i}" class="${i === gPi ? 'on' : ''}"><span class="t">${esc(dm(x.d))}${x.d.slice(0, 4) !== GD.today.slice(0, 4) ? '.' + x.d.slice(2, 4) : ''}</span><span>${esc(x.load || '—')}</span><span class="due">${esc(setStr(x))}${x.rpe != null ? ' · ' + esc(x.rpe) : ''}</span></li>`; };
   const idx = rows.map((x, i) => i).reverse();
   return `<select class="fsel" id="g-ex">${names.map(n => `<option${n === gEx ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
@@ -947,7 +966,7 @@ $('workouts').addEventListener('change', e => {
 $('workouts').addEventListener('toggle', e => { if (e.target.id === 'g-hist') gHist = e.target.open; if (e.target.id === 'g-best') gBest = e.target.open; }, true);
 $('workouts').addEventListener('click', async e => {
   if (gv === 'prog') {
-    const sv = e.target.closest('#g-chart'), pr = e.target.closest('li[data-pi]');
+    const sv = e.target.closest('#g-chart'), pr = e.target.closest('li[data-pi], .pbest .top[data-pi]');
     let i = null;
     if (sv) { const r = sv.getBoundingClientRect(), n = Number(sv.dataset.n), W = Number(sv.dataset.w), P = Number(sv.dataset.p);
       const vx = (e.clientX - r.left) / (r.width || 1) * W; i = n < 2 ? 0 : Math.round((vx - P) / (W - P - 10) * (n - 1)); i = Math.max(0, Math.min(n - 1, i)); }
