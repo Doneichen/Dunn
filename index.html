@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 06:56:39Z, sha 1d87cece387e; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-07 07:07:10Z, sha 92a1d8ed0d83; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -272,6 +272,10 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 #prsel .box{margin-top:10px;padding:10px 12px;border:1px solid var(--cyd);border-radius:12px;background:rgba(0,225,255,.04)}#prsel .box .prc{margin-top:6px}
 .pr.on{background:rgba(0,225,255,.05)}
 .prhow{margin-top:14px;border-top:1px solid #0f2537;padding-top:8px}.prhow ol{margin:6px 0 0 18px;padding:0;color:var(--mut);font-size:13.5px;line-height:1.45}.prhow ol b{color:var(--tx);font-weight:600}
+.vt{margin:9px 0 0}.vt .lbl b{color:var(--tx);font-weight:600}.vt .bar{height:6px;margin:3px 0 0}.vt .sub{font-size:11px;margin-top:2px}
+.vt .lbl .pc{font:600 12px ui-monospace,Menlo,monospace;margin-left:6px}.pc.ok{color:var(--ok)}.pc.lo{color:var(--amb)}.pc.no{color:var(--red)}
+.vgrp{color:var(--mut);font:12px ui-monospace,Menlo,monospace;margin-top:14px;border-top:1px solid #0f2537;padding-top:8px}
+#vits .seg{grid-template-columns:1fr 1fr;margin:8px 0 4px}
 .prmore{all:unset;cursor:pointer;color:var(--cy);font-size:13px;margin-top:8px;display:inline-block}
 .wu .wd{color:var(--mut);font-size:13.5px;line-height:1.45;margin:4px 0 2px;white-space:pre-line}
 .wu.done summary{color:var(--mut);text-decoration:line-through}
@@ -342,7 +346,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="grid-template-columns:1fr 1fr;margin-top:12px" hidden><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Мои продукты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div></section>
+  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div></section>
@@ -592,6 +596,7 @@ const wd = s => WD[new Date(s + 'T00:00:00Z').getUTCDay()];
 const kcls = (x) => { const k = x.food && x.food.kcal, tk = x.target && x.target.kcal;
   return !k ? '' : (k > tk * 1.05 ? 'over' : (k < tk * .8 ? 'low' : 'ok')); };
 function renderFood() {
+  if (fv === 'vit') try { renderVits(); } catch (e) {}
   const x = FD[fdi], f = x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}, t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
   const left = t.kcal - f.kcal, isToday = fdi === 0, meals = x.meals || [];
   const base = isToday && D.activity ? D.activity.steps_base : null;
@@ -1112,7 +1117,7 @@ $('add-go').onclick = () => {
 // ── Еда → «🥫 Мои продукты» (07.11, v2): переключатель «Дневник | Мои продукты» над разделом Еда.
 // Внутри меню-кнопки, как Трени → База: Частые / Все продукты (поиск) / Как записать; тап по продукту → граммы и КБЖУ порции.
 // Только просмотр: записывает он сам, сообщением «#p07 82 г» (в буфер/чат витрина ничего из данных не кладёт).
-let PR = [], prq = '', psel = null, fv = store.get('dunn_fv') === 'prod' ? 'prod' : 'diary';
+let PR = [], prq = '', psel = null, fv = ['prod', 'vit'].includes(store.get('dunn_fv')) ? store.get('dunn_fv') : 'diary';
 const pr1 = n => n == null ? '—' : fmt(Math.round(n * 10) / 10);
 const prBy = id => PR.find(x => x.id === id);
 function prCalc(x, g) {
@@ -1123,13 +1128,15 @@ function prCalc(x, g) {
 }
 const prPer = x => `${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}`;
 function applyFv() {
-  if (!PR.length) fv = 'diary';
-  $('fseg').hidden = !PR.length;
+  if (!['diary', 'prod', 'vit'].includes(fv)) fv = 'diary';
   $('fseg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fv === fv));
-  const diary = fv === 'diary';
+  const diary = fv === 'diary', vit = fv === 'vit';
   $('fstreak').hidden = !diary || !(D && D.streak);
-  ['fdays', 'food', 'meals'].forEach(i => $(i).hidden = !diary);
-  $('prods').hidden = diary;
+  $('fdays').hidden = !(diary || vit);  // выбор дня общий: дневник и витамины
+  ['food', 'meals'].forEach(i => $(i).hidden = !diary);
+  $('prods').hidden = fv !== 'prod';
+  $('vits').hidden = !vit;
+  if (vit) renderVits();
 }
 $('fseg').addEventListener('click', e => {
   const b = e.target.closest('button[data-fv]'); if (!b) return;
@@ -1198,6 +1205,41 @@ $('prods').addEventListener('input', e => {
   const x = prBy(psel); if (!x) return;
   $('prsel').querySelector('.prv').innerHTML = prCalc(x, e.target.value);
   $('prsel').querySelector('.prgv').textContent = e.target.value || '…';
+});
+
+// ── Еда → «💊 Витамины» (07.11): % нормы за выбранный день (полоса дней — та же, что в дневнике) или за его неделю пн–вс.
+// Еда из food_days[].mic + БАД (micro.supp) за каждый день с записями; клетчатка из food.fib (псиллиум уже внутри).
+let vmode = store.get('dunn_vmode') === 'week' ? 'week' : 'day';
+const vfmt = n => fmt(n >= 100 ? Math.round(n) : Math.round(n * 10) / 10);
+function vitDays() {
+  const x = FD[fdi]; if (vmode === 'day') return {days: [x]};
+  const d0 = new Date(x.d + 'T00:00:00Z'), mon = new Date(d0 - ((d0.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
+  const sun = new Date(Date.parse(mon + 'T00:00:00Z') + 6 * 864e5).toISOString().slice(0, 10);
+  return {days: FD.filter(y => y.d >= mon && y.d <= sun), mon, sun};
+}
+function renderVits() {
+  const M = D && D.micro; if (!M || !FD.length) { $('vits').innerHTML = '<div class="sub">Нет данных о витаминах — обнови витрину.</div>'; return; }
+  const {days, mon, sun} = vitDays(), had = days.filter(y => (y.meals || []).length), n = had.length, x = FD[fdi];
+  const span = vmode === 'day' ? `${esc(wd(x.d))}, ${esc(dm(x.d))}${fdi === 0 ? ' · сегодня' : ''}` : `неделя ${esc(dm(mon))}–${esc(dm(sun))} · дней с записями ${n}`;
+  let h = `<h2>💊 Витамины и минералы</h2><div class="seg"><button data-vm="day" class="${vmode === 'day' ? 'on' : ''}">День</button><button data-vm="week" class="${vmode === 'week' ? 'on' : ''}">Неделя</button></div><div class="sub">${span} · еда + БАД</div>`;
+  if (!n) { $('vits').innerHTML = h + `<div class="sub" style="margin-top:10px">${vmode === 'day' ? 'В этот день записей нет.' : 'На этой неделе записей нет.'}</div>`; return; }
+  let grp = '';
+  for (const r of M.norms) {
+    const g = r.src === 'RDA' ? 'Общие нормы (RDA)' : 'Твоя таблица';
+    if (g !== grp) { h += `<div class="vgrp">${g}</div>`; grp = g; }
+    const food = had.reduce((a, y) => a + (r.key === 'fib' ? (y.food && y.food.fib) || 0 : (y.mic && y.mic[r.key]) || 0), 0);
+    const sp = (M.supp[r.key] || 0) * n, tot = food + sp, norm = r.day * n, pc = norm ? Math.round(tot / norm * 100) : 0;
+    const cls = pc >= 90 ? 'ok' : pc >= 50 ? 'lo' : 'no';
+    h += `<div class="vt"><div class="lbl"><span><b>${esc(r.name)}</b><span class="pc ${cls}">${pc}%</span></span><span><b>${vfmt(tot)}</b> / ${vfmt(norm)} ${esc(r.unit)}</span></div>`
+      + `<div class="bar"><i class="${cls === 'ok' ? '' : cls === 'lo' ? 'low' : 'over'}" style="width:${Math.min(100, pc)}%"></i></div>`
+      + (sp ? `<div class="sub">еда ${vfmt(food)} + БАД ${vfmt(sp)}</div>` : '') + `</div>`;
+  }
+  h += `<div class="sub" style="margin-top:12px;line-height:1.45">${vmode === 'week' ? 'Норма недели = норма дня × дни с записями. ' : ''}🟢 ≥90% · 🟡 50–89% · 🔴 &lt;50%. ${esc(M.note || '')}</div>`;
+  $('vits').innerHTML = h;
+}
+$('vits').addEventListener('click', e => {
+  const b = e.target.closest('button[data-vm]'); if (!b) return;
+  vmode = b.dataset.vm; store.set('dunn_vmode', vmode); renderVits();
 });
 
 // ── экран входа: wait → setup (ключа ещё нет) | unlock; key — показать DUNN-KEY для Дана
