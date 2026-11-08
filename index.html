@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 11:14:53Z, sha 699752ad44d5; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 12:35:07Z, sha 32bc0efb7d1c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -283,6 +283,9 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
 .mhow{margin-top:8px;border-top:1px solid #0f2537;padding-top:6px}.mhow .wu{padding:2px 0}.mhow .wn{display:inline-block;width:20px;color:var(--cyd);font:12px ui-monospace,Menlo,monospace}
 .pcw{position:relative;display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#07111b}.pcw.on{border-color:var(--amb)}.pcw span{font-size:12px;color:var(--mut);white-space:nowrap}.pcw select{all:unset;flex:1;padding:10px 18px 10px 0;font-size:15px;color:var(--tx);cursor:pointer;min-width:0}.pcw.on select{color:var(--amb)}.pcw select option{background:#0b1420;color:#d8f6ff}.pcw i{position:absolute;right:12px;font-style:normal;color:var(--cy);pointer-events:none}
+.binf{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:100%;box-sizing:border-box;margin:8px 0 2px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--cy)}.binf.on{border-color:var(--cy)}
+.binfo{font-size:12px;color:var(--mut);line-height:1.5;padding:8px 12px;border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;margin-top:-4px}.binfo b{color:var(--tx);display:block;margin-top:6px}.binfo div b{display:inline;margin:0}.binfo div{margin-top:3px}
+.bsrc{font-size:11px;padding:0 6px;border-radius:6px;border:1px solid var(--line);margin-left:6px;white-space:nowrap}.bsrc.of{color:var(--ok);border-color:#1d5a3f}.bsrc.off{color:var(--amb);border-color:#5a4a1d}
 .psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .prx{color:var(--mut);font-size:12px;font-weight:400}.pr .pl2{font-size:11px;margin-top:5px;padding-top:4px;border-top:1px dashed var(--line)}.pr .pl2 b{color:var(--cy);font-weight:600}
 .prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;margin:10px 0 4px}
 .pr{padding:8px 0;border-top:1px solid #0f2537;cursor:pointer}.pr:first-child{border-top:0}
@@ -558,7 +561,7 @@ function render(d) {
 
   // ── Вес
   WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
-  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps();
+  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; BASE = null; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps();
 
   // ── Задачи
   TK = k; renderTasks();
@@ -1333,7 +1336,7 @@ $('fseg').addEventListener('click', e => {
   fv = b.dataset.fv; store.set('dunn_fv', fv); applyFv();
 });
 let pv = '';  // '' меню | top | all | how — как Трени → База
-const PRV = {top: '⭐ Частые', all: '📋 Все продукты', how: '✍️ Как записать'};
+const PRV = {top: '⭐ Частые', all: '📋 Все продукты', base: '🔎 База', how: '✍️ Как записать'};
 const prTop = () => PR.filter(x => x.n >= 2).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')).slice(0, 15);
 // «📋 Все продукты»: сортировка кнопками (его идея 08.11): А–Я / больше белка / углеводов / жиров / ккал на 100 г сверху
 const PSORT = {az: 'А–Я', p: 'Белок', c: 'Углеводы', f: 'Жиры', kcal: 'Ккал'};
@@ -1344,13 +1347,65 @@ const prCats = () => { const have = new Set(PR.map(x => x.cat || 'Другое')
 const prBar = () => { const cs = prCats(); if (pcat && !cs.includes(pcat)) pcat = '';
   return `<label class="pcw${pcat ? ' on' : ''}"><span>Категория</span><select class="pcsel">${['', ...cs].map(c => `<option value="${esc(c)}"${pcat === c ? ' selected' : ''}>${c ? esc(c) : 'Все продукты'}${c ? ` (${PR.filter(x => (x.cat || 'Другое') === c).length})` : ''}</option>`).join('')}</select><i>▾</i></label>`
     + `<div class="psort">${Object.keys(PSORT).map(k => `<button data-ps="${k}" class="${psort === k ? 'on' : ''}">${k === 'az' && pv === 'top' ? 'Частота' : PSORT[k]}</button>`).join('')}</div>`; };
+// 🔎 База продуктов (его просьба 08.11): D.base.rows из /data/food/base.json — поиск в телефоне, весь список не показываем.
+// Записи кнопкой нет: во фразу для бота можно класть только то, что Данич ввёл сам (README, правило Al) — он пишет «#b0123 270 г» сам.
+let BASE = null, bq = '', bk = '', bsel = null, binfo = false;
+const BK = {'': 'Все', ff: '🍔 Фастфуд', shop: '🛒 Магазин', basic: '🥩 Базовые'};
+const baseRows = () => { if (BASE) return BASE; const b = D && D.base;
+  BASE = ((b && b.rows) || []).map(r => ({id: r[0], name: r[1], brand: r[2], kind: r[3], kcal: r[4], p: r[5], f: r[6], c: r[7], g: r[8], chk: r[9], code: r[10], ap: r[11]})); return BASE; };
+const bnorm = s => String(s || '').toLowerCase().replace(/ё/g, 'е');
+function baseInfo() {
+  const m = (D && D.base && D.base.meta) || [], by = k => m.filter(x => x.kind === k);
+  const line = x => `${esc(x.source)} — ${esc(x.n)} шт.${x.fetched ? ', собрано ' + esc(dm(x.fetched)) : ''}${x.note ? ' (' + esc(x.note) + ')' : ''}`;
+  return `<div class="binfo"><b>Откуда цифры</b>
+    <div>🍔 <b>Фастфуд</b> — таблицы КБЖУ самих сетей: ${by('ff').map(line).join('; ') || '—'}. Метка зелёная.</div>
+    <div>🥩 <b>Базовые</b> — USDA FoodData Central, госбаза США (SR Legacy): ${by('basic').map(x => esc(x.n) + ' шт.').join('; ') || '—'}. Для «русских» продуктов — ближайший аналог, помечен «≈ аналог США» (напр. творог USDA: белка 10–12 г против 16–18 г у нашего — для творога лучше 🛒 Магазин). Метка зелёная.</div>
+    <div>🛒 <b>Магазин</b> — Open Food Facts, открытая база по штрихкодам: КБЖУ переписаны с этикеток людьми, бывают ошибки: ${by('shop').map(x => esc(x.n) + ' шт.' + (x.fetched ? ', собрано ' + esc(dm(x.fetched)) : '')).join('; ') || '—'}. Метка жёлтая; ⚠ — калории не сходятся с БЖУ, сверь с упаковкой.</div>
+    <b>Как устроено</b>
+    <div>База лежит у Дана на сервере (/data/food/base.json), копия — здесь в приложении, поиск идёт прямо в телефоне. Всё на 100 г. В Notion базы нет — туда попадает только съеденное («Питание»).</div>
+    <div>Ищи по названию, бренду или штрихкоду. Слова можно в любом порядке: «воппер двойной».</div>
+    <b>Как записать</b>
+    <div>Тапни продукт → введи граммы → увидишь КБЖУ. Записать: напиши Дану номер и граммы, например «#b0123 270 г». Съешь что-то из базы пару раз — оно само появится в «Моих продуктах».</div>
+    <div>Обновляет базу Дан по твоей просьбе («обнови базу»).</div></div>`;
+}
+function baseView() {
+  return `<button class="binf${binfo ? ' on' : ''}" data-binfo="1">ℹ️ Как устроена база и откуда цифры <span>${binfo ? '▴' : '▾'}</span></button>${binfo ? baseInfo() : ''}`
+    + `<input id="bq" class="prq" type="search" placeholder="воппер, гречка, творог, штрихкод" autocomplete="off" value="${esc(bq)}">`
+    + `<div class="psort">${Object.keys(BK).map(k => `<button data-bk="${k}" class="${bk === k ? 'on' : ''}">${BK[k]}</button>`).join('')}</div>`
+    + `<div id="bsel"></div><div id="bl">${baseList()}</div>`;
+}
+function baseList() {
+  const all = baseRows(), q = bnorm(bq).trim();
+  if (q.length < 2) return `<div class="sub" style="margin-top:6px">Начни вводить — ищу по ${all.length} продуктам${bk ? ' (' + BK[bk] + ')' : ''}.</div>`;
+  const ws = q.split(/\s+/), isCode = /^\d{6,}$/.test(q);
+  const hit = all.filter(x => (!bk || x.kind === bk) && (isCode ? x.code === q : ws.every(w => bnorm(x.name + ' ' + x.brand).includes(w))));
+  const show = hit.slice(0, 60);
+  if (!show.length) return '<div class="sub" style="margin-top:6px">Ничего не нашлось. Попробуй короче или другим словом.</div>';
+  return `<div class="sub" style="margin:4px 0">${hit.length > 60 ? `показаны 60 из ${hit.length} — уточни` : `найдено ${hit.length}`}</div>` + show.map(x =>
+    `<div class="pr${x.id === bsel ? ' on' : ''}" data-bid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}${x.brand ? `<span class="bsrc ${x.kind === 'shop' ? 'off' : 'of'}">${esc(x.brand)}</span>` : ''}</span><span class="pri">#${esc(x.id)}</span></div>`
+    + `<div class="sub">100 г — ${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}${x.g ? ` · порция ${esc(x.g)} г` : ''}${x.chk ? ' · ⚠ сверь' : ''}${x.ap ? ' · ≈ аналог США' : ''}</div></div>`).join('');
+}
+function baseSel() {
+  const x = baseRows().find(y => y.id === bsel); if (!x) { $('bsel').innerHTML = ''; return; }
+  const g = Math.round(x.g || 100);
+  $('bsel').innerHTML = `<div class="box"><div class="prh"><span class="prn">${esc(x.name)}</span><span class="pri">#${esc(x.id)}</span></div>
+    <div class="sub">${esc(x.brand || '')}${x.kind === 'shop' ? ' · Open Food Facts' : (x.kind === 'ff' ? ' · официально' : ' · USDA')}${x.code ? ' · ' + esc(x.code) : ''}</div>
+    <div class="prc"><input class="prg bg" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(g)}"> г <span class="bv">${prCalc(x, g)}</span></div>
+    <div class="sub" style="margin-top:6px">Записать: напиши мне <b>«#${esc(x.id)} <span class="bgv">${esc(g)}</span> г»</b></div></div>`;
+}
+$('prods').addEventListener('input', e => {
+  if (e.target.id === 'bq') { bq = e.target.value; bsel = null; $('bsel').innerHTML = ''; $('bl').innerHTML = baseList(); return; }
+  if (e.target.classList.contains('bg')) { const x = baseRows().find(y => y.id === bsel); if (!x) return;
+    const v = e.target.value.replace(/\D+/g, '').slice(0, 4); if (v !== e.target.value) e.target.value = v;
+    $('bsel').querySelector('.bv').innerHTML = prCalc(x, v); $('bsel').querySelector('.bgv').textContent = v || '…'; }
+});
 function renderProds() {
   if (!PR.length) { $('prods').innerHTML = ''; return; }
   if (psel && !prBy(psel)) psel = null;
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
+    const sub = {base: `${baseRows().length} · фастфуд, магазины, базовые продукты`, top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
@@ -1365,6 +1420,7 @@ function renderProds() {
       </ol></div>`;
     $('prods').innerHTML = h; return;
   }
+  if (pv === 'base') { $('prods').innerHTML = h + baseView(); return; }
   if (pv === 'prot') { $('prods').innerHTML = h + '<div id="protbox"></div>'; try { renderProt(); } catch (e) {} return; }
   h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}">` : '') + prBar() + `<div id="prl"></div>`;
   $('prods').innerHTML = h;
@@ -1427,6 +1483,13 @@ $('prods').addEventListener('click', e => {
     catch (err) { $('prlog-hint').textContent = 'Чат не открылся. Фраза в буфере — вставь её боту сам.'; }
     return;
   }
+  if (e.target.closest('[data-binfo]')) { binfo = !binfo; renderProds(); return; }
+  const bkb = e.target.closest('[data-bk]');
+  if (bkb) { bk = bkb.dataset.bk; $('prods').querySelectorAll('[data-bk]').forEach(b => b.classList.toggle('on', b.dataset.bk === bk)); $('bl').innerHTML = baseList(); return; }
+  const bb = e.target.closest('[data-bid]');
+  if (bb) { bsel = bb.dataset.bid; $('bl').innerHTML = baseList(); baseSel(); $('bsel').scrollIntoView({block: 'center', behavior: 'smooth'});
+    const i = $('bsel').querySelector('.bg'); if (i) { i.focus({preventScroll: true}); i.select(); } return; }
+  if (e.target.closest('#bsel')) return;
   const ps = e.target.closest('[data-ps]');
   if (ps) { psort = ps.dataset.ps; try { store.set('dunn_psort', psort); } catch (err) {} renderProds(); return; }
   const pk = e.target.closest('[data-pk]');
