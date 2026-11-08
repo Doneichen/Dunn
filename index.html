@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 10:40:41Z, sha 0ca5e3dc27be; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 10:48:31Z, sha 3e633d43fd7f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1283,7 +1283,7 @@ function prCalc(x, g) {
 const prPer = x => `${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}`;
 // «💪 Чем добрать белок» внутри 🥫 Продукты (его просьба 08.11): D.protein (курированный) + его продукты по белку на 100 ккал
 const protLeft = () => { const t = D && D.activity && D.activity.target, f = (D && D.food) || {}; return t && t.p ? Math.round(t.p - (f.p || 0)) : null; };
-const protSub = () => { const l = protLeft(); return l > 0 ? `сегодня осталось Б ${l} г · что закроет` : 'лучшие по белку на калорию'; };
+const protSub = () => { const l = protLeft(); return l > 0 ? `сегодня осталось Б ${l} г · что закроет` : 'все продукты по белку на 100 г'; };
 let pex = null;  // раскрытая строка в «Чем добрать белок»
 function renderProt() {
   if (!D || !$('protbox')) return;
@@ -1293,8 +1293,8 @@ function renderProt() {
   const need = x => left > 0 && x.p ? Math.round(left / x.p * 100) : null;
   // один общий список: курированные (D.protein, ключ c:id) + его продукты (ключ p:id), по белку на 100 ккал
   const cur = (D.protein || []).map(x => Object.assign({}, x, {key: 'c:' + x.id, cur: true}));
-  const mine = (PR || []).filter(x => x.p >= 8 && x.kcal > 0).map(x => Object.assign({}, x, {key: 'p:' + x.id}));
-  const ok = cur.filter(x => x.p != null && x.kcal).concat(mine).sort((a, b) => p100k(b) - p100k(a)).slice(0, 15);
+  const mine = (PR || []).filter(x => x.p != null && x.kcal > 0).map(x => Object.assign({}, x, {key: 'p:' + x.id}));
+  const ok = cur.filter(x => x.p != null && x.kcal).concat(mine).sort((a, b) => b.p - a.p || p100k(b) - p100k(a));  // все, по белку на 100 г (его просьба 08.11)
   const nodata = cur.filter(x => !(x.p != null && x.kcal));
   const det = x => {
     let d = `<div class="pdet"><div>на 100 г: ${Math.round(x.kcal)} ккал · Б ${n1(x.p)} · Ж ${x.f != null ? n1(x.f) : '—'} · У ${x.c != null ? n1(x.c) : '—'}</div>`;
@@ -1306,7 +1306,7 @@ function renderProt() {
     if (!x.cur) d += `<div class="sub">записать: «#${esc(x.id)} ${need(x) || pg || 100} г» мне в чат</div>`;
     return d + '</div>';
   };
-  let s = `<div class="sub">${left > 0 ? `Сегодня осталось <b>Б ${left} г</b>. Больше белка на калорию — выше; справа — сколько грамм закроют остаток. Тап — подробнее.` : (left != null ? '<span class="ok">Белок на сегодня закрыт ✓</span> Тап — подробнее.' : '')}</div>`;
+  let s = `<div class="sub">${left > 0 ? `Сегодня осталось <b>Б ${left} г</b>. Сверху — больше всего белка на 100 г; справа — сколько грамм закроют остаток. Тап — подробнее.` : (left != null ? '<span class="ok">Белок на сегодня закрыт ✓</span> Тап — подробнее.' : '')}</div>`;
   s += ok.map(x => { const nd = need(x), open = pex === x.key;
     return `<div class="pt${open ? ' on' : ''}" data-pk="${esc(x.key)}"><span>${esc(x.name)}${x.cur ? '' : `<span class="pi">#${esc(x.id)}</span>`}${x.status ? `<span class="st">${esc(x.status)}</span>` : '<br>'}<small class="sub">Б ${n1(x.p)} на 100 г · ${n1(p100k(x))} г/100 ккал</small></span><span>${nd ? `<b>${nd} г</b><br><small>${Math.round(x.kcal * nd / 100)} ккал</small>` : ''}<i class="ch">${open ? '▾' : '›'}</i></span></div>${open ? det(x) : ''}`; }).join('');
   if (nodata.length) s += `<div class="sub" style="margin-top:8px">Ждут цифр: ${nodata.map(x => esc(x.name) + (x.status ? ' — ' + esc(x.status) : '')).join('; ')}</div>`;
