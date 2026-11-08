@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 11:03:42Z, sha d55915d244b7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 11:05:22Z, sha d5a4b5021c4c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1374,9 +1374,21 @@ function renderPrSel() {
     <button class="prlog" data-log="1">🥫 Записать <span class="prgv">${esc(g)}</span> г</button><div class="sub" id="prlog-hint">Фраза уйдёт в буфер и откроется чат с ботом — вставишь и отправишь. Или напиши сам «#${esc(x.id)} ${esc(g)} г».</div></div></div>`;
 }
 // нижняя строка как в «Чем добрать белок» (его просьба 08.11): белок за 100 ккал + сколько съесть, чтобы закрыть остаток
-const pl2 = x => { if (!(x.p > 0 && x.kcal > 0)) return '';
-  const l = protLeft(), n = l > 0 ? Math.round(l / x.p * 100) : null, f = v => String(Math.round(v * 10) / 10).replace('.', ',');
-  return `<div class="sub pl2">${f(x.p / x.kcal * 100)} г Б за 100 ккал${n ? ` · закрыть Б ${l} г: съесть <b>${n} г</b> · ${Math.round(x.kcal * n / 100)} ккал` : ''}</div>`; };
+const pl2 = x => {  // нижняя строка под выбранную сортировку (его просьба 08.11): «Осталось У 83 г → съесть 120 г (430 ккал)»
+  const k = pv === 'all' && ['c', 'f', 'kcal'].includes(psort) ? psort : 'p', L = {p: 'Б', c: 'У', f: 'Ж', kcal: 'ккал'}[k];
+  const t = D && D.activity && D.activity.target, fd = (D && D.food) || {};
+  if (!(x.kcal > 0) || x[k] == null) return '';
+  const f = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const left = t && t[k] != null ? Math.round(t[k] - (fd[k] || 0)) : null;
+  const ratio = k === 'kcal' ? '' : (x[k] > 0 ? ` · ${f(x[k] / x.kcal * 100)} г ${L} за 100 ккал` : '');
+  let main;
+  if (left == null) main = '';
+  else if (left <= 0) main = `${L === 'ккал' ? 'Калории' : L} на сегодня закрыт${L === 'ккал' ? 'ы' : ''}`;
+  else if (!(x[k] > 0)) main = `${L} в нём нет`;
+  else { const n = Math.round(left / x[k] * 100);
+    main = `Осталось ${k === 'kcal' ? left + ' ккал' : L + ' ' + left + ' г'} → съесть ${n > 2000 ? '<b>больше 2 кг</b>' : `<b>${n} г</b>${k === 'kcal' ? '' : ` (${Math.round(x.kcal * n / 100)} ккал)`}`}`; }
+  return main || ratio ? `<div class="sub pl2">${main}${main ? ratio : ratio.slice(3)}</div>` : '';
+};
 function renderPrList() {
   let all;
   if (pv === 'top') all = prTop();
