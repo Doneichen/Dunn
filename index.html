@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 16:51:10Z, sha 8018faa5c63d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 16:59:01Z, sha 4002f4e63461; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -466,6 +466,18 @@ function idb(mode, fn) {
 const remGet = () => idb('readonly', s => s.get('priv')).catch(() => null);
 const remSet = v => idb('readwrite', s => s.put(v, 'priv')).catch(() => {});
 const remDel = () => idb('readwrite', s => s.delete('priv')).catch(() => {});
+// 08.11 быстрый старт: последний data.enc.json (тот же шифротекст, что лежит на Pages) хранится в IndexedDB.
+// При открытии сначала расшифровываем его и сразу показываем, свежий файл тянем параллельно и тихо перерисовываем.
+const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
+const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
+const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
+let ENCP = null, PEND = null;
+function applyFresh(d) {
+  const a = document.activeElement;
+  if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { PEND = d; return; }  // не мешаем вводу — обновим, когда уйдёт фокус
+  PEND = null; render(d);
+}
+document.addEventListener('focusout', () => setTimeout(() => { if (PEND) applyFresh(PEND); }, 300));
 
 // иконки БЖУ (inline SVG): белок — окорочок, жиры — капля масла, углеводы — колос, клетчатка — лист
 const ICO = {
@@ -1650,13 +1662,22 @@ function setup(m) {
 }
 
 async function openWith(priv, kid) {
-  let enc;
-  try { enc = await (await fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'})).json(); }
-  catch (e) { view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
+  let enc, shown = false, cached = null;
+  const net = ENCP || encFetch(); ENCP = null;
+  try { cached = await encGet(); } catch (e) {}
+  if (cached && cached.v === 2 && cached.kid === kid) {
+    try { const d0 = await decrypt(cached, priv); $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
+      render(d0); show(store.get('dunn_tab') || 'home'); shown = true; } catch (e) { cached = null; }
+  }
+  try { enc = await net; }
+  catch (e) { if (shown) return true; view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
+  if (shown && cached && enc && enc.iv === cached.iv && enc.epk === cached.epk) return true;  // ничего нового
   if (enc.v !== 2 || !enc.kid) { showKey('Дан ещё не получил твой ключ. Отправь ему сообщение ниже целиком: в нём нет ничего секретного, это открытый ключ.'); return false; }
   if (enc.kid !== kid) { showKey('Данные зашифрованы <b>другим</b> ключом. Если ты недавно создавал новый ключ, отправь его Дану ещё раз. Если нет, ключ на сервере подменён: напиши Al.'); return false; }
   let d;
   try { d = await decrypt(enc, priv); } catch (e) { view('unlock'); msg('Данные повреждены или подменены. Напиши Al.'); return false; }
+  encSet(enc);
+  if (shown) { applyFresh(d); return true; }
   $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
   render(d); show(store.get('dunn_tab') || 'home');
   return true;
@@ -1726,6 +1747,7 @@ $('lockbtn').onclick = async () => { await remDel(); view('unlock'); msg(''); };
 
 async function boot() {
   store.del('dunn_pw');  // от старой схемы: там фраза лежала открытым текстом
+  ENCP = encFetch(); ENCP.catch(() => {});  // свежие данные качаем сразу, параллельно с ключом из CloudStorage
   try { K = JSON.parse(await kget(KEY_ITEM) || 'null'); } catch (e) { K = null; }
   if (!K || K.v !== 2) return setup('setup');
   const r = await remGet();
