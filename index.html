@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 10:51:11Z, sha e7cc634c8949; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 10:54:21Z, sha 58645d527325; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1308,7 +1308,7 @@ function renderProt() {
   };
   let s = `<div class="sub">${left > 0 ? `Сегодня осталось <b>Б ${left} г</b>. Сверху — больше всего белка на 100 г. Справа — сколько грамм продукта съесть, чтобы закрыть эти ${left} г белка, и сколько это ккал. Тап — подробнее.` : (left != null ? '<span class="ok">Белок на сегодня закрыт ✓</span> Тап — подробнее.' : '')}</div>`;
   s += ok.map(x => { const nd = need(x), open = pex === x.key;
-    return `<div class="pt${open ? ' on' : ''}" data-pk="${esc(x.key)}"><span>${esc(x.name)}${x.cur ? '' : `<span class="pi">#${esc(x.id)}</span>`}<br><small class="sub">Б ${n1(x.p)} на 100 г · ${n1(p100k(x))} г/100 ккал</small></span><span>${nd ? `<b>${nd} г</b><br><small>съесть · ${Math.round(x.kcal * nd / 100)} ккал</small>` : ''}<i class="ch">${open ? '▾' : '›'}</i></span></div>${open ? det(x) : ''}`; }).join('');
+    return `<div class="pt${open ? ' on' : ''}" data-pk="${esc(x.key)}"><span>${esc(x.name)}${x.cur ? '' : `<span class="pi">#${esc(x.id)}</span>`}<br><small class="sub">Б ${n1(x.p)} на 100 г · ${n1(p100k(x))} г Б за 100 ккал</small></span><span>${nd ? `<b>${nd} г</b><br><small>съесть · ${Math.round(x.kcal * nd / 100)} ккал</small>` : ''}<i class="ch">${open ? '▾' : '›'}</i></span></div>${open ? det(x) : ''}`; }).join('');
   if (nodata.length) s += `<div class="sub" style="margin-top:8px">Ждут цифр: ${nodata.map(x => esc(x.name) + (x.status ? ' — ' + esc(x.status) : '')).join('; ')}</div>`;
   $('protbox').innerHTML = s;
 }
