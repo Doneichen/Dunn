@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 13:03:29Z, sha 0ae369c9f722; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 16:51:10Z, sha 8018faa5c63d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -561,7 +561,7 @@ function render(d) {
 
   // ── Вес
   WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
-  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; BASE = null; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps();
+  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; BASE = null; BASEP = null; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps();
 
   // ── Задачи
   TK = k; renderTasks();
@@ -1351,8 +1351,24 @@ const prBar = () => { const cs = prCats(); if (pcat && !cs.includes(pcat)) pcat 
 // Записи кнопкой нет: во фразу для бота можно класть только то, что Данич ввёл сам (README, правило Al) — он пишет «#b0123 270 г» сам.
 let BASE = null, bq = '', bk = '', bsel = null, binfo = false;
 const BK = {'': 'Все', ff: '🍔 Фастфуд', shop: '🛒 Магазин', basic: '🥩 Базовые'};
-const baseRows = () => { if (BASE) return BASE; const b = D && D.base;
-  BASE = ((b && b.rows) || []).map(r => ({id: r[0], name: r[1], brand: r[2], kind: r[3], kcal: r[4], p: r[5], f: r[6], c: r[7], g: r[8], chk: r[9], code: r[10], ap: r[11]})); return BASE; };
+// 08.11: строки Базы приходят сжатыми (D.base.gz = base64 gzip) — распаковка в фоне при первом обращении, потом из памяти
+let BASEP = null;
+const bmap = rows => rows.map(r => ({id: r[0], name: r[1], brand: r[2], kind: r[3], kcal: r[4], p: r[5], f: r[6], c: r[7], g: r[8], chk: r[9], code: r[10], ap: r[11]}));
+function loadBase() {
+  if (BASE || BASEP) return; const b = D && D.base;
+  if (!b) { BASE = []; return; }
+  if (b.rows) { BASE = bmap(b.rows); return; }
+  if (!b.gz || typeof DecompressionStream === 'undefined') { BASE = []; return; }
+  const d0 = D;
+  BASEP = (async () => {
+    const bin = Uint8Array.from(atob(b.gz), c => c.charCodeAt(0));
+    const txt = await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+    if (D !== d0) return;
+    BASE = bmap(JSON.parse(txt));
+  })().catch(() => { BASE = []; }).finally(() => { BASEP = null; if (fv === 'prod' && (pv === 'base' || pv === '')) { if (pv === 'base' && $('bl')) $('bl').innerHTML = baseList(); else renderProds(); } });
+}
+const baseRows = () => { if (!BASE) loadBase(); return BASE || []; };
+const baseCount = () => BASE ? BASE.length : ((D && D.base && D.base.n) || 0);
 const bnorm = s => String(s || '').toLowerCase().replace(/ё/g, 'е');
 function baseInfo() {
   const m = (D && D.base && D.base.meta) || [], by = k => m.filter(x => x.kind === k);
@@ -1376,6 +1392,7 @@ function baseView() {
 }
 function baseList() {
   const all = baseRows(), q = bnorm(bq).trim();
+  if (!BASE) return '<div class="sub" style="margin-top:6px">Распаковываю базу…</div>';
   if (q.length < 2) return `<div class="sub" style="margin-top:6px">Начни вводить — ищу по ${all.length} продуктам${bk ? ' (' + BK[bk] + ')' : ''}.</div>`;
   const ws = q.split(/\s+/), isCode = /^\d{6,}$/.test(q);
   const hit = all.filter(x => (!bk || x.kind === bk) && (isCode ? x.code === q : ws.every(w => bnorm(x.name + ' ' + x.brand).includes(w))));
@@ -1423,7 +1440,7 @@ function renderProds() {
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {recent: 'что ел за последние 7 дней — по дням', base: `${baseRows().length} · фастфуд, магазины, базовые продукты`, top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
+    const sub = {recent: 'что ел за последние 7 дней — по дням', base: `${baseCount()} · фастфуд, магазины, базовые продукты`, top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
