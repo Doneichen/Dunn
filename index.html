@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-07 13:49:55Z, sha 104e35e986b1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 04:47:45Z, sha ab2dc45d9e62; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -213,6 +213,17 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .seg button.on{background:rgba(0,225,255,.12);color:var(--cy)}
 #workouts .seg{grid-template-columns:repeat(4,1fr)}#workouts .seg button{font-size:12px}
 .kbm{display:flex;flex-direction:column;gap:8px;margin:2px 0 10px}
+.mus{display:flex;flex-direction:column;margin:6px 0 4px}
+.mr{all:unset;cursor:pointer;display:grid;grid-template-columns:1fr auto auto;gap:3px 8px;align-items:baseline;padding:7px 2px 6px;border-bottom:1px solid #0f2537;-webkit-tap-highlight-color:transparent}
+.mr .mn{font-size:13.5px;color:var(--tx)}.mr b{font:600 13px ui-monospace,Menlo,monospace;color:var(--tx)}.mr small{font-size:11px;min-width:62px;text-align:right}
+.mr small.low{color:var(--amb)}.mr small.ok{color:var(--ok)}.mr small.hi{color:var(--cy)}.mr small.free{color:var(--mut)}.mr.z{opacity:.5}.mr.on .mn{color:var(--cy)}
+.mb{grid-column:1/-1;position:relative;height:6px;background:#0e2233;border-radius:4px;overflow:hidden}
+.mb i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--mut)}.mb i.low{background:var(--amb)}.mb i.ok{background:var(--ok)}.mb i.hi{background:var(--cy)}
+.mb .tg{position:absolute;top:0;bottom:0;border-left:1px dashed rgba(62,224,143,.7);border-right:1px dashed rgba(62,224,143,.7);background:rgba(62,224,143,.08)}
+.mdet{margin:2px 0 6px;padding-left:18px}
+.mhint{margin:10px 0 6px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:13px;line-height:1.5}
+.mseg{margin:0 0 6px}.mseg button{padding:5px 0;font-size:12px}
+
 .kbm button{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,225,255,.03);-webkit-tap-highlight-color:transparent}
 .kbm button:active{background:rgba(0,225,255,.1)}
 .kbm b{font-weight:600;color:var(--tx);font-size:15px}.kbm small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
@@ -548,7 +559,7 @@ function render(d) {
   TK = k; renderTasks();
 
   // ── Тренировки: дневник
-  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || [], kb: (d.training && d.training.kb) || null, warm: (d.training && d.training.warm) || null};
+  GD = {today, wk, log: (d.training && d.training.log) || [], tpl: (d.training && d.training.templates) || [], kb: (d.training && d.training.kb) || null, warm: (d.training && d.training.warm) || null, mus: (d.training && d.training.muscles) || null};
   renderGym();
 
   // ── Деньги (renderMoney ниже)
@@ -735,6 +746,7 @@ $('steps').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
 $('steps').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) { ssel = i; renderSteps(); hap(); } };
 
 // ── Тренировки: дневник (календарь · прогресс · новая)
+let gmv = 'w0', gMs = '';
 let GD = null, gv = store.get('dunn_gv') || 'cal', gMonth = null, gSel = null, gEx = null, gPi = null, gHist = false, gBest = false;
 const WDS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 const MON = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
@@ -949,12 +961,56 @@ function gymKb() {
   SC.forEach((sc, i) => { if (kbv !== 's' + i) return; h += `<div class="kb"><h3>${esc(sc.title)}</h3><ul class="kbl">${(sc.items || []).map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`; });
   return h + '<div class="sub" style="margin-top:10px">Дописать или поправить — напиши Дану «в базу: …»</div>';
 }
+// «💪 Мышцы»: недельный объём по мышцам, дробный счёт подходов (×1 основная, ×0,5 помогающая) по /data/training/muscles.json
+const dAdd = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const monOf = d => dAdd(d, -((new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7));
+const fr = x => String(+(+x).toFixed(1)).replace('.', ',');
+function musAgg(a, b) {
+  const M = GD.mus, S = {}, by = {}, miss = {};
+  GD.log.forEach(r => { if (!r.d || r.d < a || r.d > b) return;
+    const n = [r.s1, r.s2].filter(v => v != null && v !== '' && Number(v) !== 0).length; if (!n) return;
+    const m = M.map[r.ex]; if (!m) { miss[r.ex] = (miss[r.ex] || 0) + n; return; }
+    Object.entries(m).forEach(([k, c]) => { if (k[0] === '_') return; S[k] = (S[k] || 0) + n * c;
+      const e = (by[k] = by[k] || {}), x = (e[r.ex] = e[r.ex] || {n: 0, c, ask: !!m._ask}); x.n += n; }); });
+  return {S, by, miss};
+}
+function gymMus() {
+  const M = GD.mus; if (!M || !M.map || !M.muscles) return '<div class="sub">Таблица мышц ещё не собрана — напиши Дану</div>';
+  const t = GD.today, m0 = monOf(t);
+  const R = gmv === 'w1' ? [dAdd(m0, -7), dAdd(m0, -1), 1, `${dm(dAdd(m0, -7))}–${dm(dAdd(m0, -1))}`]
+    : gmv === 'w4' ? [dAdd(t, -27), t, 4, `${dm(dAdd(t, -27))}–${dm(t)} · в среднем за неделю`]
+    : [m0, t, 1, `${dm(m0)}–${dm(t)}`];
+  const {S, by, miss} = musAgg(R[0], R[1]), div = R[2];
+  const [lo, hi] = M.target || [10, 20], free = new Set(M.no_target || []);
+  const nW = new Set(GD.log.filter(r => r.d >= R[0] && r.d <= R[1]).map(r => r.d)).size;
+  const vals = M.muscles.map(k => [k, (S[k] || 0) / div]);
+  const mx = Math.max(hi + 5, ...vals.map(v => v[1]));
+  const cls = (k, v) => free.has(k) ? 'free' : v < lo ? 'low' : v > hi ? 'hi' : 'ok';
+  const lbl = {low: 'мало', ok: 'норма', hi: 'много', free: 'без нормы'};
+  let h = `<div class="seg mseg">${[['w0', 'Эта неделя'], ['w1', 'Прошлая'], ['w4', '4 недели']].map(([k, l]) => `<button data-gmv="${k}" class="${gmv === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  h += `<div class="sub">${R[3]} · ${nW ? `тренировок: ${nW}` : 'тренировок нет'} · тап по мышце — откуда подходы</div>`;
+  h += '<div class="mus">' + vals.map(([k, v]) => { const c = cls(k, v), open = gMs === k;
+    const det = open ? `<ul class="kbl mdet">${Object.entries(by[k] || {}).sort((a, b) => b[1].n * b[1].c - a[1].n * a[1].c)
+      .map(([e, x]) => `<li>${esc(e)}${x.ask ? ' <span class="warn">(?)</span>' : ''} — ${fr(x.n / div)} подх × ${fr(x.c)} = <b>${fr(x.n * x.c / div)}</b></li>`).join('') || '<li>за этот период ни одного подхода</li>'}</ul>` : '';
+    return `<button class="mr${v ? '' : ' z'}${open ? ' on' : ''}" data-ms="${esc(k)}"><span class="mn">${esc(k)}</span><b>${fr(v)}</b><small class="${c}">${lbl[c]}</small>`
+      + `<span class="mb"><i class="${c}" style="width:${(v / mx * 100).toFixed(1)}%"></i>${free.has(k) ? '' : `<span class="tg" style="left:${(lo / mx * 100).toFixed(1)}%;width:${((hi - lo) / mx * 100).toFixed(1)}%"></span>`}</span></button>${det}`; }).join('') + '</div>';
+  if (nW) {
+    const tplEx = new Set(GD.tpl.flatMap(x => (x.exercises || []).map(e => e.name)));
+    const how = k => Object.entries(M.map).filter(([, m]) => m[k] === 1).map(([e]) => e).sort((a, b) => tplEx.has(b) - tplEx.has(a)).slice(0, 2);
+    const lag = vals.filter(([k, v]) => !free.has(k) && v < lo).sort((a, b) => a[1] - b[1]).slice(0, 3);
+    if (lag.length) h += `<div class="mhint">⬇ Меньше всего: ${lag.map(([k, v]) => `<b>${esc(k.toLowerCase())}</b> ${fr(v)}`).join(', ')}.<br>Добрать: ${lag.map(([k]) => `${esc(k.toLowerCase())} — ${how(k).map(esc).join(' или ') || '—'}`).join('; ')}.`
+      + `${vals.every(([k, v]) => free.has(k) || v < lo) ? '<br><span class="sub">Всё ниже 10 — на «Базовом минимуме» это ожидаемо. Рост есть и с 4–5 подходами в неделю, просто меньше, чем с 10+.</span>' : ''}</div>`;
+  }
+  const ms = Object.keys(miss);
+  if (ms.length) h += `<div class="sub warn">Нет в таблице: ${ms.map(esc).join(', ')} — напиши Дану «мышцы: упражнение — …»</div>`;
+  return h + `<div class="sub" style="margin-top:8px">Подход в основную мышцу ×1, в помогающую ×0,5 (Pelland и соавт., 2024). Зелёная зона — ${lo}–${hi} подходов в неделю (Schoenfeld, Ogborn, Krieger, 2017). Разминка не считается. Поправить таблицу — напиши Дану «мышцы: …»</div>`;
+}
 function renderGym() {
   if (!GD) return;
   const dr = gDraft();  // отправленный черновик сбрасывается сам, когда тренировка этого дня появилась в данных
   if (dr && dr.saved && GD.log.some(x => x.d === dr.date)) store.del('dunn_wdraft');
-  const body = gv === 'prog' ? gymProg() : gv === 'new' ? gymNew() : gv === 'kb' ? gymKb() : gymCal();
-  $('workouts').innerHTML = `<h2>Дневник тренировок</h2><div class="seg"><button data-gv="cal" class="${gv === 'cal' ? 'on' : ''}">Календарь</button><button data-gv="prog" class="${gv === 'prog' ? 'on' : ''}">Прогресс</button><button data-gv="new" class="${gv === 'new' ? 'on' : ''}">＋ Новая</button><button data-gv="kb" class="${gv === 'kb' ? 'on' : ''}">База</button></div>${body}`;
+  const body = gv === 'prog' ? gymProg() : gv === 'new' ? gymNew() : gv === 'kb' ? gymKb() : gv === 'mus' ? gymMus() : gymCal();
+  $('workouts').innerHTML = `<h2>Дневник тренировок</h2><div class="seg"><button data-gv="cal" class="${gv === 'cal' ? 'on' : ''}">Календарь</button><button data-gv="prog" class="${gv === 'prog' ? 'on' : ''}">Прогресс</button><button data-gv="new" class="${gv === 'new' ? 'on' : ''}">＋ Новая</button><button data-gv="kb" class="${gv === 'kb' ? 'on' : ''}">База</button><button data-gv="mus" class="${gv === 'mus' ? 'on' : ''}">💪 Мышцы</button></div>${body}`;
 }
 function saveDraftFromDom() {
   const f = gDraft(); if (!f) return null;
@@ -997,6 +1053,8 @@ $('workouts').addEventListener('click', async e => {
       if (pr) { const pp = document.querySelector('#workouts .ppick'); pp && pp.scrollIntoView({block: 'nearest', behavior: 'smooth'}); } return; }
   }
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.gmv) { gmv = b.dataset.gmv; gMs = ''; renderGym(); hap(); return; }
+  if (b.dataset.ms !== undefined) { gMs = gMs === b.dataset.ms ? '' : b.dataset.ms; const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (b.dataset.gv) { if (b.dataset.gv === 'kb') kbv = ''; gv = b.dataset.gv; store.set('dunn_gv', gv); renderGym(); hap(); return; }
   if (b.dataset.kbv !== undefined) { kbv = b.dataset.kbv; renderGym(); hap(); try { $('workouts').scrollIntoView({block: 'start'}); } catch (err) {} return; }
   if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
