@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 11:05:52Z, sha 7288e4ea2d2a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 11:14:53Z, sha 699752ad44d5; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -282,6 +282,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .wu details{flex:1;min-width:0}.wu summary{cursor:pointer;line-height:26px;list-style:none}.wu summary::-webkit-details-marker{display:none}
 .wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
 .mhow{margin-top:8px;border-top:1px solid #0f2537;padding-top:6px}.mhow .wu{padding:2px 0}.mhow .wn{display:inline-block;width:20px;color:var(--cyd);font:12px ui-monospace,Menlo,monospace}
+.pcw{position:relative;display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#07111b}.pcw.on{border-color:var(--amb)}.pcw span{font-size:12px;color:var(--mut);white-space:nowrap}.pcw select{all:unset;flex:1;padding:10px 18px 10px 0;font-size:15px;color:var(--tx);cursor:pointer;min-width:0}.pcw.on select{color:var(--amb)}.pcw select option{background:#0b1420;color:#d8f6ff}.pcw i{position:absolute;right:12px;font-style:normal;color:var(--cy);pointer-events:none}
 .psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .prx{color:var(--mut);font-size:12px;font-weight:400}.pr .pl2{font-size:11px;margin-top:5px;padding-top:4px;border-top:1px dashed var(--line)}.pr .pl2 b{color:var(--cy);font-weight:600}
 .prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;margin:10px 0 4px}
 .pr{padding:8px 0;border-top:1px solid #0f2537;cursor:pointer}.pr:first-child{border-top:0}
@@ -1332,18 +1333,24 @@ $('fseg').addEventListener('click', e => {
   fv = b.dataset.fv; store.set('dunn_fv', fv); applyFv();
 });
 let pv = '';  // '' меню | top | all | how — как Трени → База
-const PRV = {top: '⭐ Частые', prot: '💪 Чем добрать белок', all: '📋 Все продукты', how: '✍️ Как записать'};
+const PRV = {top: '⭐ Частые', all: '📋 Все продукты', how: '✍️ Как записать'};
 const prTop = () => PR.filter(x => x.n >= 2).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')).slice(0, 15);
 // «📋 Все продукты»: сортировка кнопками (его идея 08.11): А–Я / больше белка / углеводов / жиров / ккал на 100 г сверху
 const PSORT = {az: 'А–Я', p: 'Белок', c: 'Углеводы', f: 'Жиры', kcal: 'Ккал'};
 let psort = (() => { try { const v = store.get('dunn_psort'); return PSORT[v] ? v : 'az'; } catch (e) { return 'az'; } })();
+// категории продуктов (его просьба 08.11): D.product_cats — порядок кнопок, x.cat — из /data/food/product-categories.json
+let pcat = (() => { try { return store.get('dunn_pcat') || ''; } catch (e) { return ''; } })();
+const prCats = () => { const have = new Set(PR.map(x => x.cat || 'Другое')); return ((D && D.product_cats) || []).filter(c => have.has(c)); };
+const prBar = () => { const cs = prCats(); if (pcat && !cs.includes(pcat)) pcat = '';
+  return `<label class="pcw${pcat ? ' on' : ''}"><span>Категория</span><select class="pcsel">${['', ...cs].map(c => `<option value="${esc(c)}"${pcat === c ? ' selected' : ''}>${c ? esc(c) : 'Все продукты'}${c ? ` (${PR.filter(x => (x.cat || 'Другое') === c).length})` : ''}</option>`).join('')}</select><i>▾</i></label>`
+    + `<div class="psort">${Object.keys(PSORT).map(k => `<button data-ps="${k}" class="${psort === k ? 'on' : ''}">${k === 'az' && pv === 'top' ? 'Частота' : PSORT[k]}</button>`).join('')}</div>`; };
 function renderProds() {
   if (!PR.length) { $('prods').innerHTML = ''; return; }
   if (psel && !prBy(psel)) psel = null;
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {top: `${prTop().length} самых частых за 60 дней`, prot: protSub(), all: `${PR.length} · поиск и сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
+    const sub = {top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
@@ -1359,7 +1366,7 @@ function renderProds() {
     $('prods').innerHTML = h; return;
   }
   if (pv === 'prot') { $('prods').innerHTML = h + '<div id="protbox"></div>'; try { renderProt(); } catch (e) {} return; }
-  h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}"><div class="psort">${Object.keys(PSORT).map(k => `<button data-ps="${k}" class="${psort === k ? 'on' : ''}">${PSORT[k]}</button>`).join('')}</div>` : '') + `<div id="prl"></div>`;
+  h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}">` : '') + prBar() + `<div id="prl"></div>`;
   $('prods').innerHTML = h;
   if (pv === 'all') $('prq').addEventListener('input', e => { prq = e.target.value; renderPrList(); });
   renderPrSel(); renderPrList();
@@ -1375,7 +1382,7 @@ function renderPrSel() {
 }
 // нижняя строка как в «Чем добрать белок» (его просьба 08.11): белок за 100 ккал + сколько съесть, чтобы закрыть остаток
 const pl2 = x => {  // нижняя строка под выбранную сортировку (его просьба 08.11): «Осталось У 83 г → съесть 120 г (430 ккал)»
-  const k = pv === 'all' && ['c', 'f', 'kcal'].includes(psort) ? psort : 'p', L = {p: 'Б', c: 'У', f: 'Ж', kcal: 'ккал'}[k];
+  const k = (pv === 'all' || pv === 'top') && ['c', 'f', 'kcal'].includes(psort) ? psort : 'p', L = {p: 'Б', c: 'У', f: 'Ж', kcal: 'ккал'}[k];
   const t = D && D.activity && D.activity.target, fd = (D && D.food) || {};
   if (!(x.kcal > 0) || x[k] == null) return '';
   const f = v => String(Math.round(v * 10) / 10).replace('.', ',');
@@ -1391,18 +1398,19 @@ const pl2 = x => {  // нижняя строка под выбранную со�
 };
 function renderPrList() {
   let all;
-  if (pv === 'top') all = prTop();
+  const inCat = x => !pcat || (x.cat || 'Другое') === pcat, v = x => x[psort] == null ? -1 : +x[psort];
+  if (pv === 'top') all = pcat ? PR.filter(x => x.n >= 2 && inCat(x)).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')) : prTop();
   else {
     const q = prq.trim().toLowerCase().replace(/^#/, '');
-    const v = x => x[psort] == null ? -1 : +x[psort];
-    all = (q ? PR.filter(x => x.name.toLowerCase().includes(q) || x.id === q) : PR.slice())
-      .sort((a, b) => psort === 'az' ? a.name.localeCompare(b.name, 'ru') : (v(b) - v(a) || a.name.localeCompare(b.name, 'ru')));
+    all = (q ? PR.filter(x => x.name.toLowerCase().includes(q) || x.id === q) : PR.slice()).filter(inCat)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   }
-  const hi = (k, t) => pv === 'all' && psort === k ? `<b class="hi">${t}</b>` : t;
+  if (psort !== 'az') all = all.slice().sort((a, b) => v(b) - v(a) || a.name.localeCompare(b.name, 'ru'));
+  const hi = (k, t) => (pv === 'all' || pv === 'top') && psort === k ? `<b class="hi">${t}</b>` : t;
   const per = x => `100 г — ${hi('kcal', esc(x.kcal) + ' ккал')} · ${hi('p', 'Б ' + pr1(x.p))} · ${hi('f', 'Ж ' + pr1(x.f))} · ${hi('c', 'У ' + pr1(x.c))}`;
   $('prl').innerHTML = all.length ? all.map(x => `<div class="pr${x.id === psel ? ' on' : ''}" data-pid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}${x.n ? ` <span class="prx">(${esc(x.n)}×)</span>` : ''}</span><span class="pri">#${esc(x.id)}</span></div>`
       + `<div class="sub">${per(x)}${x.src === 'label' ? ' · этикетка' : ''}</div>${pl2(x)}</div>`).join('')
-    : '<div class="sub" style="margin-top:6px">Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.</div>';
+    : `<div class="sub" style="margin-top:6px">${pv === 'top' && pcat ? 'В этой категории нет продуктов, которые ел 2+ раза — смотри «Все продукты».' : 'Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.'}</div>`;
 }
 // 🥫 записать (разрешил Al 07.11, /dash/README.md): фраза строго «🥫 записать #<id> <граммы> г», граммы — только то,
 // что он ввёл (целое 1–5000), id — products[].id. Названия и других данных витрины во фразе нет. В буфер + чат с ботом.
@@ -1430,6 +1438,10 @@ $('prods').addEventListener('click', e => {
   psel = r.dataset.pid; renderPrSel(); renderPrList();
   $('prsel').scrollIntoView({block: 'center', behavior: 'smooth'});
   const i = $('prsel').querySelector('.prg'); if (i) { i.focus({preventScroll: true}); i.select(); }
+});
+$('prods').addEventListener('change', e => {
+  if (!e.target.classList.contains('pcsel')) return;
+  pcat = e.target.value; try { store.set('dunn_pcat', pcat); } catch (err) {} renderProds();
 });
 $('prods').addEventListener('input', e => {
   if (!e.target.classList.contains('prg')) return;
