@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 17:32:03Z, sha 9706619c3798; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 17:38:24Z, sha c2145adc768d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -400,7 +400,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
-  <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
+  <section class="tab" data-tab="tasks" hidden><div class="seg" id="tseg" style="margin-top:12px;grid-template-columns:repeat(2,1fr)"><button data-tv="list">📋 Задачи</button><button data-tv="dl">🔁 Дейлики</button></div><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
 </div>
 
@@ -622,9 +622,20 @@ const tli = (x, right, ck) => { const go = okId(x.id), cid = go ? String(x.id).r
   return `<li${cls ? ` class="${cls}"` : ''}${go ? ` data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
 const tdCls = (y, isPast) => { const all = (y.cal || []).concat(y.due || []); if (!all.length) return '';
   const open = all.filter(z => !z.done).length; return !open ? 'ok' : (isPast ? 'over' : 'low'); };
+// 08.11: «🔁 Дейлики» — отдельная вкладка внутри Задач (кнопка сверху), выбор запоминается
+let tv = (() => { try { return store.get('dunn_tv') === 'dl' ? 'dl' : 'list'; } catch (e) { return 'list'; } })();
+function applyTv() {
+  $('tseg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.tv === tv));
+  const dl = tv === 'dl';
+  $('tasks').hidden = dl; if (dl) $('tdays').hidden = true;
+  $('dailies').hidden = !dl || !(TK && TK.dailies && (TK.dailies.items || []).length);
+}
+$('tseg').addEventListener('click', e => { const b = e.target.closest('[data-tv]'); if (!b) return;
+  tv = b.dataset.tv; try { store.set('dunn_tv', tv); } catch (err) {} renderTasks(); });
 function renderTasks() {
   const k = TK; if (!k) return;
   try { renderDailies(k.dailies); } catch (e) {}
+  if (tv === 'dl') { applyTv(); return; }
   const days = k.days || [], today = D && D.date;
   const ti = days.findIndex(y => y.d === today);
   const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>
@@ -651,8 +662,8 @@ function renderTasks() {
 // 🔁 Дейлики · ударный режим (его просьба 08.11): серия по каждому из tasks.dailies (журнал /data/dailies/log.json)
 function renderDailies(dl) {
   const el = $('dailies'); if (!el) return;
-  if (!dl || !(dl.items || []).length) { el.hidden = true; return; }
-  el.hidden = false;
+  setTimeout(applyTv, 0);
+  if (!dl || !(dl.items || []).length) { el.innerHTML = '<div class="sub">Журнала дейликов пока нет.</div>'; return; }
   const nm = t => t.replace(/\s*\([^)]*\)/g, '').replace(/\s*→.*$/, '').trim();
   const nx = s => { if (!s) return ''; const d = s.slice(0, 10), t = s.slice(11, 16); return `${wd(d)} ${dm(d)}${t && t !== '00:00' ? ', ' + t : ''}`; };
   const L = dl.last;
