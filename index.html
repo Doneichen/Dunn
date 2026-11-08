@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 10:54:21Z, sha 58645d527325; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 11:00:52Z, sha 80af17c9efb4; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -282,6 +282,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .wu details{flex:1;min-width:0}.wu summary{cursor:pointer;line-height:26px;list-style:none}.wu summary::-webkit-details-marker{display:none}
 .wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
 .mhow{margin-top:8px;border-top:1px solid #0f2537;padding-top:6px}.mhow .wu{padding:2px 0}.mhow .wn{display:inline-block;width:20px;color:var(--cyd);font:12px ui-monospace,Menlo,monospace}
+.psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .pl2{font-size:11px;margin-top:1px}.pr .pl2 b{color:var(--cy);font-weight:600}
 .prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;margin:10px 0 4px}
 .pr{padding:8px 0;border-top:1px solid #0f2537;cursor:pointer}.pr:first-child{border-top:0}
 .prh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.prn{color:var(--tx);font-size:14px;min-width:0;overflow-wrap:anywhere}.pri{color:var(--cyd);font:12px ui-monospace,Menlo,monospace;white-space:nowrap}
@@ -1293,7 +1294,8 @@ function renderProt() {
   const need = x => left > 0 && x.p ? Math.round(left / x.p * 100) : null;
   // один общий список: курированные (D.protein, ключ c:id) + его продукты (ключ p:id), по белку на 100 ккал
   const cur = (D.protein || []).map(x => Object.assign({}, x, {key: 'c:' + x.id, cur: true}));
-  const mine = (PR || []).filter(x => x.p != null && x.kcal > 0).map(x => Object.assign({}, x, {key: 'p:' + x.id}));
+  const curN = new Set(cur.map(x => x.name.toLowerCase()));  // курированные уже есть сверху — не дублировать из «Моих продуктов»
+  const mine = (PR || []).filter(x => x.p != null && x.kcal > 0 && !curN.has(x.name.toLowerCase())).map(x => Object.assign({}, x, {key: 'p:' + x.id}));
   const ok = cur.filter(x => x.p != null && x.kcal).concat(mine).sort((a, b) => b.p - a.p || p100k(b) - p100k(a));  // все, по белку на 100 г (его просьба 08.11)
   const nodata = cur.filter(x => !(x.p != null && x.kcal));
   const det = x => {
@@ -1332,13 +1334,16 @@ $('fseg').addEventListener('click', e => {
 let pv = '';  // '' меню | top | all | how — как Трени → База
 const PRV = {top: '⭐ Частые', prot: '💪 Чем добрать белок', all: '📋 Все продукты', how: '✍️ Как записать'};
 const prTop = () => PR.filter(x => x.n >= 2).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')).slice(0, 15);
+// «📋 Все продукты»: сортировка кнопками (его идея 08.11): А–Я / больше белка / углеводов / жиров / ккал на 100 г сверху
+const PSORT = {az: 'А–Я', p: 'Белок', c: 'Углеводы', f: 'Жиры', kcal: 'Ккал'};
+let psort = (() => { try { const v = store.get('dunn_psort'); return PSORT[v] ? v : 'az'; } catch (e) { return 'az'; } })();
 function renderProds() {
   if (!PR.length) { $('prods').innerHTML = ''; return; }
   if (psel && !prBy(psel)) psel = null;
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {top: `${prTop().length} самых частых за 60 дней`, prot: protSub(), all: `${PR.length} · поиск по названию и #номеру`, how: 'номер + граммы мне в чат'};
+    const sub = {top: `${prTop().length} самых частых за 60 дней`, prot: protSub(), all: `${PR.length} · поиск и сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
@@ -1354,7 +1359,7 @@ function renderProds() {
     $('prods').innerHTML = h; return;
   }
   if (pv === 'prot') { $('prods').innerHTML = h + '<div id="protbox"></div>'; try { renderProt(); } catch (e) {} return; }
-  h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}">` : '') + `<div id="prl"></div>`;
+  h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}"><div class="psort">${Object.keys(PSORT).map(k => `<button data-ps="${k}" class="${psort === k ? 'on' : ''}">${PSORT[k]}</button>`).join('')}</div>` : '') + `<div id="prl"></div>`;
   $('prods').innerHTML = h;
   if (pv === 'all') $('prq').addEventListener('input', e => { prq = e.target.value; renderPrList(); });
   renderPrSel(); renderPrList();
@@ -1368,15 +1373,23 @@ function renderPrSel() {
     <div class="prc"><input class="prg" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${esc(g)}"> г <span class="prv">${prCalc(x, g)}</span>
     <button class="prlog" data-log="1">🥫 Записать <span class="prgv">${esc(g)}</span> г</button><div class="sub" id="prlog-hint">Фраза уйдёт в буфер и откроется чат с ботом — вставишь и отправишь. Или напиши сам «#${esc(x.id)} ${esc(g)} г».</div></div></div>`;
 }
+// нижняя строка как в «Чем добрать белок» (его просьба 08.11): белок за 100 ккал + сколько съесть, чтобы закрыть остаток
+const pl2 = x => { if (!(x.p > 0 && x.kcal > 0)) return '';
+  const l = protLeft(), n = l > 0 ? Math.round(l / x.p * 100) : null, f = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  return `<div class="sub pl2">${f(x.p / x.kcal * 100)} г Б за 100 ккал${n ? ` · закрыть Б ${l} г: съесть <b>${n} г</b> · ${Math.round(x.kcal * n / 100)} ккал` : ''}</div>`; };
 function renderPrList() {
   let all;
   if (pv === 'top') all = prTop();
   else {
     const q = prq.trim().toLowerCase().replace(/^#/, '');
-    all = (q ? PR.filter(x => x.name.toLowerCase().includes(q) || x.id === q) : PR.slice()).sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    const v = x => x[psort] == null ? -1 : +x[psort];
+    all = (q ? PR.filter(x => x.name.toLowerCase().includes(q) || x.id === q) : PR.slice())
+      .sort((a, b) => psort === 'az' ? a.name.localeCompare(b.name, 'ru') : (v(b) - v(a) || a.name.localeCompare(b.name, 'ru')));
   }
+  const hi = (k, t) => pv === 'all' && psort === k ? `<b class="hi">${t}</b>` : t;
+  const per = x => `${hi('kcal', esc(x.kcal) + ' ккал')} · ${hi('p', 'Б ' + pr1(x.p))} · ${hi('f', 'Ж ' + pr1(x.f))} · ${hi('c', 'У ' + pr1(x.c))}`;
   $('prl').innerHTML = all.length ? all.map(x => `<div class="pr${x.id === psel ? ' on' : ''}" data-pid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}</span><span class="pri">#${esc(x.id)}</span></div>`
-      + `<div class="sub">${prPer(x)}${x.src === 'label' ? ' · этикетка' : ''}${x.n ? ` · ел ${esc(x.n)}×` : ''}</div></div>`).join('')
+      + `<div class="sub">${per(x)}${x.src === 'label' ? ' · этикетка' : ''}${x.n ? ` · ел ${esc(x.n)}×` : ''}</div>${pl2(x)}</div>`).join('')
     : '<div class="sub" style="margin-top:6px">Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.</div>';
 }
 // 🥫 записать (разрешил Al 07.11, /dash/README.md): фраза строго «🥫 записать #<id> <граммы> г», граммы — только то,
@@ -1394,6 +1407,8 @@ $('prods').addEventListener('click', e => {
     catch (err) { $('prlog-hint').textContent = 'Чат не открылся. Фраза в буфере — вставь её боту сам.'; }
     return;
   }
+  const ps = e.target.closest('[data-ps]');
+  if (ps) { psort = ps.dataset.ps; try { store.set('dunn_psort', psort); } catch (err) {} renderProds(); return; }
   const pk = e.target.closest('[data-pk]');
   if (pk) { pex = pex === pk.dataset.pk ? null : pk.dataset.pk; renderProt(); return; }
   const v = e.target.closest('[data-pv]');
@@ -1451,13 +1466,15 @@ $('vits').addEventListener('click', e => {
 // ── Еда → «📖 Рецепты» (07.11): из /data/food/recipes.json через collect.py (recipes[] с итогами).
 // Список кнопками, как База; внутри — КБЖУ на 100 г / порцию / всё блюдо, ингредиенты, способ приготовления.
 let rsel = null;
+// БЖУ прямо в списке рецептов (его просьба 08.11)
+const rbju = o => `${Math.round(o.kcal)} ккал · Б ${pr1(o.p)} · Ж ${pr1(o.f)} · У ${pr1(o.c)}`;
 function renderRecs() {
   const R = (D && Array.isArray(D.recipes)) ? D.recipes : [];
   const head = `<h2>📖 Рецепты</h2>`;
   const r = R.find(x => x.id === rsel);
   if (!r) {
     rsel = null;
-    $('recs').innerHTML = head + (R.length ? `<div class="kbm" style="margin-top:8px">${R.map(x => `<button data-rid="${esc(x.id)}"><span class="tx"><b>${esc(x.name)}</b><small>${x.per100 ? `${Math.round(x.per100.kcal)} ккал на 100 г` : ''}${x.portion ? ` · порция ${Math.round(x.portion.kcal)} ккал` : ''}${x.date ? ` · ${esc(dm(x.date))}` : ''}</small></span><span class="ch">›</span></button>`).join('')}</div>` : '<div class="sub" style="margin-top:8px">Рецептов пока нет.</div>')
+    $('recs').innerHTML = head + (R.length ? `<div class="kbm" style="margin-top:8px">${R.map(x => `<button data-rid="${esc(x.id)}"><span class="tx"><b>${esc(x.name)}</b><small>${x.per100 ? `100 г: ${rbju(x.per100)}` : ''}${x.portion ? `<br>порция: ${rbju(x.portion)}` : ''}${x.date ? `<br>${esc(dm(x.date))}` : ''}</small></span><span class="ch">›</span></button>`).join('')}</div>` : '<div class="sub" style="margin-top:8px">Рецептов пока нет.</div>')
       + '<div class="sub" style="margin-top:8px;line-height:1.45">Новый рецепт — пришли Дану ингредиенты с граммами, вес готового блюда, на сколько порций и как готовил.</div>';
     return;
   }
