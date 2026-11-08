@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 17:22:33Z, sha bf6647486c51; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 17:32:03Z, sha 9706619c3798; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -290,6 +290,8 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .binf{all:unset;cursor:pointer;display:flex;justify-content:space-between;width:100%;box-sizing:border-box;margin:8px 0 2px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;color:var(--cy)}.binf.on{border-color:var(--cy)}
 .binfo{font-size:12px;color:var(--mut);line-height:1.5;padding:8px 12px;border:1px solid var(--line);border-top:0;border-radius:0 0 10px 10px;margin-top:-4px}.binfo b{color:var(--tx);display:block;margin-top:6px}.binfo div b{display:inline;margin:0}.binfo div{margin-top:3px}
 .bsrc{font-size:11px;padding:0 6px;border-radius:6px;border:1px solid var(--line);margin-left:6px;white-space:nowrap}.bsrc.of{color:var(--ok);border-color:#1d5a3f}.bsrc.off{color:var(--amb);border-color:#5a4a1d}
+.dq{padding:8px 0;border-bottom:1px solid var(--line)}.dq:last-of-type{border-bottom:0}.dqn{color:var(--tx);font-size:14px}.dqs{color:var(--amb);font-weight:700;white-space:nowrap}
+.dqh{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:5px}.dqh i{height:6px;border-radius:2px;background:var(--ln3)}.dqh i.d{background:var(--ok)}.dqh i.m{background:var(--red)}
 .psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .prx{color:var(--mut);font-size:12px;font-weight:400}.pr .pl2{font-size:11px;margin-top:5px;padding-top:4px;border-top:1px dashed var(--line)}.pr .pl2 b{color:var(--cy);font-weight:600}
 .prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--tx);font-size:16px;margin:10px 0 4px}
 .pr{padding:8px 0;border-top:1px solid var(--ln2);cursor:pointer}.pr:first-child{border-top:0}
@@ -398,7 +400,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
-  <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div></section>
+  <section class="tab" data-tab="tasks" hidden><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
 </div>
 
@@ -622,6 +624,7 @@ const tdCls = (y, isPast) => { const all = (y.cal || []).concat(y.due || []); if
   const open = all.filter(z => !z.done).length; return !open ? 'ok' : (isPast ? 'over' : 'low'); };
 function renderTasks() {
   const k = TK; if (!k) return;
+  try { renderDailies(k.dailies); } catch (e) {}
   const days = k.days || [], today = D && D.date;
   const ti = days.findIndex(y => y.d === today);
   const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>
@@ -644,6 +647,24 @@ function renderTasks() {
   $('tasks').innerHTML = `<h2>${isToday ? 'Сегодня' : 'Календарь'}</h2><ul>${cal.map(y => tli(y, '', true)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
     ${due.length ? `<h2 style="margin-top:14px">Срок в этот день</h2><ul>${due.map(y => tli({...y, time: ''}, '', true)).join('')}</ul>` : ''}
     ${isToday ? `<h2 style="margin-top:14px">Дейлики</h2><ul>${k.daily.map(y => tli(y)).join('')}</ul>` : ''}` + (isToday ? curList : `<div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа) · текущие действия — на «сегодня»</div>`);
+}
+// 🔁 Дейлики · ударный режим (его просьба 08.11): серия по каждому из tasks.dailies (журнал /data/dailies/log.json)
+function renderDailies(dl) {
+  const el = $('dailies'); if (!el) return;
+  if (!dl || !(dl.items || []).length) { el.hidden = true; return; }
+  el.hidden = false;
+  const nm = t => t.replace(/\s*\([^)]*\)/g, '').replace(/\s*→.*$/, '').trim();
+  const nx = s => { if (!s) return ''; const d = s.slice(0, 10), t = s.slice(11, 16); return `${wd(d)} ${dm(d)}${t && t !== '00:00' ? ', ' + t : ''}`; };
+  const L = dl.last;
+  let s = `<h2>🔁 Дейлики · ударный режим</h2><div class="sub">${L ? `последний закрытый день ${esc(dm(L.d))}: <b>${L.done}/${L.done + L.miss}</b>${L.miss ? '' : ' ✅'}` : ''}${dl.all_streak ? ` · всё закрыто <b>${dl.all_streak}</b> дн подряд` : ''}</div>`;
+  s += dl.items.map(x => {
+    const cells = [...(x.h || '')].map(c => `<i class="${c === 'd' ? 'd' : c === 'm' ? 'm' : ''}"></i>`).join('');
+    const sch = x.alt ? 'через день · ' : x.every ? `раз в ${x.every} дн · ` : '';
+    return `<div class="dq"><div class="lbl"><span class="dqn">${esc(nm(x.t))}</span><span class="dqs">${x.streak ? '🔥 ' + x.streak : '—'}</span></div>
+      <div class="sub">${sch}${x.n != null ? 'всего ' + x.n + ' · ' : ''}рекорд ${x.best}${x.next ? ' · след. ' + esc(nx(x.next)) : ''}</div><div class="dqh">${cells}</div></div>`;
+  }).join('');
+  s += `<div class="sub" style="margin-top:8px;font-size:11px">Полоска — 14 дней: зелёный сделал, красный пропуск. История с ${esc(dm('2026-11-08'))}; серия стартовала со счётчика «Отчетность». Пропуск называешь, когда просишь перенести дейлики.</div>`;
+  el.innerHTML = s;
 }
 function pickTDay(i) {
   const days = (TK && TK.days) || [];
