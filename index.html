@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 12:35:07Z, sha 32bc0efb7d1c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 13:03:29Z, sha 0ae369c9f722; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1336,7 +1336,7 @@ $('fseg').addEventListener('click', e => {
   fv = b.dataset.fv; store.set('dunn_fv', fv); applyFv();
 });
 let pv = '';  // '' меню | top | all | how — как Трени → База
-const PRV = {top: '⭐ Частые', all: '📋 Все продукты', base: '🔎 База', how: '✍️ Как записать'};
+const PRV = {recent: '🕘 Недавние', top: '⭐ Частые', all: '📋 Все продукты', base: '🔎 База', how: '✍️ Как записать'};
 const prTop = () => PR.filter(x => x.n >= 2).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')).slice(0, 15);
 // «📋 Все продукты»: сортировка кнопками (его идея 08.11): А–Я / больше белка / углеводов / жиров / ккал на 100 г сверху
 const PSORT = {az: 'А–Я', p: 'Белок', c: 'Углеводы', f: 'Жиры', kcal: 'Ккал'};
@@ -1399,13 +1399,31 @@ $('prods').addEventListener('input', e => {
     const v = e.target.value.replace(/\D+/g, '').slice(0, 4); if (v !== e.target.value) e.target.value = v;
     $('bsel').querySelector('.bv').innerHTML = prCalc(x, v); $('bsel').querySelector('.bgv').textContent = v || '…'; }
 });
+// 🕘 Недавние (его просьба 08.11): последние 7 дней по дням из food_days[].meals; строка → «Мои продукты» по pk (= название продукта)
+function recentView() {
+  const days = (D && D.food_days || []).slice(0, 7), today = D && D.date;
+  const nn = t => String(t || '').toLowerCase().replace(/ё/g, 'е').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  const byName = new Map(); PR.forEach(x => { const k = nn(x.name); if (!byName.has(k) || x.n > byName.get(k).n) byName.set(k, x); });
+  const lbl = d => d === today ? 'Сегодня' : (days[1] && d === days[1].d && Date.parse(today) - Date.parse(d) === 864e5 ? 'Вчера' : `${wd(d)}, ${dm(d)}`);
+  let s = '<div class="sub" style="margin:4px 0 2px">Последние 7 дней. Тап — те же граммы и «Записать». Без #номера — продукт ещё не в «Моих» (ел 1 раз), пиши мне словами.</div>';
+  days.forEach(day => {
+    const agg = new Map();
+    (day.meals || []).forEach(m => { const k = nn(m.pk || m.name); const a = agg.get(k) || {name: m.name, w: 0, kcal: 0, pk: k, n: 0};
+      a.w += m.w || 0; a.kcal += m.kcal || 0; a.n++; agg.set(k, a); });
+    if (!agg.size) return;
+    s += `<div class="vgrp">${esc(lbl(day.d))}</div>` + [...agg.values()].map(a => { const x = byName.get(a.pk);
+      return `<div class="pr${x && x.id === psel ? ' on' : ''}"${x ? ` data-pid="${esc(x.id)}" data-rw="${Math.round(a.w)}"` : ''}><div class="prh"><span class="prn">${esc(x ? x.name : a.name)}${a.n > 1 ? ` <span class="prx">(${a.n}×)</span>` : ''}</span>${x ? `<span class="pri">#${esc(x.id)}</span>` : ''}</div>`
+        + `<div class="sub">${a.w ? Math.round(a.w) + ' г · ' : ''}${Math.round(a.kcal)} ккал${x ? '' : ' · <span class="prx">не в «Моих» — пиши словами</span>'}</div></div>`; }).join('');
+  });
+  return s;
+}
 function renderProds() {
   if (!PR.length) { $('prods').innerHTML = ''; return; }
   if (psel && !prBy(psel)) psel = null;
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {base: `${baseRows().length} · фастфуд, магазины, базовые продукты`, top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
+    const sub = {recent: 'что ел за последние 7 дней — по дням', base: `${baseRows().length} · фастфуд, магазины, базовые продукты`, top: `${prTop().length} самых частых · категории и сортировка`, prot: protSub(), all: `${PR.length} · поиск, категории, сортировка по Б/Ж/У/ккал`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
@@ -1420,6 +1438,7 @@ function renderProds() {
       </ol></div>`;
     $('prods').innerHTML = h; return;
   }
+  if (pv === 'recent') { $('prods').innerHTML = h + `<div id="prsel"></div>` + recentView(); renderPrSel(); return; }
   if (pv === 'base') { $('prods').innerHTML = h + baseView(); return; }
   if (pv === 'prot') { $('prods').innerHTML = h + '<div id="protbox"></div>'; try { renderProt(); } catch (e) {} return; }
   h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}">` : '') + prBar() + `<div id="prl"></div>`;
@@ -1498,7 +1517,10 @@ $('prods').addEventListener('click', e => {
   if (v) { pv = v.dataset.pv; psel = null; renderProds(); $('prods').scrollIntoView({block: 'start'}); return; }
   if (e.target.closest('#prsel')) return;
   const r = e.target.closest('[data-pid]'); if (!r) return;
-  psel = r.dataset.pid; renderPrSel(); renderPrList();
+  psel = r.dataset.pid;
+  if (pv === 'recent') { renderPrSel(); const gi = $('prsel').querySelector('.prg'); if (gi && +r.dataset.rw > 0) { gi.value = r.dataset.rw; gi.dispatchEvent(new Event('input', {bubbles: true})); }
+    $('prods').querySelectorAll('.pr[data-pid]').forEach(el => el.classList.toggle('on', el === r)); $('prsel').scrollIntoView({block: 'center', behavior: 'smooth'}); return; }
+  renderPrSel(); renderPrList();
   $('prsel').scrollIntoView({block: 'center', behavior: 'smooth'});
   const i = $('prsel').querySelector('.prg'); if (i) { i.focus({preventScroll: true}); i.select(); }
 });
