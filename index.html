@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 04:47:45Z, sha ab2dc45d9e62; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 08:25:45Z, sha f8b8dc846c53; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -64,6 +64,7 @@ h1{font:700 18px ui-monospace,Menlo,monospace;letter-spacing:.3em;margin:0;color
 .bar i.over{background:var(--red)}.bar i.low{background:var(--amb)}
 .lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
 .lbl b{color:var(--tx);font-weight:600}
+.lft{display:flex;gap:6px;align-items:stretch;margin:10px 0 10px}.lft .lh{font-size:12px;color:var(--mut);align-self:center;margin-right:2px}.lft .lc{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 6px;text-align:center;line-height:1.15}.lft .lc i{display:block;font-style:normal;font-size:11px;color:var(--mut)}.lft .lc b{font:600 16px ui-monospace,Menlo,monospace;color:var(--cy)}.lft .lc small{font-size:11px;color:var(--mut);margin-left:2px}.lft .lc.bad{border-color:var(--red)}.lft .lc.bad b{color:var(--red)}.lft .lc.done b{color:var(--ok)}
 .mi{display:inline-flex;vertical-align:-5px;margin-right:8px}.mi svg{width:20px;height:20px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mi.p svg{stroke:#ff6b8b}.mi.f svg{stroke:#ffc94d}.mi.c svg{stroke:#e8cf8f}.mi.fb svg{stroke:#6ee7a0}
 ul{list-style:none;margin:0;padding:0}
@@ -622,6 +623,12 @@ const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const wd = s => WD[new Date(s + 'T00:00:00Z').getUTCDay()];
 const kcls = (x) => { const k = x.food && x.food.kcal, tk = x.target && x.target.kcal;
   return !k ? '' : (k > tk * 1.05 ? 'over' : (k < tk * .8 ? 'low' : 'ok')); };
+// «Осталось» Б/Ж/У в граммах (его просьба 08.11): только для сегодня; перебор — «+N сверх» красным
+const leftRow = (f, t) => {
+  const one = (name, v, tg) => { const r = Math.round((tg || 0) - (v || 0));
+    return `<div class="lc ${r < 0 ? 'bad' : (r === 0 ? 'done' : '')}"><i>${name}</i><b>${r < 0 ? '+' + (-r) : r}</b><small>${r < 0 ? 'г сверх' : 'г'}</small></div>`; };
+  return `<div class="lft"><span class="lh">Осталось</span>${one('Белки', f.p, t.p)}${one('Жиры', f.f, t.f)}${one('Углеводы', f.c, t.c)}</div>`;
+};
 function renderFood() {
   if (fv === 'vit') try { renderVits(); } catch (e) {}
   const x = FD[fdi], f = x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}, t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
@@ -636,7 +643,7 @@ function renderFood() {
   $('food').innerHTML = `<h2>Питание · ${esc(x.type || '')}</h2>
     <div class="row"><div class="big">${f.kcal}<small> / ${t.kcal} ккал</small></div><div class="${left < 0 ? 'bad' : 'ok'}">${left < 0 ? 'перебор ' + (-left) : (isToday ? 'осталось ' : 'недобор ') + left}</div></div>
     <div class="bar"><i class="${f.kcal > t.kcal * 1.05 ? 'over' : ''}" style="width:${t.kcal ? Math.min(100, f.kcal / t.kcal * 100) : 0}%"></i></div>
-    ${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
+    ${isToday ? leftRow(f, t) : ''}${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
     <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
     ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
     ${!isToday ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
