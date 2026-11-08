@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 11:00:52Z, sha 80af17c9efb4; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 11:03:42Z, sha d55915d244b7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -282,7 +282,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .wu details{flex:1;min-width:0}.wu summary{cursor:pointer;line-height:26px;list-style:none}.wu summary::-webkit-details-marker{display:none}
 .wu summary::after{content:' ▾';color:var(--mut);font-size:11px}.wu details[open] summary::after{content:' ▴'}
 .mhow{margin-top:8px;border-top:1px solid #0f2537;padding-top:6px}.mhow .wu{padding:2px 0}.mhow .wn{display:inline-block;width:20px;color:var(--cyd);font:12px ui-monospace,Menlo,monospace}
-.psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .pl2{font-size:11px;margin-top:1px}.pr .pl2 b{color:var(--cy);font-weight:600}
+.psort{display:flex;gap:4px;margin:6px 0 4px}.psort button{all:unset;cursor:pointer;flex:1;text-align:center;padding:6px 0;border-radius:8px;border:1px solid var(--line);font-size:12px;color:var(--mut)}.psort button.on{border-color:var(--cy);color:var(--cy)}.pr .hi{color:var(--cy);font-weight:600}.pr .pl2{font-size:11px;margin-top:5px;padding-top:4px;border-top:1px dashed var(--line)}.pr .pl2 b{color:var(--cy);font-weight:600}
 .prq{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid var(--line);background:#07111b;color:var(--tx);font-size:16px;margin:10px 0 4px}
 .pr{padding:8px 0;border-top:1px solid #0f2537;cursor:pointer}.pr:first-child{border-top:0}
 .prh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.prn{color:var(--tx);font-size:14px;min-width:0;overflow-wrap:anywhere}.pri{color:var(--cyd);font:12px ui-monospace,Menlo,monospace;white-space:nowrap}
@@ -1387,7 +1387,7 @@ function renderPrList() {
       .sort((a, b) => psort === 'az' ? a.name.localeCompare(b.name, 'ru') : (v(b) - v(a) || a.name.localeCompare(b.name, 'ru')));
   }
   const hi = (k, t) => pv === 'all' && psort === k ? `<b class="hi">${t}</b>` : t;
-  const per = x => `${hi('kcal', esc(x.kcal) + ' ккал')} · ${hi('p', 'Б ' + pr1(x.p))} · ${hi('f', 'Ж ' + pr1(x.f))} · ${hi('c', 'У ' + pr1(x.c))}`;
+  const per = x => `100 г — ${hi('kcal', esc(x.kcal) + ' ккал')} · ${hi('p', 'Б ' + pr1(x.p))} · ${hi('f', 'Ж ' + pr1(x.f))} · ${hi('c', 'У ' + pr1(x.c))}`;
   $('prl').innerHTML = all.length ? all.map(x => `<div class="pr${x.id === psel ? ' on' : ''}" data-pid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}</span><span class="pri">#${esc(x.id)}</span></div>`
       + `<div class="sub">${per(x)}${x.src === 'label' ? ' · этикетка' : ''}${x.n ? ` · ел ${esc(x.n)}×` : ''}</div>${pl2(x)}</div>`).join('')
     : '<div class="sub" style="margin-top:6px">Ничего не нашлось. Новый продукт — пришли этикетку, добавлю.</div>';
