@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 08:25:45Z, sha f8b8dc846c53; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 10:40:41Z, sha 0ca5e3dc27be; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -64,6 +64,8 @@ h1{font:700 18px ui-monospace,Menlo,monospace;letter-spacing:.3em;margin:0;color
 .bar i.over{background:var(--red)}.bar i.low{background:var(--amb)}
 .lbl{display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
 .lbl b{color:var(--tx);font-weight:600}
+.ps{border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}.ps .nm{color:var(--tx);font-weight:600;font-size:14px}.ps .st{color:var(--amb);font-size:11px;white-space:nowrap;margin-left:6px}.ps .sub{margin-top:3px}.ps .cl{color:var(--cy);font-size:13px;margin-top:4px}
+.pt{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}.pt:last-child{border-bottom:0}.pt span:first-child{color:var(--tx)}.pt span:last-child{color:var(--mut);text-align:right;white-space:nowrap}.pt b{color:var(--cy);font-weight:600}.pt span.pi{color:var(--mut);font-size:11px;margin-left:4px}.pt{cursor:pointer}.pt span.st{display:block;color:var(--amb);font-size:11px;margin-left:0}.pt .ch{font-style:normal;color:var(--cy);margin-left:6px}.pt.on{border-bottom:0}.pdet{font-size:12px;color:var(--mut);padding:2px 0 8px;border-bottom:1px solid var(--line);line-height:1.45}.pdet b{color:var(--cy);font-weight:600}
 .lft{display:flex;gap:6px;align-items:stretch;margin:10px 0 10px}.lft .lh{font-size:12px;color:var(--mut);align-self:center;margin-right:2px}.lft .lc{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 6px;text-align:center;line-height:1.15}.lft .lc i{display:block;font-style:normal;font-size:11px;color:var(--mut)}.lft .lc b{font:600 16px ui-monospace,Menlo,monospace;color:var(--cy)}.lft .lc small{font-size:11px;color:var(--mut);margin-left:2px}.lft .lc.bad{border-color:var(--red)}.lft .lc.bad b{color:var(--red)}.lft .lc.done b{color:var(--ok)}
 .mi{display:inline-flex;vertical-align:-5px;margin-right:8px}.mi svg{width:20px;height:20px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mi.p svg{stroke:#ff6b8b}.mi.f svg{stroke:#ffc94d}.mi.c svg{stroke:#e8cf8f}.mi.fb svg{stroke:#6ee7a0}
@@ -1279,6 +1281,37 @@ function prCalc(x, g) {
   return `<b>${Math.round(x.kcal * g / 100)} ккал</b> · Б ${k(x.p)} · Ж ${k(x.f)} · У ${k(x.c)}`;
 }
 const prPer = x => `${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}`;
+// «💪 Чем добрать белок» внутри 🥫 Продукты (его просьба 08.11): D.protein (курированный) + его продукты по белку на 100 ккал
+const protLeft = () => { const t = D && D.activity && D.activity.target, f = (D && D.food) || {}; return t && t.p ? Math.round(t.p - (f.p || 0)) : null; };
+const protSub = () => { const l = protLeft(); return l > 0 ? `сегодня осталось Б ${l} г · что закроет` : 'лучшие по белку на калорию'; };
+let pex = null;  // раскрытая строка в «Чем добрать белок»
+function renderProt() {
+  if (!D || !$('protbox')) return;
+  const left = protLeft();
+  const p100k = x => x.kcal ? x.p / x.kcal * 100 : 0;
+  const n1 = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const need = x => left > 0 && x.p ? Math.round(left / x.p * 100) : null;
+  // один общий список: курированные (D.protein, ключ c:id) + его продукты (ключ p:id), по белку на 100 ккал
+  const cur = (D.protein || []).map(x => Object.assign({}, x, {key: 'c:' + x.id, cur: true}));
+  const mine = (PR || []).filter(x => x.p >= 8 && x.kcal > 0).map(x => Object.assign({}, x, {key: 'p:' + x.id}));
+  const ok = cur.filter(x => x.p != null && x.kcal).concat(mine).sort((a, b) => p100k(b) - p100k(a)).slice(0, 15);
+  const nodata = cur.filter(x => !(x.p != null && x.kcal));
+  const det = x => {
+    let d = `<div class="pdet"><div>на 100 г: ${Math.round(x.kcal)} ккал · Б ${n1(x.p)} · Ж ${x.f != null ? n1(x.f) : '—'} · У ${x.c != null ? n1(x.c) : '—'}</div>`;
+    const pg = x.portion_g || (x.g ? Math.round(x.g) : null);
+    if (pg) d += `<div>${x.portion_g ? 'Порция' : 'Обычно ешь'} ${pg} г → Б ${n1(x.p * pg / 100)} · ${Math.round(x.kcal * pg / 100)} ккал</div>`;
+    if (x.price_rub && x.pack_g) d += `<div>${x.price_rub} ₽ за ${x.pack_g} г → <b>${(x.price_rub / (x.pack_g * x.p / 100)).toFixed(2).replace('.', ',')} ₽ за г белка</b></div>`;
+    if (x.how) d += `<div>${esc(x.how)}</div>`;
+    if (x.note) d += `<div class="sub" style="font-size:11px">${esc(x.note)}</div>`;
+    if (!x.cur) d += `<div class="sub">записать: «#${esc(x.id)} ${need(x) || pg || 100} г» мне в чат</div>`;
+    return d + '</div>';
+  };
+  let s = `<div class="sub">${left > 0 ? `Сегодня осталось <b>Б ${left} г</b>. Больше белка на калорию — выше; справа — сколько грамм закроют остаток. Тап — подробнее.` : (left != null ? '<span class="ok">Белок на сегодня закрыт ✓</span> Тап — подробнее.' : '')}</div>`;
+  s += ok.map(x => { const nd = need(x), open = pex === x.key;
+    return `<div class="pt${open ? ' on' : ''}" data-pk="${esc(x.key)}"><span>${esc(x.name)}${x.cur ? '' : `<span class="pi">#${esc(x.id)}</span>`}${x.status ? `<span class="st">${esc(x.status)}</span>` : '<br>'}<small class="sub">Б ${n1(x.p)} на 100 г · ${n1(p100k(x))} г/100 ккал</small></span><span>${nd ? `<b>${nd} г</b><br><small>${Math.round(x.kcal * nd / 100)} ккал</small>` : ''}<i class="ch">${open ? '▾' : '›'}</i></span></div>${open ? det(x) : ''}`; }).join('');
+  if (nodata.length) s += `<div class="sub" style="margin-top:8px">Ждут цифр: ${nodata.map(x => esc(x.name) + (x.status ? ' — ' + esc(x.status) : '')).join('; ')}</div>`;
+  $('protbox').innerHTML = s;
+}
 function applyFv() {
   if (!['diary', 'prod', 'vit', 'rec'].includes(fv)) fv = 'diary';
   $('fseg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fv === fv));
@@ -1297,7 +1330,7 @@ $('fseg').addEventListener('click', e => {
   fv = b.dataset.fv; store.set('dunn_fv', fv); applyFv();
 });
 let pv = '';  // '' меню | top | all | how — как Трени → База
-const PRV = {top: '⭐ Частые', all: '📋 Все продукты', how: '✍️ Как записать'};
+const PRV = {top: '⭐ Частые', prot: '💪 Чем добрать белок', all: '📋 Все продукты', how: '✍️ Как записать'};
 const prTop = () => PR.filter(x => x.n >= 2).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'ru')).slice(0, 15);
 function renderProds() {
   if (!PR.length) { $('prods').innerHTML = ''; return; }
@@ -1305,7 +1338,7 @@ function renderProds() {
   if (!PRV[pv]) pv = '';
   const head = `<div class="lbl"><span>🥫 Мои продукты</span><span class="sub">${PR.length} · на 100 г</span></div>`;
   if (!pv) {
-    const sub = {top: `${prTop().length} самых частых за 60 дней`, all: `${PR.length} · поиск по названию и #номеру`, how: 'номер + граммы мне в чат'};
+    const sub = {top: `${prTop().length} самых частых за 60 дней`, prot: protSub(), all: `${PR.length} · поиск по названию и #номеру`, how: 'номер + граммы мне в чат'};
     $('prods').innerHTML = head + `<div class="kbm" style="margin-top:10px">${Object.keys(PRV).map(k => `<button data-pv="${k}"><span class="tx"><b>${PRV[k]}</b><small>${sub[k]}</small></span><span class="ch">›</span></button>`).join('')}</div>`;
     return;
   }
@@ -1320,6 +1353,7 @@ function renderProds() {
       </ol></div>`;
     $('prods').innerHTML = h; return;
   }
+  if (pv === 'prot') { $('prods').innerHTML = h + '<div id="protbox"></div>'; try { renderProt(); } catch (e) {} return; }
   h += `<div id="prsel"></div>` + (pv === 'all' ? `<input id="prq" class="prq" type="search" placeholder="найти: творог, морс, #p07" autocomplete="off" value="${esc(prq)}">` : '') + `<div id="prl"></div>`;
   $('prods').innerHTML = h;
   if (pv === 'all') $('prq').addEventListener('input', e => { prq = e.target.value; renderPrList(); });
@@ -1360,6 +1394,8 @@ $('prods').addEventListener('click', e => {
     catch (err) { $('prlog-hint').textContent = 'Чат не открылся. Фраза в буфере — вставь её боту сам.'; }
     return;
   }
+  const pk = e.target.closest('[data-pk]');
+  if (pk) { pex = pex === pk.dataset.pk ? null : pk.dataset.pk; renderProt(); return; }
   const v = e.target.closest('[data-pv]');
   if (v) { pv = v.dataset.pv; psel = null; renderProds(); $('prods').scrollIntoView({block: 'start'}); return; }
   if (e.target.closest('#prsel')) return;
