@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-08 16:59:01Z, sha 4002f4e63461; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-08 17:02:31Z, sha 4cc3425c7903; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -471,7 +471,9 @@ const remDel = () => idb('readwrite', s => s.delete('priv')).catch(() => {});
 const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
-let ENCP = null, PEND = null;
+let ENCP = null, PEND = null, TM = [];
+// 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
+const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { PEND = d; return; }  // не мешаем вводу — обновим, когда уйдёт фокус
@@ -545,7 +547,7 @@ function streakTile(s) {
 }
 
 function render(d) {
-  $('upd').textContent = 'обновлено ' + d.updated;
+  $('upd').textContent = $('upd').dataset.base = 'обновлено ' + d.updated; if (TM.length) $('upd').textContent += ' · ' + TM.join(' · ') + ' с';
   const f = d.food, a = d.activity, t = a.target, left = t.kcal - f.kcal;
   const w = d.weight, last = w[w.length - 1], df = d.deficit, k = d.tasks, m = d.money;
 
@@ -1661,22 +1663,23 @@ function setup(m) {
   view('setup');
 }
 
-async function openWith(priv, kid) {
+async function openWith(priv, kid, fast) {
   let enc, shown = false, cached = null;
   const net = ENCP || encFetch(); ENCP = null;
   try { cached = await encGet(); } catch (e) {}
   if (cached && cached.v === 2 && cached.kid === kid) {
     try { const d0 = await decrypt(cached, priv); $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
-      render(d0); show(store.get('dunn_tab') || 'home'); shown = true; } catch (e) { cached = null; }
+      render(d0); show(store.get('dunn_tab') || 'home'); shown = true; tmark('экран'); } catch (e) { cached = null; }
   }
   try { enc = await net; }
   catch (e) { if (shown) return true; view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
-  if (shown && cached && enc && enc.iv === cached.iv && enc.epk === cached.epk) return true;  // ничего нового
+  if (shown && cached && enc && enc.iv === cached.iv && enc.epk === cached.epk) { tmark('данные'); return true; }  // ничего нового
+  if (fast && (!enc || enc.v !== 2 || enc.kid !== kid)) { if (shown) { $('lock').style.display = ''; $('app').hidden = true; $('nav').hidden = true; } return false; }
   if (enc.v !== 2 || !enc.kid) { showKey('Дан ещё не получил твой ключ. Отправь ему сообщение ниже целиком: в нём нет ничего секретного, это открытый ключ.'); return false; }
   if (enc.kid !== kid) { showKey('Данные зашифрованы <b>другим</b> ключом. Если ты недавно создавал новый ключ, отправь его Дану ещё раз. Если нет, ключ на сервере подменён: напиши Al.'); return false; }
   let d;
   try { d = await decrypt(enc, priv); } catch (e) { view('unlock'); msg('Данные повреждены или подменены. Напиши Al.'); return false; }
-  encSet(enc);
+  encSet(enc); tmark('данные');
   if (shown) { applyFresh(d); return true; }
   $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
   render(d); show(store.get('dunn_tab') || 'home');
@@ -1745,15 +1748,23 @@ $('impgo').onclick = () => busy('impgo', async () => {
 });
 $('lockbtn').onclick = async () => { await remDel(); view('unlock'); msg(''); };
 
+let FAST = null;  // быстрый путь стартует прямо при разборе страницы (до telegram-web-app.js и CloudStorage)
+async function fastBoot() {
+  ENCP = encFetch(); ENCP.catch(() => {});  // свежие данные качаем сразу
+  const r = await remGet();
+  return !!(r && r.priv && r.kid && await openWith(r.priv, r.kid, true));
+}
 async function boot() {
   store.del('dunn_pw');  // от старой схемы: там фраза лежала открытым текстом
-  ENCP = encFetch(); ENCP.catch(() => {});  // свежие данные качаем сразу, параллельно с ключом из CloudStorage
+  if (FAST && await FAST) return;
+  if (!ENCP) { ENCP = encFetch(); ENCP.catch(() => {}); }
   try { K = JSON.parse(await kget(KEY_ITEM) || 'null'); } catch (e) { K = null; }
   if (!K || K.v !== 2) return setup('setup');
   const r = await remGet();
   if (r && r.priv && r.kid === await kidOf(K.pub) && await openWith(r.priv, r.kid)) return;
   if ($('v-key').hidden && $('v-unlock').hidden) view('unlock');
 }
+try { FAST = fastBoot().catch(() => false); } catch (e) { FAST = null; }
 </script>
 </body>
 </html>
