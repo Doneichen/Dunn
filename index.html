@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 10:00:41Z, sha 4ba867d72f85; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 10:02:58Z, sha 2a5f1bdce424; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -869,7 +869,7 @@ function rpePair(e) {  // «8» если одинаковые, «8 / 9» есл�
   const ra = rirOf(a), rb = rirOf(b);
   return ' · RPE ' + a + ' / ' + b + (ra !== '' && rb !== '' ? ' · до отказа ' + ra + ' / ' + rb : '');
 }
-const rirTxt = rpe => { const r = rirOf(rpe); return r === '' ? '' : r === '0' ? ' · до отказа' : ` · ${r} до отказа`; };
+const rirTxt = rpe => { if (String(rpe ?? '').includes('/')) { const R = String(rpe).split('/').map(v => rirOf(v.trim())); return R.every(x => x !== '') ? ' · до отказа ' + R.join(' / ') : ''; } const r = rirOf(rpe); return r === '' ? '' : r === '0' ? ' · до отказа' : ` · ${r} до отказа`; };
 // ── следующий шаг нагрузки: самая маленькая прибавка из реальных резинок (каждая в одном экземпляре)
 const STEP_ORDER = ['ЭТ', 'С-Я', 'К1', 'К2', 'Ч', 'Ф', 'З'];
 const STEP_KG = {'ЭТ': 6, 'С-Я': 7, 'К1': 15, 'К2': 25, 'Ч': 29, 'Ф': 39, 'З': 59};
