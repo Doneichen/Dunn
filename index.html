@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 11:06:00Z, sha a76f22195342; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 14:56:41Z, sha faabf99c908c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -731,7 +731,8 @@ function renderFood() {
     <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
     ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
     ${!isToday ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
-  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`);
+  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`)
+    + `<button class="btn ghost" id="bc-go" style="margin-top:10px">📷 По штрих-коду → в чат</button><div class="sub" id="bc-hint" style="margin-top:4px">Откроется чат: пришли фото штрих-кода, подпись — граммы («150 г»). Найду продукт и запишу.</div>`;
 }
 const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус': '🍎', 'Ужин': '🌙', 'Без времени': '🕓'};
 const r1 = v => Math.round((v || 0) * 10) / 10;
@@ -1472,6 +1473,7 @@ function applyFv() {
   $('vits').hidden = !vit;
   $('recs').hidden = fv !== 'rec';
   if (vit) renderVits();
+  { const dr = rbLoad(); if (dr && dr.sent && D && (D.recipes || []).some(x => String(x.name || '').toLowerCase() === String(dr.name || '').trim().toLowerCase())) { store.del('dunn_rdraft'); if (RB && RB.sent) RB = null; } }
   if (fv === 'rec') renderRecs();
 }
 $('fseg').addEventListener('click', e => {
@@ -1737,14 +1739,39 @@ $('vits').addEventListener('click', e => {
 let rsel = null;
 // БЖУ прямо в списке рецептов (его просьба 08.11)
 const rbju = o => `${Math.round(o.kcal)} ккал · Б ${pr1(o.p)} · Ж ${pr1(o.f)} · У ${pr1(o.c)}`;
+// конструктор: всё во фразе — только то, что Данич сам ввёл в форму (правило README), черновик на устройстве
+let RB = null;
+const rbLoad = () => { try { return JSON.parse(store.get('dunn_rdraft') || 'null'); } catch (e) { return null; } };
+const rbSave = () => { if (RB) store.set('dunn_rdraft', JSON.stringify(RB)); };
+function rbRead() { if (!RB) return; const v = id => { const el = $(id); return el ? el.value : ''; };
+  RB.name = v('rb-name'); RB.cooked = v('rb-w'); RB.portions = v('rb-n'); RB.how = v('rb-how');
+  document.querySelectorAll('#recs [data-rbi]').forEach(el => { const i = Number(el.dataset.rbi), k = el.dataset.rbk; if (RB.ing[i]) RB.ing[i][k] = el.value; }); rbSave(); }
+function rbPhrase() { const L = [`Рецепт: ${RB.name.trim()}`];
+  RB.ing.filter(x => String(x.n || '').trim()).forEach(x => L.push(`- ${String(x.n).trim()} — ${String(x.g || '').trim() || '?'} г`));
+  if (String(RB.cooked || '').trim()) L.push(`Готовое: ${String(RB.cooked).trim()} г`); if (String(RB.portions || '').trim()) L.push(`Порций: ${String(RB.portions).trim()}`);
+  if (String(RB.how || '').trim()) L.push(`Как готовил: ${String(RB.how).trim()}`); return L.join('\n').slice(0, 500); }
+function rbForm() {
+  const names = [...new Set(((D && D.products) || []).map(x => x.name).filter(Boolean))].slice(0, 300);
+  return `<button class="kbback" data-rb="close">‹ Рецепты</button><h2 style="margin-top:0">Новый рецепт</h2>
+    <input class="finp" id="rb-name" placeholder="название: макароны с курицей" value="${esc(RB.name || '')}">
+    <div class="vgrp">Ингредиенты · вес сырой, как кладёшь</div>
+    <datalist id="rb-list">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    ${RB.ing.map((x, i) => `<div style="display:grid;grid-template-columns:1fr 74px 30px;gap:6px;margin-top:6px"><input class="finp" list="rb-list" data-rbi="${i}" data-rbk="n" placeholder="продукт" value="${esc(x.n || '')}"><input class="finp" data-rbi="${i}" data-rbk="g" inputmode="decimal" placeholder="г" value="${esc(x.g || '')}"><button class="rm" data-rb="del" data-i="${i}" aria-label="убрать">✕</button></div>`).join('')}
+    <button class="btn ghost" data-rb="add" style="margin-top:8px">＋ ингредиент</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><input class="finp" id="rb-w" inputmode="decimal" placeholder="вес готового, г" value="${esc(RB.cooked || '')}"><input class="finp" id="rb-n" inputmode="numeric" placeholder="порций" value="${esc(RB.portions || '')}"></div>
+    <textarea class="finp" id="rb-how" rows="2" style="margin-top:6px;resize:vertical" placeholder="как готовил (по желанию)">${esc(RB.how || '')}</textarea>
+    <div class="sub" style="margin-top:6px;line-height:1.45">Вес готового — взвесь всё блюдо после готовки, без кастрюли. КБЖУ ингредиентов найду сам: по твоим продуктам, базе и этикеткам. Пришлю итог «на 100 г / порцию / всё блюдо».</div>
+    <button class="btn" data-rb="send">Скопировать и открыть чат</button><button class="btn ghost" data-rb="reset">Очистить</button><div class="hint" id="rb-hint"></div>`;
+}
 function renderRecs() {
   const R = (D && Array.isArray(D.recipes)) ? D.recipes : [];
-  const head = `<h2>📖 Рецепты</h2>`;
+  if (RB) { $('recs').innerHTML = rbForm(); return; }
+  const head = `<h2>📖 Рецепты</h2><button class="btn" data-rb="new" style="margin:4px 0 6px">＋ Новый рецепт</button>`;
   const r = R.find(x => x.id === rsel);
   if (!r) {
     rsel = null;
     $('recs').innerHTML = head + (R.length ? `<div class="kbm" style="margin-top:8px">${R.map(x => `<button data-rid="${esc(x.id)}"><span class="tx"><b>${esc(x.name)}</b><small>${x.per100 ? `100 г: ${rbju(x.per100)}` : ''}${x.portion ? `<br>порция: ${rbju(x.portion)}` : ''}${x.date ? `<br>${esc(dm(x.date))}` : ''}</small></span><span class="ch">›</span></button>`).join('')}</div>` : '<div class="sub" style="margin-top:8px">Рецептов пока нет.</div>')
-      + '<div class="sub" style="margin-top:8px;line-height:1.45">Новый рецепт — пришли Дану ингредиенты с граммами, вес готового блюда, на сколько порций и как готовил.</div>';
+      + '<div class="sub" style="margin-top:8px;line-height:1.45">«＋ Новый рецепт» — форма уйдёт мне в чат, я посчитаю КБЖУ и добавлю сюда.</div>';
     return;
   }
   const col = (o, k) => o ? `<span class="v${k === 'kcal' ? ' big' : ''}">${pr1(k === 'kcal' ? Math.round(o[k]) : o[k])}</span>` : '<span class="v">—</span>';
@@ -1759,7 +1786,26 @@ function renderRecs() {
   h += `<div class="sub" style="margin-top:10px">Записать съеденное: напиши мне «${esc(r.name.toLowerCase())} 1 порция» или граммы.</div>`;
   $('recs').innerHTML = h;
 }
-$('recs').addEventListener('click', e => {
+$('meals').addEventListener('click', async e => { if (!e.target.closest('#bc-go')) return; const ph = '📷 штрих-код';
+  try { await navigator.clipboard.writeText(ph); } catch (err) {}
+  try { window.dunnLinks.bot(ph); $('bc-hint').textContent = 'Чат открыт: пришли фото штрих-кода, подпись — граммы.'; } catch (err) { $('bc-hint').textContent = 'Открой чат с ботом и пришли фото штрих-кода с граммами.'; } });
+$('recs').addEventListener('input', e => { if (RB && e.target.closest('#recs')) rbRead(); });
+$('recs').addEventListener('click', async e => {
+  const rb = e.target.closest('[data-rb]');
+  if (rb) { const a = rb.dataset.rb;
+    if (a === 'new') { RB = rbLoad() || {name: '', ing: [{n: '', g: ''}, {n: '', g: ''}], cooked: '', portions: '', how: ''}; renderRecs(); hap(); return; }
+    rbRead();
+    if (a === 'close') { RB = null; renderRecs(); return; }
+    if (a === 'add') { RB.ing.push({n: '', g: ''}); rbSave(); renderRecs(); return; }
+    if (a === 'del') { RB.ing.splice(Number(rb.dataset.i), 1); if (!RB.ing.length) RB.ing.push({n: '', g: ''}); rbSave(); renderRecs(); return; }
+    if (a === 'reset') { if (!confirm('Очистить форму рецепта?')) return; store.del('dunn_rdraft'); RB = {name: '', ing: [{n: '', g: ''}, {n: '', g: ''}], cooked: '', portions: '', how: ''}; renderRecs(); return; }
+    if (a === 'send') { if (!String(RB.name || '').trim()) { $('rb-hint').textContent = 'Впиши название'; return; }
+      if (!RB.ing.some(x => String(x.n || '').trim())) { $('rb-hint').textContent = 'Добавь хотя бы один ингредиент'; return; }
+      const ph = rbPhrase(); try { await navigator.clipboard.writeText(ph); } catch (err) {}
+      try { window.dunnLinks.bot('Рецепт ' + RB.name.trim().slice(0, 60)); $('rb-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Черновик почищу, когда рецепт появится в списке.'; }
+      catch (err) { $('rb-hint').textContent = 'Текст в буфере — открой чат с ботом и вставь.'; }
+      RB.sent = true; rbSave(); return; }
+    return; }
   const b = e.target.closest('[data-rid]'); if (!b) return;
   rsel = b.dataset.rid || null; renderRecs(); $('recs').scrollIntoView({block: 'start'});
 });
