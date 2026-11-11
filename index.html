@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 17:08:04Z, sha 5c8a7b015db7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 17:10:14Z, sha c8dd7614e013; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1091,7 +1091,9 @@ function gymNew() {
     const d = f.date, wu = f.wu; f = newDraft(f.tpl); f.date = d; f.wu = wu || {}; store.set('dunn_wdraft', JSON.stringify(f)); }
   if (!f) { f = newDraft(GD.tpl.length ? (GD.tpl.find(t => t.name === 'Базовый минимум') || GD.tpl[0]).name : ''); store.set('dunn_wdraft', JSON.stringify(f)); }
   const allEx = [...new Set([...GD.log.map(x => x.ex), ...GD.tpl.flatMap(t => (t.exercises || []).map(e => e.name))])].filter(Boolean).sort();
-  return modeSeg() + (f.saved && f.sum ? sumCard(f.sum) : '') + `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+  const startH = f.saved ? '' : f.t1 ? `<div class="sub" style="margin:0 0 8px">⏱ идёт с ${new Date(f.t1).toTimeString().slice(0, 5)}</div>`
+    : `<button class="btn" id="w-start" style="margin:0 0 4px">▶ Начать тренировку</button><div class="sub" style="margin-bottom:8px">Не нажмёшь — время пойдёт само с первой галочки разминки или первого подхода.</div>`;
+  return modeSeg() + (f.saved && f.sum ? sumCard(f.sum) : '') + startH + `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
     <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. RPE и «до отк.» — по каждому подходу: 0 до отказа = RPE 10, 1 = RPE 9, 2 = RPE 8; заполняй любое из двух, второе посчитается само. ✓ — подход сделан, запускает отдых 1:30; пустой ✓ берёт прошлый результат. Заметки к упражнениям — по желанию, общая внизу. Черновик сохраняется сам.</div>
@@ -1239,7 +1241,7 @@ function saveDraftFromDom() {
     if (el.querySelector('[data-k="rpe1"]')) { if (e.rpe1 == null) e.rpe1 = ''; if (e.rpe2 == null) e.rpe2 = ''; e.rpe = ''; } });
   const v = id => { const el = $(id); return el ? el.value : ''; };
   f.date = v('w-date') || f.date; f.min = v('w-min'); f.rpe = v('w-rpe'); f.note = v('w-note');
-  { const sig = f.ex.map(x => [x.s1, x.s2].join(',')).join('|'); if (sig !== f._sig) { f._sig = sig; if (f.ex.some(x => String(x.s1 || '').trim() || String(x.s2 || '').trim())) { const n = Date.now(); if (!f.t1) f.t1 = n; f.tl = n; } } }
+  { const sig = f.ex.map(x => [x.s1, x.s2].join(',')).join('|') + '#' + JSON.stringify(f.wu || {}); if (sig !== f._sig) { f._sig = sig; if (f.ex.some(x => String(x.s1 || '').trim() || String(x.s2 || '').trim()) || Object.values(f.wu || {}).some(Boolean)) { const n = Date.now(); if (!f.t1) f.t1 = n; f.tl = n; } } }
   store.set('dunn_wdraft', JSON.stringify(f)); return f;
 }
 $('workouts').addEventListener('input', e => {
@@ -1292,7 +1294,7 @@ $('workouts').addEventListener('click', async e => {
   if (b.dataset.kbv !== undefined) { kbv = b.dataset.kbv; renderGym(); hap(); try { $('workouts').scrollIntoView({block: 'start'}); } catch (err) {} return; }
   if (b.dataset.m) { const [Y, M] = gMonth.split('-').map(Number), t = new Date(Date.UTC(Y, M - 1 + Number(b.dataset.m), 1)); gMonth = t.toISOString().slice(0, 7); renderGym(); hap(); return; }
   if (b.dataset.d) { gSel = b.dataset.d; renderGym(); hap(); return; }
-  if (b.dataset.wu) { const f = saveDraftFromDom(); if (!f) return; f.wu = f.wu || {}; f.wu[b.dataset.wu] = !f.wu[b.dataset.wu]; store.set('dunn_wdraft', JSON.stringify(f));
+  if (b.dataset.wu) { const f = saveDraftFromDom(); if (!f) return; f.wu = f.wu || {}; f.wu[b.dataset.wu] = !f.wu[b.dataset.wu]; if (f.wu[b.dataset.wu]) { const n = Date.now(); if (!f.t1) f.t1 = n; f.tl = n; } store.set('dunn_wdraft', JSON.stringify(f));
     const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (b.dataset.note) { const f = saveDraftFromDom(); f.ex[Number(b.dataset.note)].showNote = true; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); const el = document.querySelector(`.fex[data-i="${b.dataset.note}"] input.note`); el && el.focus(); return; }
   if (b.dataset.ok && /_p$/.test(b.dataset.ok)) { const f = saveDraftFromDom(); if (!f) return; const x = f.ex[Number(b.dataset.ok.split('_')[0])]; if (!x) return;
@@ -1307,6 +1309,7 @@ $('workouts').addEventListener('click', async e => {
     if (j < 0 || j >= f.ex.length) return; exSwapContent(f, i, j); store.set('dunn_wdraft', JSON.stringify(f));
     renderGym(); hap(); const el = document.querySelector(`.fex[data-i="${j}"]`); el && el.scrollIntoView({block: 'nearest'}); return; }
   if (b.dataset.sw) { const f = saveDraftFromDom(), i = Number(b.dataset.sw); f.ex[i].swap = !f.ex[i].swap; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
+  if (b.id === 'w-start') { const f = saveDraftFromDom(); if (!f) return; f.t1 = Date.now(); f.tl = f.t1; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); hap(); return; }
   if (b.id === 'w-addc') { const n = (prompt('Название упражнения') || '').trim(); if (!n) return; const f = saveDraftFromDom();
     f.ex.push({...addSlot(f), name: n, reps: '', load: '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-reset') { if (!confirm('Сбросить черновик тренировки?')) return; store.del('dunn_wdraft'); renderGym(); return; }
