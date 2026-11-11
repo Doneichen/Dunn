@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 11:02:44Z, sha d1c79d02cd5d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 11:06:00Z, sha a76f22195342; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -892,25 +892,24 @@ const stepFmt = (gf, bs) => { const b = bs.slice().sort((x, y) => STEP_KG[y.c] -
 function nextStep(load) {
   const P = parseLoad(load), num = x => String(+x.toFixed(1)).replace('.', ',');
   if (P.kg != null && !P.bands.length && !P.gf) { const s = P.kg < 10 ? 1 : 2.5; return {to: num(P.kg + s) + ' кг', alt: '', why: '+' + num(s) + ' кг'}; }
-  if (!P.bands.length) return {to: stepFmt(P.gf, [{c: 'С-Я', x2: false}]), alt: stepFmt(P.gf, [{c: 'ЭТ', x2: false}]), why: P.gf ? 'к грифу добавь самую лёгкую резину (1–7 кг)' : 'самая лёгкая резина поверх своего веса (1–7 кг)'};
+  if (!P.bands.length) return {to: stepFmt(P.gf, [{c: 'С-Я', x2: false}]), alt: stepFmt(P.gf, [{c: 'К1', x2: false}]), why: P.gf ? 'к грифу добавь самую лёгкую резину (1–7 кг)' : 'самая лёгкая резина поверх своего веса (1–7 кг)'};
   const used = new Set(P.bands.map(b => b.c)), cur = stepKg(P.bands), anyX2 = P.bands.some(b => b.x2), C = [];
-  if (P.bands.length < 3) STEP_ORDER.forEach(c => { if (!used.has(c)) C.push(P.bands.concat([{c, x2: false}])); });
-  P.bands.forEach((b, i) => { for (let j = STEP_ORDER.indexOf(b.c) + 1; j < STEP_ORDER.length; j++) { const c = STEP_ORDER[j]; if (used.has(c)) continue; const nb = P.bands.slice(); nb[i] = {c, x2: b.x2}; C.push(nb); break; } });
-  if (!anyX2) STEP_ORDER.forEach(c => C.push([{c, x2: false}]));
-  // ЭТ — трубка с ручками, ставим её только если С-Я не помогает (штраф 4 кг при выборе)
-  const cost = bs => stepKg(bs) + (bs.some(b => b.c === 'ЭТ') && !used.has('ЭТ') ? 4 : 0);
+  // ЭТ (трубка с ручками) не предлагаем — неудобна (его слова 11.11)
+  if (P.bands.length < 3) STEP_ORDER.forEach(c => { if (!used.has(c) && c !== 'ЭТ') C.push(P.bands.concat([{c, x2: false}])); });
+  P.bands.forEach((b, i) => { for (let j = STEP_ORDER.indexOf(b.c) + 1; j < STEP_ORDER.length; j++) { const c = STEP_ORDER[j]; if (used.has(c) || c === 'ЭТ') continue; const nb = P.bands.slice(); nb[i] = {c, x2: b.x2}; C.push(nb); break; } });
+  if (!anyX2) STEP_ORDER.forEach(c => { if (c !== 'ЭТ') C.push([{c, x2: false}]); });
+  const cost = bs => stepKg(bs);
   const seen = new Set(), ok = C.filter(bs => stepKg(bs) > cur).map(bs => ({bs, k: stepKg(bs), c: cost(bs), s: stepFmt(P.gf, bs)}))
     .filter(x => !seen.has(x.s) && seen.add(x.s)).sort((a, b) => a.c - b.c);
   if (!ok.length) return {to: '', alt: '', why: 'резины на пределе — дальше медленный негатив 3 с или пауза внизу'};
-  // большой прыжок (>40%) — тогда лучше маленькая ЭТ, даже со штрафом (дельты, руки на лёгких резинах)
-  let a = ok[0]; const et = ok.filter(x => x.k < a.k).sort((x, y) => x.k - y.k)[0];
-  const tot = cur + (parseFloat(P.gf) || 0);  // для процента считаем и гриф
-  if (et && tot && (a.k - cur) / tot > 0.4) a = et;
-  const b = ok.find(x => x.k > a.k + 0.5 && x !== a) || null, pct = tot ? Math.round((a.k - cur) / tot * 100) : 0;
-  return {to: a.s, alt: b ? b.s : '', why: '≈ +' + num(a.k - cur) + ' кг по биркам' + (pct ? ', +' + pct + '%' : '')};
+  const a = ok[0], tot = cur + (parseFloat(P.gf) || 0);  // для процента считаем и гриф
+  const b = ok.find(x => x.k > a.k + 0.5) || null, pct = tot ? Math.round((a.k - cur) / tot * 100) : 0;
+  // прыжок больше 40% (дельты, руки на лёгких резинах): сначала выжать больше из текущей
+  const big = pct > 40 ? '. Прыжок большой — можно сначала остаться на текущей: +2–3 повтора сверх диапазона или негатив 3 с' : '';
+  return {to: a.s, alt: b ? b.s : '', why: '≈ +' + num(a.k - cur) + ' кг по биркам' + (pct ? ', +' + pct + '%' : ''), big};
 }
 const stepTxt = load => { const n = nextStep(load), cur = load && String(load).trim() ? String(load).trim() : 'свой вес';
-  return n.to ? 'Шаг: ' + cur + ' → ' + n.to + ' (' + n.why + ')' + (n.alt ? '. Следующий после него — ' + n.alt : '') : n.why; };
+  return n.to ? 'Шаг: ' + cur + ' → ' + n.to + ' (' + n.why + ')' + (n.alt ? '. Следующий после него — ' + n.alt : '') + (n.big || '') : n.why; };
 function progHint(ex, rr) {
   const [lo, hi] = (String(rr || '').match(/\d+/g) || []).map(Number); if (!hi) return null;
   const R = GD.log.filter(x => x.ex === ex && (x.s1 != null || x.s2 != null)); if (!R.length) return null;
