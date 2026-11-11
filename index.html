@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 14:56:41Z, sha faabf99c908c; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 16:46:21Z, sha 3390514e8af8; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1022,14 +1022,76 @@ function wuCard(f, key, title) {
       <details><summary>${esc(x.name)}</summary><div class="wd">${esc(x.desc || '')}</div></details></div>`; }).join('')}
     ${key === 'cooldown' && W.evening ? `<div class="sub" style="margin-top:6px">🌙 ${esc(W.evening)}</div>` : ''}</div>`;
 }
+// ── 🏃 Кардио: беговая дорожка с таймером (инструкция X2A-1: 30 мин работы → 10 мин пауза мотору)
+let gmode = store.get('dunn_gmode') || 'str', cdT = null, cdAudio = null, cdLock = null;
+const CDN = 'Беговая дорожка ZENECO';
+const cdGet = () => { try { return JSON.parse(store.get('dunn_cardio') || 'null') || {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } catch (e) { return {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } };
+const cdSet = c => store.set('dunn_cardio', JSON.stringify(c));
+const mmss = s => Math.floor(s / 60) + ':' + String(Math.max(0, Math.floor(s % 60))).padStart(2, '0');
+function cdLeft(c) { if (c.phase !== 'work' && c.phase !== 'rest') return null; const total = (c.phase === 'rest' ? 10 : c.dur) * 60;
+  const run = (c.acc || 0) + (c.startAt ? (Date.now() - c.startAt) / 1000 : 0); return Math.max(0, total - run); }
+function cdBeep() { try { const a = cdAudio || new (window.AudioContext || window.webkitAudioContext)(); cdAudio = a; if (a.state === 'suspended') a.resume();
+  [0, 0.45, 0.9, 1.6, 2.05, 2.5].forEach(t => { const o = a.createOscillator(), g = a.createGain(); o.type = 'sine'; o.frequency.value = t < 1.5 ? 880 : 1175;
+    g.gain.setValueAtTime(0.0001, a.currentTime + t); g.gain.exponentialRampToValueAtTime(0.5, a.currentTime + t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + t + 0.35);
+    o.connect(g); g.connect(a.destination); o.start(a.currentTime + t); o.stop(a.currentTime + t + 0.4); }); } catch (e) {}
+  try { tg() && tg().HapticFeedback.notificationOccurred('success'); } catch (e) {} try { navigator.vibrate && navigator.vibrate([300, 150, 300, 150, 300]); } catch (e) {} }
+async function cdWake(on) { try { if (on && 'wakeLock' in navigator) cdLock = await navigator.wakeLock.request('screen'); else if (!on && cdLock) { await cdLock.release(); cdLock = null; } } catch (e) {} }
+function cdTick() { const c = cdGet(), el = $('cd-time'); if (c.phase !== 'work' && c.phase !== 'rest') { clearInterval(cdT); cdT = null; return; }
+  const left = cdLeft(c); if (el) el.textContent = mmss(left);
+  if (left <= 0 && c.startAt) { if (c.phase === 'work') c.rounds.push(c.dur); c.acc = 0; c.startAt = null; c.phase = c.phase === 'work' ? 'done' : 'restdone'; cdSet(c); cdBeep(); cdWake(false); renderGym(); } }
+function cdRun() { if (!cdT) cdT = setInterval(cdTick, 500); cdTick(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden && gmode === 'cardio') cdTick(); });
+const modeSeg = () => `<div class="seg" style="grid-template-columns:1fr 1fr;margin:0 0 10px"><button data-gm="str" class="${gmode === 'str' ? 'on' : ''}">💪 Силовая</button><button data-gm="cardio" class="${gmode === 'cardio' ? 'on' : ''}">🏃 Кардио</button></div>`;
+function cardioView() {
+  const c = cdGet(), left = cdLeft(c), mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && left != null ? Math.floor((c.dur * 60 - left) / 60) : 0);
+  const st = c.phase === 'work' ? (c.startAt ? 'идёт' : 'пауза') : c.phase === 'rest' ? (c.startAt ? 'отдых мотора' : 'пауза отдыха') : c.phase === 'done' ? 'готово — дай дорожке 10 минут' : c.phase === 'restdone' ? 'мотор отдохнул — можно ещё круг' : 'не начато';
+  const big = c.phase === 'work' || c.phase === 'rest' ? mmss(left) : c.phase === 'done' ? '10:00' : mmss(c.dur * 60);
+  if (c.phase === 'work' || c.phase === 'rest') setTimeout(cdRun, 0);
+  return modeSeg() + `<div class="sub">Шаблон: <b style="color:var(--tx)">${CDN}</b> · по инструкции 30 минут работы → 10 минут пауза мотору</div>
+    <div class="seg" style="grid-template-columns:repeat(3,1fr);margin-top:8px">${[10, 20, 30].map(m => `<button data-cdd="${m}" class="${c.dur === m ? 'on' : ''}" ${c.phase === 'work' ? 'disabled' : ''}>${m} мин</button>`).join('')}</div>
+    <div style="text-align:center;margin:14px 0 4px"><div id="cd-time" style="font:700 54px ui-monospace,Menlo,monospace;color:var(--cy)">${big}</div><div class="sub">${st}${c.rounds.length ? ' · кругов: ' + c.rounds.length : ''}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">${
+      c.phase === 'work' || c.phase === 'rest' ? `<button class="btn" data-cd="${c.startAt ? 'pause' : 'resume'}" style="margin:0">${c.startAt ? '⏸ Пауза' : '▶ Дальше'}</button><button class="btn ghost" data-cd="stop" style="margin:0">⏹ Стоп</button>`
+      : c.phase === 'done' ? `<button class="btn" data-cd="rest" style="margin:0">▶ Отдых мотора 10:00</button><button class="btn ghost" data-cd="start" style="margin:0">▶ Ещё круг</button>`
+      : `<button class="btn" data-cd="start" style="margin:0">▶ Старт ${c.dur}:00</button><button class="btn ghost" data-cd="remind" style="margin:0">🔔 Напомнить в чате</button>`}</div>
+    <div class="sub" style="margin-top:6px">Звук в конце — если приложение открыто на экране. Свернёшь или погаснет экран — iPhone усыпит страницу. «🔔 Напомнить в чате» → я сам напишу через ${c.dur} мин.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px"><input class="finp" data-cf="speed" inputmode="decimal" placeholder="км/ч" value="${esc(c.speed)}"><input class="finp" data-cf="dist" inputmode="decimal" placeholder="дистанция, км" value="${esc(c.dist)}"><input class="finp" data-cf="steps" inputmode="numeric" placeholder="шаги" value="${esc(c.steps)}"></div>
+    <input class="finp" data-cf="note" style="margin-top:6px" placeholder="заметка: самочувствие, пульс…" value="${esc(c.note)}">
+    <div class="sub" style="margin-top:6px">Минут: <b style="color:var(--tx)">${mins}</b> — считается само по таймеру, можно поправить в заметке.</div>
+    <button class="btn" data-cd="save" ${mins || c.dist || c.steps ? '' : 'disabled'}>Скопировать и открыть чат</button><button class="btn ghost" data-cd="reset">Сбросить</button><div class="hint" id="cd-hint"></div>`;
+}
+function cdPhrase(c) { const mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && cdLeft(c) != null ? Math.floor((c.dur * 60 - cdLeft(c)) / 60) : 0);
+  const P = [`${mins} мин`]; if (String(c.speed).trim()) P.push(`${String(c.speed).trim()} км/ч`); if (String(c.dist).trim()) P.push(`${String(c.dist).trim()} км`); if (String(c.steps).trim()) P.push(`${String(c.steps).trim()} шагов`);
+  return `Кардио ${dm(GD.today)} · ${CDN}: ${P.join(' · ')}${String(c.note || '').trim() ? ' · ' + String(c.note).trim() : ''}`.slice(0, 500); }
+$('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.value; cdSet(c); });
+$('workouts').addEventListener('click', async e => {
+  const b = e.target.closest('[data-gm],[data-cd],[data-cdd]'); if (!b || b.disabled) return; e.stopImmediatePropagation();
+  if (b.dataset.gm) { gmode = b.dataset.gm; store.set('dunn_gmode', gmode); renderGym(); hap(); return; }
+  const c = cdGet();
+  if (b.dataset.cdd) { c.dur = Number(b.dataset.cdd); cdSet(c); renderGym(); hap(); return; }
+  const a = b.dataset.cd;
+  if (a === 'start' || a === 'rest') { try { cdAudio = cdAudio || new (window.AudioContext || window.webkitAudioContext)(); cdAudio.resume(); } catch (er) {}
+    c.phase = a === 'rest' ? 'rest' : 'work'; c.acc = 0; c.startAt = Date.now(); cdSet(c); cdWake(true); renderGym(); hap(); return; }
+  if (a === 'pause') { c.acc = (c.acc || 0) + (Date.now() - c.startAt) / 1000; c.startAt = null; cdSet(c); renderGym(); return; }
+  if (a === 'resume') { c.startAt = Date.now(); cdSet(c); renderGym(); return; }
+  if (a === 'stop') { if (c.phase === 'work') { const done = Math.floor(((c.acc || 0) + (c.startAt ? (Date.now() - c.startAt) / 1000 : 0)) / 60); if (done > 0) c.rounds.push(done); }
+    c.phase = c.rounds.length ? 'done' : 'idle'; c.acc = 0; c.startAt = null; cdSet(c); cdWake(false); renderGym(); return; }
+  if (a === 'remind') { const ph = `⏱ дорожка ${c.dur} мин`; try { await navigator.clipboard.writeText(ph); } catch (er) {}
+    try { window.dunnLinks.bot(ph); $('cd-hint').textContent = 'Отправь фразу — и жми «Старт». Напишу, когда пройдёт время.'; } catch (er) { $('cd-hint').textContent = 'Открой чат с ботом и вставь фразу.'; } return; }
+  if (a === 'save') { const ph = cdPhrase(c); try { await navigator.clipboard.writeText(ph); } catch (er) {}
+    try { window.dunnLinks.bot('Кардио ' + dm(GD.today)); $('cd-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Потом «Сбросить».'; } catch (er) { $('cd-hint').textContent = 'Текст в буфере — открой чат с ботом и вставь.'; } return; }
+  if (a === 'reset') { if (!confirm('Сбросить кардио-сессию?')) return; store.del('dunn_cardio'); cdWake(false); renderGym(); return; }
+}, true);
+
 function gymNew() {
+  if (gmode === 'cardio') return cardioView();
   let f = gDraft();
   // старый черновик без кругов и без введённых цифр — пересобрать из шаблона, чтобы появились блоки
   if (f && f.ex.length && f.ex.every(x => x.gi == null) && !f.ex.some(x => String(x.s1 || x.s2 || '').trim()) && ((GD.tpl.find(t => t.name === f.tpl) || {}).exercises || []).some(e => e.sec)) {
     const d = f.date, wu = f.wu; f = newDraft(f.tpl); f.date = d; f.wu = wu || {}; store.set('dunn_wdraft', JSON.stringify(f)); }
   if (!f) { f = newDraft(GD.tpl.length ? (GD.tpl.find(t => t.name === 'Базовый минимум') || GD.tpl[0]).name : ''); store.set('dunn_wdraft', JSON.stringify(f)); }
   const allEx = [...new Set([...GD.log.map(x => x.ex), ...GD.tpl.flatMap(t => (t.exercises || []).map(e => e.name))])].filter(Boolean).sort();
-  return `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+  return modeSeg() + `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
     <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. RPE и «до отк.» — по каждому подходу: 0 до отказа = RPE 10, 1 = RPE 9, 2 = RPE 8; заполняй любое из двух, второе посчитается само. ✓ — подход сделан, запускает отдых 1:30; пустой ✓ берёт прошлый результат. Заметки к упражнениям — по желанию, общая внизу. Черновик сохраняется сам.</div>
