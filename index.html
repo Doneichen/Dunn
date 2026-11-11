@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 10:40:30Z, sha 063ff4a13f12; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 11:02:44Z, sha d1c79d02cd5d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -902,7 +902,11 @@ function nextStep(load) {
   const seen = new Set(), ok = C.filter(bs => stepKg(bs) > cur).map(bs => ({bs, k: stepKg(bs), c: cost(bs), s: stepFmt(P.gf, bs)}))
     .filter(x => !seen.has(x.s) && seen.add(x.s)).sort((a, b) => a.c - b.c);
   if (!ok.length) return {to: '', alt: '', why: 'резины на пределе — дальше медленный негатив 3 с или пауза внизу'};
-  const a = ok[0], b = ok.find(x => x.k > a.k + 0.5) || null, pct = cur ? Math.round((a.k - cur) / cur * 100) : 0;
+  // большой прыжок (>40%) — тогда лучше маленькая ЭТ, даже со штрафом (дельты, руки на лёгких резинах)
+  let a = ok[0]; const et = ok.filter(x => x.k < a.k).sort((x, y) => x.k - y.k)[0];
+  const tot = cur + (parseFloat(P.gf) || 0);  // для процента считаем и гриф
+  if (et && tot && (a.k - cur) / tot > 0.4) a = et;
+  const b = ok.find(x => x.k > a.k + 0.5 && x !== a) || null, pct = tot ? Math.round((a.k - cur) / tot * 100) : 0;
   return {to: a.s, alt: b ? b.s : '', why: '≈ +' + num(a.k - cur) + ' кг по биркам' + (pct ? ', +' + pct + '%' : '')};
 }
 const stepTxt = load => { const n = nextStep(load), cur = load && String(load).trim() ? String(load).trim() : 'свой вес';
