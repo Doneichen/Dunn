@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 09:53:35Z, sha 383f00e0b215; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 09:53:45Z, sha 867f42c00472; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -851,12 +851,44 @@ const rnum = v => { const x = parseFloat(String(v ?? '').replace(',', '.')); ret
 const rirOf = rpe => { const x = rnum(rpe); return x != null && x >= 5 && x <= 10 ? String(+(10 - x).toFixed(1)) : ''; };
 const rpeOf = rir => { const x = rnum(rir); return x != null && x >= 0 && x <= 5 ? String(+(10 - x).toFixed(1)) : ''; };
 const rirTxt = rpe => { const r = rirOf(rpe); return r === '' ? '' : r === '0' ? ' · до отказа' : ` · ${r} до отказа`; };
+// ── следующий шаг нагрузки: самая маленькая прибавка из реальных резинок (каждая в одном экземпляре)
+const STEP_ORDER = ['ЭТ', 'С-Я', 'К1', 'К2', 'Ч', 'Ф', 'З'];
+const STEP_KG = {'ЭТ': 6, 'С-Я': 7, 'К1': 15, 'К2': 25, 'Ч': 29, 'Ф': 39, 'З': 59};
+function parseLoad(load) {
+  const up = String(load || '').toUpperCase().replace(/Х/g, 'X');
+  const g = up.match(/ГФ\s*(\d+(?:[.,]\d+)?)/), gf = g ? g[1].replace(',', '.') : '';
+  const rest = up.replace(/ГФ\s*\d+(?:[.,]\d+)?/, ' ');
+  const km = rest.match(/(\d+(?:[.,]\d+)?)\s*КГ/);
+  const bands = [];
+  rest.split(/[+\s,]+/).forEach(t => { const m = t.match(/^(ЭТ|С-Я|С|К1|К2|Ч|Ф|З)(\(X2\))?$/); if (m) bands.push({c: m[1] === 'С' ? 'С-Я' : m[1], x2: !!m[2]}); });
+  return {gf, kg: km ? parseFloat(km[1].replace(',', '.')) : null, bands};
+}
+const stepKg = bs => bs.reduce((a, b) => a + STEP_KG[b.c] * (b.x2 ? 2 : 1), 0);
+const stepFmt = (gf, bs) => { const b = bs.slice().sort((x, y) => STEP_KG[y.c] - STEP_KG[x.c]).map(x => x.c + (x.x2 ? '(х2)' : '')).join('+'); return gf ? 'ГФ ' + gf + (b ? ' + ' + b : '') : b; };
+function nextStep(load) {
+  const P = parseLoad(load), num = x => String(+x.toFixed(1)).replace('.', ',');
+  if (P.kg != null && !P.bands.length && !P.gf) { const s = P.kg < 10 ? 1 : 2.5; return {to: num(P.kg + s) + ' кг', alt: '', why: '+' + num(s) + ' кг'}; }
+  if (!P.bands.length) return {to: stepFmt(P.gf, [{c: 'С-Я', x2: false}]), alt: stepFmt(P.gf, [{c: 'ЭТ', x2: false}]), why: P.gf ? 'к грифу добавь самую лёгкую резину (1–7 кг)' : 'самая лёгкая резина поверх своего веса (1–7 кг)'};
+  const used = new Set(P.bands.map(b => b.c)), cur = stepKg(P.bands), anyX2 = P.bands.some(b => b.x2), C = [];
+  if (P.bands.length < 3) STEP_ORDER.forEach(c => { if (!used.has(c)) C.push(P.bands.concat([{c, x2: false}])); });
+  P.bands.forEach((b, i) => { for (let j = STEP_ORDER.indexOf(b.c) + 1; j < STEP_ORDER.length; j++) { const c = STEP_ORDER[j]; if (used.has(c)) continue; const nb = P.bands.slice(); nb[i] = {c, x2: b.x2}; C.push(nb); break; } });
+  if (!anyX2) STEP_ORDER.forEach(c => C.push([{c, x2: false}]));
+  // ЭТ — трубка с ручками, ставим её только если С-Я не помогает (штраф 4 кг при выборе)
+  const cost = bs => stepKg(bs) + (bs.some(b => b.c === 'ЭТ') && !used.has('ЭТ') ? 4 : 0);
+  const seen = new Set(), ok = C.filter(bs => stepKg(bs) > cur).map(bs => ({bs, k: stepKg(bs), c: cost(bs), s: stepFmt(P.gf, bs)}))
+    .filter(x => !seen.has(x.s) && seen.add(x.s)).sort((a, b) => a.c - b.c);
+  if (!ok.length) return {to: '', alt: '', why: 'резины на пределе — дальше медленный негатив 3 с или пауза внизу'};
+  const a = ok[0], b = ok.find(x => x.k > a.k + 0.5) || null, pct = cur ? Math.round((a.k - cur) / cur * 100) : 0;
+  return {to: a.s, alt: b ? b.s : '', why: '≈ +' + num(a.k - cur) + ' кг по биркам' + (pct ? ', +' + pct + '%' : '')};
+}
+const stepTxt = load => { const n = nextStep(load), cur = load && String(load).trim() ? String(load).trim() : 'свой вес';
+  return n.to ? 'Шаг: ' + cur + ' → ' + n.to + ' (' + n.why + ')' + (n.alt ? '. Следующий после него — ' + n.alt : '') : n.why; };
 function progHint(ex, rr) {
   const [lo, hi] = (String(rr || '').match(/\d+/g) || []).map(Number); if (!hi) return null;
   const R = GD.log.filter(x => x.ex === ex && (x.s1 != null || x.s2 != null)); if (!R.length) return null;
   const last = R[R.length - 1], sets = [last.s1, last.s2].filter(v => v != null);
   const lk = x => (x.load || '').toUpperCase().replace(/[\s.]/g, ''), sum = x => (x.s1 || 0) + (x.s2 || 0);
-  if (sets.every(v => v >= hi)) return {cls: 'ok', txt: `⬆ Все подходы на ${hi}+ → сегодня на шаг тяжелее. Мини-шаг: добавь С-Я или ЭТ к текущей. Повторы упадут до ~${lo || hi - 4}, это норма`};
+  if (sets.every(v => v >= hi)) return {cls: 'ok', txt: `⬆ Все подходы на ${hi}+ → сегодня на шаг тяжелее. ${stepTxt(last.load)}. Повторы упадут до ~${lo || hi - 4}, это норма`};
   const same = []; for (let i = R.length - 1; i >= 0 && lk(R[i]) === lk(last); i--) same.unshift(R[i]);
   if (same.length >= 3) { const t = same.slice(-3); if (sum(t[2]) <= sum(t[0]))
     return {cls: 'warn', txt: `⚠ 3 тренировки на ${last.load || 'этой нагрузке'} без прироста повторов, это застой. Сначала проверь сон и еду после смен. Если с ними всё в порядке — откатись на шаг легче, набери до ${hi} и снова вверх`}; }
