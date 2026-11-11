@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 10:02:58Z, sha 2a5f1bdce424; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-11 10:40:30Z, sha 063ff4a13f12; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -333,6 +333,11 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .fex .sl input{width:100%;box-sizing:border-box;padding:9px 4px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);color:var(--tx);font-size:16px;text-align:center}
 .fex .sl.done input{border-color:var(--ok)}
 .fex .sl .ok{all:unset;cursor:pointer;width:40px;height:38px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--mut);box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.ramp{display:flex;gap:8px;align-items:flex-start;margin:10px 0 2px;font-size:13px;color:var(--tx2);cursor:pointer}
+.ramp input{margin-top:2px;accent-color:var(--cy)}
+.fex .sl.rmp{grid-template-columns:16px minmax(0,1.25fr) minmax(0,2fr) 40px}
+.fex .sl.rmp .rt{font:11px ui-monospace,Menlo,monospace;color:var(--mut);text-align:left}
+.fex .sl.rmp input{border-style:dashed}
 .fex .sl.done .ok{background:var(--ok);border-color:var(--ok);color:var(--bg)}
 #rtimer{position:fixed;left:12px;right:12px;bottom:calc(74px + env(safe-area-inset-bottom));z-index:60;display:none;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--cy);color:var(--tx);box-shadow:0 6px 24px rgba(0,0,0,.45)}
 #rtimer b{font:600 22px ui-monospace,Menlo,monospace;color:var(--cy)}
@@ -993,7 +998,7 @@ const gDraft = () => { try { return JSON.parse(store.get('dunn_wdraft') || 'null
 function newDraft(tplName) {
   const t = GD.tpl.find(x => x.name === tplName) || GD.tpl[0];
   return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '', wu: {},
-          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastOf(e.name); return {sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}; })};
+          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastOf(e.name); return {sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: e.reps || '', load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}; })};
 }
 // порядок и замена: двигается/меняется само упражнение, а место в круге (sec/grp/rest/gi) остаётся за позицией
 const SLOT = ['sec', 'grp', 'rest', 'gi'];
@@ -1024,6 +1029,7 @@ function gymNew() {
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
     <div class="sub" style="margin-top:6px">Подставлено «как в прошлый раз» — правь цифры по ходу. RPE и «до отк.» — по каждому подходу: 0 до отказа = RPE 10, 1 = RPE 9, 2 = RPE 8; заполняй любое из двух, второе посчитается само. ✓ — подход сделан, запускает отдых 1:30; пустой ✓ берёт прошлый результат. Заметки к упражнениям — по желанию, общая внизу. Черновик сохраняется сам.</div>
+    <label class="ramp"><input type="checkbox" id="w-ramp"${store.get('dunn_ramp') === '1' ? ' checked' : ''}><span>🔥 Подводящий подход: рабочая нагрузка × 1–2 повтора → отдых 1:30 → рабочие</span></label>
     ${wuCard(f, 'warmup', '🔥 Разминка')}
     ${f.ex.map((e, i) => { const pv = f.ex[i - 1], newSec = e.sec && (!pv || pv.sec !== e.sec), newGrp = e.gi != null && (!pv || pv.gi !== e.gi);
       let k = 1; for (let j = i - 1; j >= 0 && f.ex[j].gi === e.gi && e.gi != null; j--) k++;
@@ -1034,6 +1040,7 @@ function gymNew() {
       ${e.last ? `<div class="sub pt">было: ${esc(e.last)}</div>` : ''}${(() => { const h = progHint(e.name, e.reps); return h ? `<div class="phint ${h.cls}">${esc(h.txt)}</div>` : ''; })()}
       <input class="ld" data-k="load" value="${esc(e.load)}" placeholder="резина / вес — ГФ 4.5 + К1, пусто = свой вес">
       <div class="sl sh"><span>#</span><span>повторы</span><span>RPE</span><span>до отк.</span><span></span></div>
+      ${store.get('dunn_ramp') === '1' ? `<div class="sl rmp${e.okp ? ' done' : ''}"><span class="no">П</span><input data-k="sp" inputmode="numeric" value="${esc(e.sp ?? '')}" placeholder="1–2"><span class="rt">рабочий вес, не до отказа</span><button class="ok" data-ok="${i}_p" aria-label="подводящий сделан">${e.okp ? '✓' : ''}</button></div>` : ''}
       ${[1, 2].map(k => { const rp = setRpe(e, k), on = !!e['ok' + k]; return `<div class="sl${on ? ' done' : ''}"><span class="no">${k}</span><input data-k="s${k}" inputmode="numeric" value="${esc(e['s' + k])}" placeholder="${esc(e['p' + k] === '' || e['p' + k] == null ? '—' : 'было ' + e['p' + k])}"><input data-k="rpe${k}" inputmode="decimal" value="${esc(rp)}" placeholder="—"><input data-k="rir${k}" inputmode="decimal" value="${esc(rirOf(rp))}" placeholder="—"><button class="ok" data-ok="${i}_${k}" aria-label="подход сделан">${on ? '✓' : ''}</button></div>`; }).join('')}
       ${e.note || e.showNote ? `<input class="note" data-k="note" value="${esc(e.note)}" placeholder="заметка к упражнению">` : `<button class="rm" data-note="${i}" style="margin-top:6px;font-size:12px;color:var(--cyd)">＋ заметка</button>`}</div>`; }).join('')}
     ${wuCard(f, 'cooldown', '🧊 Заминка · растяжка')}
@@ -1048,7 +1055,8 @@ function gymText(f) {
   const lines = [`Тренировка ${dm(f.date)} · ${f.tpl}`];
   f.ex.forEach((e, i) => { const s = [e.s1, e.s2].filter(v => String(v).trim() !== '').join(', ');
     if (!s && !e.note) return;
-    lines.push(`${i + 1}. ${e.name}: ${e.load || '—'} × ${s || '—'}${rpePair(e)}${e.note ? ' · ' + e.note : ''}`); });
+    const pv = String(e.sp ?? '').trim() && (e.okp || store.get('dunn_ramp') === '1') ? ' · подв. ' + String(e.sp).trim() : '';
+    lines.push(`${i + 1}. ${e.name}: ${e.load || '—'} × ${s || '—'}${rpePair(e)}${pv}${e.note ? ' · ' + e.note : ''}`); });
   if (GD.warm) { const [a, A] = wuCount(f, 'warmup'), [c, C] = wuCount(f, 'cooldown'); lines.push(`Разминка ✓ ${a}/${A} · Заминка ✓ ${c}/${C}`); }
   if (String(f.min).trim()) lines.push(`Длительность: ${f.min} мин`);
   if (String(f.rpe).trim()) lines.push(`RPE тренировки: ${f.rpe}`);
@@ -1157,17 +1165,18 @@ $('workouts').addEventListener('input', e => {
   saveDraftFromDom();
 });
 $('workouts').addEventListener('change', e => {
+  if (e.target.id === 'w-ramp') { saveDraftFromDom(); store.set('dunn_ramp', e.target.checked ? '1' : '0'); const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (e.target.id === 'g-ex') { gEx = e.target.value; gPi = null; renderGym(); return; }
   if (e.target.id === 'w-tpl') { const cur = saveDraftFromDom(), touched = cur && cur.ex.some(x => String(x.s1 || x.s2).trim());
     if (touched && !confirm('Сменить шаблон? Введённые цифры пропадут.')) { e.target.value = cur.tpl; return; }
     const f = newDraft(e.target.value); if (cur) f.date = cur.date; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (e.target.dataset && e.target.dataset.swsel !== undefined && e.target.value) { const f = saveDraftFromDom(), i = Number(e.target.dataset.swsel), n = e.target.value, l = lastOf(n), x = f.ex[i];
     const tE = GD.tpl.flatMap(t => t.exercises || []).find(y => y.name === n);
-    Object.assign(x, {name: n, reps: tE ? tE.reps || '' : '', load: l ? l.load : (tE ? tE.load_hint || '' : ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, note: '', showNote: false,
+    Object.assign(x, {name: n, reps: tE ? tE.reps || '' : '', load: l ? l.load : (tE ? tE.load_hint || '' : ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', showNote: false,
       p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}); delete x.swap;
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); hap(); return; }
   if (e.target.id === 'w-add' && e.target.value) { const f = saveDraftFromDom(), n = e.target.value, l = lastOf(n);
-    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''});
+    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''});
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); }
 });
 // таймер отдыха после ✓ подхода
@@ -1200,6 +1209,9 @@ $('workouts').addEventListener('click', async e => {
   if (b.dataset.wu) { const f = saveDraftFromDom(); if (!f) return; f.wu = f.wu || {}; f.wu[b.dataset.wu] = !f.wu[b.dataset.wu]; store.set('dunn_wdraft', JSON.stringify(f));
     const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (b.dataset.note) { const f = saveDraftFromDom(); f.ex[Number(b.dataset.note)].showNote = true; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); const el = document.querySelector(`.fex[data-i="${b.dataset.note}"] input.note`); el && el.focus(); return; }
+  if (b.dataset.ok && /_p$/.test(b.dataset.ok)) { const f = saveDraftFromDom(); if (!f) return; const x = f.ex[Number(b.dataset.ok.split('_')[0])]; if (!x) return;
+    if (!x.okp && !String(x.sp ?? '').trim()) x.sp = '2';
+    x.okp = !x.okp; store.set('dunn_wdraft', JSON.stringify(f)); const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); if (x.okp) restStart(90); return; }
   if (b.dataset.ok) { const f = saveDraftFromDom(); if (!f) return; const [i, k] = b.dataset.ok.split('_').map(Number), x = f.ex[i]; if (!x) return;
     if (!x['ok' + k] && !String(x['s' + k] ?? '').trim()) { if (x['p' + k] !== '' && x['p' + k] != null) x['s' + k] = String(x['p' + k]); else { b.animate && b.animate([{transform: 'translateX(-3px)'}, {transform: 'translateX(3px)'}, {transform: 'none'}], 180); return; } }
     x['ok' + k] = !x['ok' + k]; store.set('dunn_wdraft', JSON.stringify(f)); const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap();
@@ -1210,7 +1222,7 @@ $('workouts').addEventListener('click', async e => {
     renderGym(); hap(); const el = document.querySelector(`.fex[data-i="${j}"]`); el && el.scrollIntoView({block: 'nearest'}); return; }
   if (b.dataset.sw) { const f = saveDraftFromDom(), i = Number(b.dataset.sw); f.ex[i].swap = !f.ex[i].swap; store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-addc') { const n = (prompt('Название упражнения') || '').trim(); if (!n) return; const f = saveDraftFromDom();
-    f.ex.push({...addSlot(f), name: n, reps: '', load: '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
+    f.ex.push({...addSlot(f), name: n, reps: '', load: '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', last: ''}); store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); return; }
   if (b.id === 'w-reset') { if (!confirm('Сбросить черновик тренировки?')) return; store.del('dunn_wdraft'); renderGym(); return; }
   if (b.id === 'w-save') { const f = saveDraftFromDom(), txt = gymText(f); f.saved = true; store.set('dunn_wdraft', JSON.stringify(f));
     if (!f.ex.some(e => [e.s1, e.s2].some(v => String(v || '').trim()) || e.note)) { $('w-hint').textContent = 'Заполни хотя бы одно упражнение'; return; }
