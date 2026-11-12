@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-12 14:56:51Z, sha d5907e1c66fa; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-12 15:25:32Z, sha 05283f4859fc; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -414,7 +414,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
   <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="thbtn" id="thbtn" aria-label="тема">🎨</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
-  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
+  <section class="tab" data-tab="body" hidden><div class="card" id="weight"></div><div class="card" id="fcast"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="seg" id="tseg" style="margin-top:12px;grid-template-columns:repeat(2,1fr)"><button data-tv="list">📋 Задачи</button><button data-tv="dl">🔁 Дейлики</button></div><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
@@ -608,7 +608,7 @@ function render(d) {
 
   // ── Вес
   WPTS = w; if (wsel == null || wsel >= w.length) wsel = w.length - 1; DF = df;
-  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; BASE = null; BASEP = null; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps();
+  MEAS = Array.isArray(d.meas) ? d.meas : []; MHOW = Array.isArray(d.meas_how) ? d.meas_how : []; PR = Array.isArray(d.products) ? d.products : []; BASE = null; BASEP = null; renderProds(); applyFv(); renderWeight(); renderMeas(); renderSteps(); renderForecast();
 
   // ── Задачи
   TK = k; renderTasks();
@@ -838,6 +838,118 @@ $('steps').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
   const r = e.target.closest('rect.b'); if (r) { ssel = Number(r.dataset.i); renderSteps(); hap(); return; }
   const b = e.target.closest('button'); if (b && !b.disabled && b.dataset.step) { ssel = Math.max(0, Math.min(FD.length - 1, ssel - Number(b.dataset.step))); renderSteps(); hap(); } };
 $('steps').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) { ssel = i; renderSteps(); hap(); } };
+// ── 📉 Прогноз веса (Тело): ползунки активности/питания → расход, дефицит, вес через N недель
+// Модель: BMR Миффлина (рост 175, 23 года) × 1,15 + 10 % ТЭП + шаги + силовые + дорожка; вес пересчитывается каждую неделю (7700 ккал ≈ 1 кг).
+const FC_H = 175, FC_AGE = 23;
+const FC_DEF_KEYS = ['kcal', 'sh', 'ss', 'os', 'st', 'sm', 'tm', 'goal', 'cal'];
+function fcDefaults() {
+  const today = (FD[0] && FD[0].d) || '', ago = n => { const t = new Date(today + 'T12:00:00'); t.setDate(t.getDate() - n); return t.toISOString().slice(0, 10); };
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const past = FD.filter(x => x.d < today);
+  const eat = past.slice(0, 7).map(x => x.food && x.food.kcal).filter(v => v > 0);
+  const last28 = past.filter(x => x.d >= ago(28));
+  const shN = last28.filter(x => x.type === 'Смена').length, n28 = last28.length;
+  const ss = avg(past.filter(x => x.type === 'Смена' && x.steps != null).map(x => x.steps));
+  const os = avg(past.filter(x => x.type !== 'Смена' && x.steps != null).map(x => x.steps));
+  const wk = (D && Array.isArray(D.workouts) ? D.workouts : []).filter(w => w.d >= ago(28) && w.d <= today);
+  const str = wk.filter(w => (w.kind || []).includes('Силовая')), mins = str.map(w => Number(w.min)).filter(v => v > 0);
+  const cardio = wk.filter(w => (w.kind || []).includes('Кардио')).map(w => Number(w.min) || 0).reduce((a, b) => a + b, 0);
+  const last = WPTS[WPTS.length - 1];
+  return {
+    kcal: eat.length ? Math.round((avg(eat) + 60) / 50) * 50 : 2400,
+    sh: n28 >= 14 ? Math.round(shN / n28 * 7 * 2) / 2 : 3.5,
+    ss: ss ? Math.round(ss / 500) * 500 : 21000, os: os ? Math.round(os / 500) * 500 : 5000,
+    st: str.length ? Math.round(str.length / 4 * 2) / 2 : 2, sm: mins.length ? Math.round(avg(mins) / 5) * 5 : 60,
+    tm: Math.round(cardio / 4 / 10) * 10,
+    goal: last ? Math.round((last.avg - 5) * 2) / 2 : 78, cal: 0,
+  };
+}
+function fcGet() { let s = null; try { s = JSON.parse(store.get('dunn_fc') || 'null'); } catch (e) {} const d = fcDefaults(); return Object.assign({}, d, s || {}, {_def: d}); }
+function fcSet(c) { const o = {}; FC_DEF_KEYS.forEach(k => o[k] = c[k]); store.set('dunn_fc', JSON.stringify(o)); }
+function fcTdee(c, w, off) {
+  const bmr = 10 * w + 6.25 * FC_H - 5 * FC_AGE + 5;
+  const steps = (c.sh * c.ss + (7 - c.sh) * c.os) / 7;
+  const neat = steps * 0.035 * (w / 83);
+  const ex = (c.st * c.sm / 60 * 3.5 * w + c.tm / 60 * 2.4 * w) / 7;  // нетто-ккал: силовая ≈4,5 MET, ходьба 5 км/ч ≈3,4 MET
+  return {bmr, base: bmr * 1.15, tef: 0.10 * c.kcal, neat, ex, steps, off: off || 0, tdee: bmr * 1.15 + 0.10 * c.kcal + neat + ex + (off || 0)};
+}
+function fcRun(c, w0, off) {
+  const pts = [{wk: 0, kg: w0}]; let w = w0, reach = null;
+  for (let k = 1; k <= 52; k++) { const t = fcTdee(c, w, off); w = w - (t.tdee - c.kcal) * 7 / 7700; pts.push({wk: k, kg: w});
+    if (reach == null && ((w0 > c.goal && w <= c.goal) || (w0 < c.goal && w >= c.goal))) reach = k; }
+  return {pts, reach};
+}
+function fcTrend() {  // реальный темп по средней 7 дней за последние 28 дней + расход по факту
+  if (!WPTS.length) return null; const lastD = WPTS[WPTS.length - 1].d, t0 = Date.parse(lastD) - 28 * 864e5;
+  const q = WPTS.filter(p => Date.parse(p.d) >= t0 && p.avg != null); if (q.length < 5) return null;
+  const xs = q.map(p => (Date.parse(p.d) - t0) / 864e5), ys = q.map(p => p.avg), n = xs.length;
+  if (xs[n - 1] - xs[0] < 10) return null;
+  const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+  const sl = xs.reduce((a, x, i) => a + (x - mx) * (ys[i] - my), 0) / xs.reduce((a, x) => a + (x - mx) ** 2, 0);  // кг/день
+  const from = q[0].d, eat = FD.filter(x => x.d >= from && x.d <= lastD && x.food && x.food.kcal > 0).map(x => x.food.kcal + 60);
+  const eatAvg = eat.length >= 7 ? eat.reduce((a, b) => a + b, 0) / eat.length : null;
+  return {perWk: sl * 7, days: Math.round(xs[n - 1] - xs[0]), from, eatAvg, realTdee: eatAvg != null ? eatAvg - sl * 7700 : null};
+}
+function fcChart(run, goal) {
+  const W = 520, H = 170, P = 34, hist = WPTS.slice(-28).filter(p => p.avg != null);
+  const pr = run.pts.slice(0, 13), lastD = Date.parse(WPTS[WPTS.length - 1].d);
+  const allX = hist.map(p => (Date.parse(p.d) - lastD) / 864e5 / 7).concat(pr.map(p => p.wk));
+  const vs = hist.map(p => p.avg).concat(pr.map(p => p.kg), [goal]);
+  const lo = Math.floor(Math.min(...vs) - .5), hi = Math.ceil(Math.max(...vs) + .5), x0 = Math.min(...allX), x1 = 12;
+  const x = v => P + (v - x0) / (x1 - x0 || 1) * (W - P - 8), y = v => 8 + (hi - v) / (hi - lo || 1) * (H - 30);
+  const st = hi - lo > 10 ? 2 : 1; let g = '';
+  for (let k = Math.ceil(lo / st) * st; k <= hi; k += st) g += `<line x1="${P}" x2="${W}" y1="${y(k)}" y2="${y(k)}" stroke="#12324a"/><text x="0" y="${y(k) + 4}" fill="#6f93a6" font-size="11">${k}</text>`;
+  const hp = hist.length ? `<path d="${hist.map((p, i) => (i ? 'L' : 'M') + x((Date.parse(p.d) - lastD) / 864e5 / 7).toFixed(1) + ' ' + y(p.avg).toFixed(1)).join(' ')}" fill="none" stroke="#00e1ff" stroke-width="2.5"/>` : '';
+  const pp = `<path d="${pr.map((p, i) => (i ? 'L' : 'M') + x(p.wk).toFixed(1) + ' ' + y(p.kg).toFixed(1)).join(' ')}" fill="none" stroke="#00e1ff" stroke-width="2" stroke-dasharray="6 5" opacity=".85"/>`;
+  const gl = `<line x1="${P}" x2="${W}" y1="${y(goal)}" y2="${y(goal)}" stroke="#ffbe3c" stroke-dasharray="3 4"/><text x="${W - 70}" y="${y(goal) - 4}" fill="#ffbe3c" font-size="11">цель ${String(goal).replace('.', ',')}</text>`;
+  const ticks = [4, 8, 12].map(k => `<text x="${x(k) - (k === 12 ? 26 : 10)}" y="${H - 4}" fill="#6f93a6" font-size="11">+${k} н</text>`).join('') + `<text x="${x(0) - 14}" y="${H - 4}" fill="#6f93a6" font-size="11">сейчас</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}">${g}${gl}${hp}${pp}<line x1="${x(0)}" x2="${x(0)}" y1="6" y2="${H - 22}" stroke="#6f93a6" stroke-dasharray="2 4"/>${ticks}</svg>`;
+}
+const FC_SL = [
+  ['kcal', 'Калории в день', 1500, 3500, 50, ' ккал'], ['sh', 'Смен в неделю', 0, 7, 0.5, ''],
+  ['ss', 'Шаги в смену', 0, 35000, 500, ''], ['os', 'Шаги в выходной', 0, 25000, 500, ''],
+  ['st', 'Силовых в неделю', 0, 7, 0.5, ''], ['sm', 'Минут на силовую', 20, 120, 5, ' мин'],
+  ['tm', 'Дорожка в неделю', 0, 600, 10, ' мин'], ['goal', 'Цель по весу', 60, 100, 0.5, ' кг'],
+];
+const fcNum = v => String(v).replace('.', ',');
+const fcShow = (k, v) => (k === 'ss' || k === 'os' || k === 'kcal') ? fmt(v) : fcNum(v);
+function fcResult(c) {
+  const last = WPTS[WPTS.length - 1]; if (!last) return '<div class="sub">Нужны взвешивания — пока не из чего считать.</div>';
+  const w0 = last.avg, tr = fcTrend();
+  const off = c.cal && tr && tr.realTdee ? Math.max(-600, Math.min(600, tr.realTdee - fcTdee(c._def, w0).tdee)) : 0;
+  const t = fcTdee(c, w0, off), def = t.tdee - c.kcal, run = fcRun(c, w0, off), rate = def * 7 / 7700;
+  const at = k => run.pts[k] ? fcNum(Math.round(run.pts[k].kg * 10) / 10) : '—';
+  let when = '';
+  if (run.reach != null) { const dd = new Date(Date.parse(last.d) + run.reach * 7 * 864e5); when = `🎯 Цель ${fcNum(c.goal)} кг — ≈ <b>${dm(dd.toISOString().slice(0, 10))}.${String(dd.getFullYear()).slice(2)}</b> (через ${run.reach} нед)`; }
+  else when = (def > 0 && c.goal < w0) ? '🎯 За год до цели не дойдёшь с этими настройками' : (c.goal >= w0 ? '🎯 Цель выше текущего веса' : '🎯 С профицитом вес к цели не пойдёт');
+  const warn = rate > w0 * 0.01 ? '<div class="sub warn" style="margin-top:4px">⚠ Быстрее 1 % веса в неделю — растёт риск терять мышцы. Держи белок 150 г и силовые.</div>'
+    : (def < 0 ? `<div class="sub warn" style="margin-top:4px">Профицит ${fmt(Math.round(-def))} ккал/день — вес пойдёт вверх.</div>` : '');
+  const trTxt = tr ? `<div class="lbl" style="margin-top:8px"><span>📊 По факту (весы, ${tr.days} дн)</span><b class="${tr.perWk <= 0 ? 'ok' : 'warn'}">${tr.perWk > 0 ? '+' : ''}${fcNum(Math.round(tr.perWk * 100) / 100)} кг/нед</b></div>`
+      + (tr.realTdee ? `<div class="sub">Ел в среднем ${fmt(Math.round(tr.eatAvg))} ккал → реальный расход ≈ <b>${fmt(Math.round(tr.realTdee / 10) * 10)}</b> ккал/день (модель без поправки: ${fmt(Math.round(fcTdee(c._def, w0).tdee / 10) * 10)}).${Math.abs(tr.realTdee - fcTdee(c._def, w0).tdee) > 250 ? ' Расходятся заметно: где-то погрешность — в учёте еды, в воде или в модели.' : ' Сходится — модели можно верить.'}</div>` + `<label style="display:flex;gap:8px;align-items:center;margin-top:6px;font-size:14px"><input type="checkbox" data-fcc="1" ${c.cal ? 'checked' : ''} style="width:20px;height:20px;flex:none"> 🎯 подстроить прогноз под факт</label>` : '')
+    : '<div class="sub" style="margin-top:8px">📊 Реальный темп появится, когда будет 10+ дней взвешиваний.</div>';
+  return `<div class="selrow"><span>Расход в день</span><b style="font-size:17px">${fmt(Math.round(t.tdee / 10) * 10)} ккал</b></div>
+    <div class="sub" style="margin:-2px 0 6px">обмен ${fmt(Math.round(t.base))} · переваривание ${fmt(Math.round(t.tef))} · шаги ${fmt(Math.round(t.neat))} (≈${fmt(Math.round(t.steps / 100) * 100)}/день) · тренировки ${fmt(Math.round(t.ex))}${t.off ? ' · поправка по факту ' + (t.off > 0 ? '+' : '−') + fmt(Math.round(Math.abs(t.off))) : ''}</div>
+    <div class="selrow"><span>${def >= 0 ? 'Дефицит' : 'Профицит'}</span><b style="font-size:15px" class="${def >= 0 ? 'ok' : 'warn'}">${fmt(Math.round(Math.abs(def)))} ккал/день</b></div><div class="sub" style="margin:-2px 0 6px;text-align:right">≈ <b class="${def >= 0 ? 'ok' : 'warn'}">${rate >= 0 ? '−' : '+'}${fcNum(Math.round(Math.abs(rate) * 100) / 100)} кг в неделю</b></div>
+    <div class="lbl"><span>через 4 нед <b>${at(4)}</b></span><span>8 нед <b>${at(8)}</b></span><span>12 нед <b>${at(12)}</b></span></div>
+    <div class="sub" style="margin:4px 0">${when}</div>${warn}
+    ${fcChart(run, c.goal)}${trTxt}`;
+}
+function renderForecast() {
+  const el = $('fcast'); if (!el) return; const c = fcGet();
+  el.innerHTML = `<h2>📉 Прогноз веса</h2>
+    <div class="sub">Крути — прогноз пересчитается. По умолчанию — твои данные за последние недели.</div>
+    ${FC_SL.map(([k, l, a, b, s, u]) => `<div class="fcrow"><div class="lbl"><span>${l}${c[k] !== c._def[k] ? ' <span class="sub">(моё ' + fcShow(k, c._def[k]) + ')</span>' : ''}</span><b id="fcv-${k}">${fcShow(k, c[k])}${u}</b></div>
+      <input type="range" data-fc="${k}" min="${a}" max="${b}" step="${s}" value="${c[k]}" style="width:100%;accent-color:var(--cy)"></div>`).join('')}
+    <button class="btn ghost" data-fcr="1" style="margin-top:6px">↺ Вернуть мои данные</button>
+    <div id="fc-out" style="margin-top:10px">${fcResult(c)}</div>
+    <details style="margin-top:8px"><summary class="sub">Как считается</summary><div class="sub">Обмен — формула Миффлина–Сан Жеора (рост 175, 23 года, вес по средней 7 дней) ×1,15 на быт. Переваривание — 10 % съеденного. Шаги ≈ 0,035 ккал за шаг при 83 кг. Силовая ≈ 4,5 MET, дорожка 5 км/ч ≈ 3,4 MET (считаю только сверх покоя). Каждую неделю вес пересчитывается — с ним падает и расход, поэтому кривая выполаживается. 1 кг ≈ 7700 ккал — это грубое правило: в начале дефицита вес падает быстрее из-за воды и гликогена, потом медленнее. Точнее всего — строка «По факту»; галочка «подстроить под факт» добавляет к расходу разницу между фактом и моделью за последние недели (не больше ±600).</div></details>`;
+}
+$('fcast').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.fc; if (!k) return;
+  const c = fcGet(); c[k] = Number(e.target.value); fcSet(c);
+  const sl = FC_SL.find(x => x[0] === k); $('fcv-' + k).textContent = fcShow(k, c[k]) + sl[5]; $('fc-out').innerHTML = fcResult(c); });
+$('fcast').addEventListener('change', e => { if (e.target.dataset && e.target.dataset.fcc) { const c = fcGet(); c.cal = e.target.checked ? 1 : 0; fcSet(c); $('fc-out').innerHTML = fcResult(c); hap(); return; }
+  if (e.target.dataset && e.target.dataset.fc) { renderForecast(); hap(); } });
+$('fcast').addEventListener('click', e => { if (e.target.closest('[data-fcr]')) { store.del('dunn_fc'); renderForecast(); hap(); } });
 
 // ── Тренировки: дневник (календарь · прогресс · новая)
 let gmv = 'w0', gMs = '';
