@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-12 14:40:59Z, sha 1759cf8878a9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-12 14:45:10Z, sha 29178e1be6ad; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1086,8 +1086,8 @@ function cdPhrase(c) { const mins = c.rounds.reduce((a, b) => a + b, 0) + (c.pha
   const P = [`${mins} мин`]; if (String(c.speed).trim()) P.push(`${String(c.speed).trim()} км/ч`); if (String(c.dist).trim()) P.push(`${String(c.dist).trim()} км`); const r = cdCalc(c); if (String(c.steps).trim()) P.push(`${String(c.steps).trim()} шагов`); else if (r) P.push(`≈${r.steps} шагов (из дистанции)`);
   if (r) P.push(`≈${r.kcal} ккал`); if (String(c.dist).trim() || String(c.steps).trim()) P.push(c.watch ? '⌚ шаги уже на часах' : '➕ шаги к дню');
   return `Кардио ${dm(GD.today)} · ${CDN}: ${P.join(' · ')}${String(c.note || '').trim() ? ' · ' + String(c.note).trim() : ''}`.slice(0, 500); }
-$('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); });
-$('workouts').addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k || e.target.type !== 'checkbox') return; const c = cdGet(); c[k] = e.target.checked; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); });
+$('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); const sb = document.querySelector('[data-cd="save"]'); if (sb) sb.disabled = !(cdMins(c) || String(c.dist || '').trim() || String(c.steps || '').trim()); });
+$('workouts').addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k || e.target.type !== 'checkbox') return; const c = cdGet(); c[k] = e.target.checked; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); const sb = document.querySelector('[data-cd="save"]'); if (sb) sb.disabled = !(cdMins(c) || String(c.dist || '').trim() || String(c.steps || '').trim()); });
 $('workouts').addEventListener('click', async e => {
   const b = e.target.closest('[data-gm],[data-cd],[data-cdd]'); if (!b || b.disabled) return; e.stopImmediatePropagation();
   if (b.dataset.gm) { gmode = b.dataset.gm; store.set('dunn_gmode', gmode); renderGym(); hap(); return; }
