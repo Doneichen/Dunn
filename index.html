@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-12 16:27:04Z, sha 72067a6e6ec7; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-12 16:51:25Z, sha 391c696109ff; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -505,6 +505,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
+const APP_V = '12.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
@@ -580,7 +581,7 @@ function streakTile(s) {
 }
 
 function render(d) {
-  $('upd').textContent = $('upd').dataset.base = 'обновлено ' + d.updated; if (TM.length) $('upd').textContent += ' · ' + TM.join(' · ') + ' с';
+  $('upd').textContent = $('upd').dataset.base = 'v' + APP_V + ' · обновлено ' + d.updated; if (TM.length) $('upd').textContent += ' · ' + TM.join(' · ') + ' с';
   const f = d.food, a = d.activity, t = a.target, left = t.kcal - f.kcal;
   const w = d.weight, last = w[w.length - 1], df = d.deficit, k = d.tasks, m = d.money;
 
