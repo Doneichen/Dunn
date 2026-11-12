@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-12 05:50:21Z, sha d068bb84cfad; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-12 14:40:59Z, sha 1759cf8878a9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1044,6 +1044,24 @@ function cdTick() { const c = cdGet(), el = $('cd-time'); if (c.phase !== 'work'
 function cdRun() { if (!cdT) cdT = setInterval(cdTick, 500); cdTick(); }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && gmode === 'cardio') cdTick(); });
 const modeSeg = () => `<div class="seg" style="grid-template-columns:1fr 1fr;margin:0 0 10px"><button data-gm="str" class="${gmode === 'str' ? 'on' : ''}">💪 Силовая</button><button data-gm="cardio" class="${gmode === 'cardio' ? 'on' : ''}">🏃 Кардио</button></div>`;
+const CD_H = 175;  // рост, см — для длины шага
+function cdMins(c) { const l = cdLeft(c); return c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && l != null ? Math.floor((c.dur * 60 - l) / 60) : 0); }
+function cdCalc(c) {
+  const nums = x => (String(x || '').replace(/,/g, '.').match(/\d+(?:\.\d+)?/g) || []).map(Number);
+  const dist = nums(c.dist)[0] || 0; if (!(dist > 0 && dist < 60)) return null;
+  const W = (D && Array.isArray(D.weight) && D.weight.length) ? Number(D.weight[D.weight.length - 1].kg) || 83 : 83;
+  const mins = cdMins(c), sp = nums(c.speed).filter(v => v > 0 && v < 25);
+  let v = sp.length ? sp.reduce((a, b) => a + b, 0) / sp.length : (mins > 0 ? dist / (mins / 60) : 5);
+  if (!(v > 0.5 && v < 25)) v = 5;
+  const stride = 0.415 * CD_H / 100;                       // м, ходьба
+  const steps = Math.round(dist * 1000 / stride / 10) * 10;
+  const vo2 = (v < 8 ? 0.1 : 0.2) * (v * 1000 / 60) + 3.5;  // ACSM, мл/кг/мин
+  const min = mins > 0 ? mins : dist / v * 60;
+  return {steps, kcal: Math.round(vo2 * W * min / 1000 * 5), v: Math.round(v * 10) / 10, W};
+}
+function cdCalcTxt(c) { const r = cdCalc(c); if (!r) return 'Введи дистанцию — посчитаю шаги и калории.';
+  return `≈ <b style="color:var(--tx)">${r.steps.toLocaleString('ru-RU')}</b> шагов · ≈ <b style="color:var(--tx)">${r.kcal}</b> ккал <span style="opacity:.7">(шаг ${(0.415 * CD_H).toFixed(0)} см, ${r.W} кг, ~${r.v} км/ч)</span>` +
+    (c.watch ? '<br>⌚ Шаги уже на часах — второй раз не прибавлю, калории учтутся через них.' : '<br>➕ Шаги прибавлю к шагам дня → цель по калориям подрастёт сама. Ккал отдельно не добавляю, чтобы не задвоить.'); }
 function cardioView() {
   const c = cdGet(), left = cdLeft(c), mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && left != null ? Math.floor((c.dur * 60 - left) / 60) : 0);
   const st = c.phase === 'work' ? (c.startAt ? 'идёт' : 'пауза') : c.phase === 'rest' ? (c.startAt ? 'отдых мотора' : 'пауза отдыха') : c.phase === 'done' ? 'готово — дай дорожке 10 минут' : c.phase === 'restdone' ? 'мотор отдохнул — можно ещё круг' : 'не начато';
@@ -1057,15 +1075,19 @@ function cardioView() {
       : c.phase === 'done' ? `<button class="btn" data-cd="rest" style="margin:0">▶ Отдых мотора 10:00</button><button class="btn ghost" data-cd="start" style="margin:0">▶ Ещё круг</button>`
       : `<button class="btn" data-cd="start" style="margin:0">▶ Старт ${c.dur}:00</button><button class="btn ghost" data-cd="remind" style="margin:0">🔔 Напомнить в чате</button>`}</div>
     <div class="sub" style="margin-top:6px">Звук в конце — если приложение открыто на экране. Свернёшь или погаснет экран — iPhone усыпит страницу. «🔔 Напомнить в чате» → я сам напишу через ${c.dur} мин.</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px"><input class="finp" data-cf="speed" inputmode="decimal" placeholder="км/ч" value="${esc(c.speed)}"><input class="finp" data-cf="dist" inputmode="decimal" placeholder="дистанция, км" value="${esc(c.dist)}"><input class="finp" data-cf="steps" inputmode="numeric" placeholder="шаги" value="${esc(c.steps)}"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px"><input class="finp" data-cf="speed" inputmode="decimal" placeholder="км/ч" value="${esc(c.speed)}"><input class="finp" data-cf="dist" inputmode="decimal" placeholder="дистанция, км" value="${esc(c.dist)}"><input class="finp" data-cf="steps" inputmode="numeric" placeholder="шаги (авто)" value="${esc(c.steps)}"></div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px"><input type="checkbox" data-cf="watch" ${c.watch ? 'checked' : ''} style="width:20px;height:20px"> ⌚ часы уже посчитали эти шаги <span class="sub" style="margin:0">(руки свободно махали)</span></label>
+    <div class="sub" id="cd-calc" style="margin-top:6px">${cdCalcTxt(c)}</div>
     <input class="finp" data-cf="note" style="margin-top:6px" placeholder="заметка: самочувствие, пульс…" value="${esc(c.note)}">
     <div class="sub" style="margin-top:6px">Минут: <b style="color:var(--tx)">${mins}</b> — считается само по таймеру, можно поправить в заметке.</div>
     <button class="btn" data-cd="save" ${mins || c.dist || c.steps ? '' : 'disabled'}>Скопировать и открыть чат</button><button class="btn ghost" data-cd="reset">Сбросить</button><div class="hint" id="cd-hint"></div>`;
 }
 function cdPhrase(c) { const mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && cdLeft(c) != null ? Math.floor((c.dur * 60 - cdLeft(c)) / 60) : 0);
-  const P = [`${mins} мин`]; if (String(c.speed).trim()) P.push(`${String(c.speed).trim()} км/ч`); if (String(c.dist).trim()) P.push(`${String(c.dist).trim()} км`); if (String(c.steps).trim()) P.push(`${String(c.steps).trim()} шагов`);
+  const P = [`${mins} мин`]; if (String(c.speed).trim()) P.push(`${String(c.speed).trim()} км/ч`); if (String(c.dist).trim()) P.push(`${String(c.dist).trim()} км`); const r = cdCalc(c); if (String(c.steps).trim()) P.push(`${String(c.steps).trim()} шагов`); else if (r) P.push(`≈${r.steps} шагов (из дистанции)`);
+  if (r) P.push(`≈${r.kcal} ккал`); if (String(c.dist).trim() || String(c.steps).trim()) P.push(c.watch ? '⌚ шаги уже на часах' : '➕ шаги к дню');
   return `Кардио ${dm(GD.today)} · ${CDN}: ${P.join(' · ')}${String(c.note || '').trim() ? ' · ' + String(c.note).trim() : ''}`.slice(0, 500); }
-$('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.value; cdSet(c); });
+$('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); });
+$('workouts').addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k || e.target.type !== 'checkbox') return; const c = cdGet(); c[k] = e.target.checked; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); });
 $('workouts').addEventListener('click', async e => {
   const b = e.target.closest('[data-gm],[data-cd],[data-cdd]'); if (!b || b.disabled) return; e.stopImmediatePropagation();
   if (b.dataset.gm) { gmode = b.dataset.gm; store.set('dunn_gmode', gmode); renderGym(); hap(); return; }
