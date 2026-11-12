@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-11 17:10:14Z, sha c8dd7614e013; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-12 05:50:21Z, sha d068bb84cfad; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -741,14 +741,16 @@ function mealsHtml(meals, f) {
   const order = [], by = {};
   meals.forEach(m => { const k = m.slot || 'Без времени'; if (!by[k]) { by[k] = []; order.push(k); } by[k].push(m); });
   const onlyNoTime = order.length === 1 && order[0] === 'Без времени';
-  const sumOf = arr => arr.reduce((a, m) => ({kcal: a.kcal + (m.kcal || 0), p: a.p + (m.p || 0), f: a.f + (m.f || 0), c: a.c + (m.c || 0)}), {kcal: 0, p: 0, f: 0, c: 0});
+  const sumOf = arr => arr.reduce((a, m) => ({kcal: a.kcal + (m.kcal || 0), p: a.p + (m.p || 0), f: a.f + (m.f || 0), c: a.c + (m.c || 0), w: a.w + (m.w || 0)}), {kcal: 0, p: 0, f: 0, c: 0, w: 0});
+  const gr = w => w ? Math.round(w) + ' г' : '';  // граммовки (его просьба 12.11)
+  const dayW = sumOf(meals).w;
   const sec = k => { const arr = by[k], s = sumOf(arr), ts = arr.map(m => m.t).filter(Boolean);
     const tm = ts.length ? (ts[0] === ts[ts.length - 1] ? ts[0] : ts[0] + '–' + ts[ts.length - 1]) : '';
     const hasM = arr.some(m => m.p != null);
     return `<details class="ml" open><summary><span class="ch">▶</span><span class="sl">${SLOT_ICO[k] || '·'} ${esc(onlyNoTime ? 'За день' : k)}</span><span class="tm">${esc(tm)}</span><span class="kc">${Math.round(s.kcal)} ккал</span></summary>
-      ${hasM ? `<div class="bju">Б ${r1(s.p)} · Ж ${r1(s.f)} · У ${r1(s.c)}</div>` : ''}
-      <ul>${arr.map(m => `<li><span class="nm">${esc(m.name)}</span><span class="due">${m.kcal}</span>${m.p != null ? `<span class="mm">${m.t ? esc(m.t) + ' · ' : ''}Б ${r1(m.p)} Ж ${r1(m.f)} У ${r1(m.c)}</span>` : ''}</li>`).join('')}</ul></details>`; };
-  return `<div class="mtot"><span>Всего <b>${f.kcal}</b> ккал</span><span>Б ${f.p} · Ж ${f.f} · У ${f.c}</span></div>
+      ${hasM || s.w ? `<div class="bju">${s.w ? `<b>${gr(s.w)}</b>` + (hasM ? ' · ' : '') : ''}${hasM ? `Б ${r1(s.p)} · Ж ${r1(s.f)} · У ${r1(s.c)}` : ''}</div>` : ''}
+      <ul>${arr.map(m => `<li><span class="nm">${esc(m.name)}</span><span class="due">${m.kcal}</span>${m.p != null || m.w ? `<span class="mm">${m.w ? `<b>${gr(m.w)}</b> · ` : ''}${m.t ? esc(m.t) + ' · ' : ''}${m.p != null ? `Б ${r1(m.p)} Ж ${r1(m.f)} У ${r1(m.c)}` : ''}</span>` : ''}</li>`).join('')}</ul></details>`; };
+  return `<div class="mtot"><span>Всего <b>${f.kcal}</b> ккал${dayW ? ` · ${gr(dayW)}` : ''}</span><span>Б ${f.p} · Ж ${f.f} · У ${f.c}</span></div>
     ${order.map(sec).join('')}
     <div class="sub" style="margin-top:8px">Всего включает псиллиум (60 ккал, У 16). Тап по приёму сворачивает его.</div>`;
 }
