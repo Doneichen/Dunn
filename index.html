@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-13 14:37:44Z, sha 673242695971; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-13 17:09:27Z, sha 8510efda9bf1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -517,7 +517,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '13.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '13.11e';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
@@ -1904,7 +1904,7 @@ const prBar = () => { const cs = prCats(); if (pcat && !cs.includes(pcat)) pcat 
 // 🔎 База продуктов (его просьба 08.11): D.base.rows из /data/food/base.json — поиск в телефоне, весь список не показываем.
 // Записи кнопкой нет: во фразу для бота можно класть только то, что Данич ввёл сам (README, правило Al) — он пишет «#b0123 270 г» сам.
 let BASE = null, bq = '', bk = '', bsel = null, binfo = false;
-const BK = {'': 'Все', ff: '🍔 Фастфуд', shop: '🛒 Магазин', basic: '🥩 Базовые'};
+const BK = {'': 'Все', ff: '🍔 Фастфуд', shop: '🛒 Магазин', basic: '🥩 Базовые', typ: '🥐 Выпечка'};
 // 08.11: строки Базы приходят сжатыми (D.base.gz = base64 gzip) — распаковка в фоне при первом обращении, потом из памяти
 let BASEP = null;
 const bmap = rows => rows.map(r => ({id: r[0], name: r[1], brand: r[2], kind: r[3], kcal: r[4], p: r[5], f: r[6], c: r[7], g: r[8], chk: r[9], code: r[10], ap: r[11]}));
@@ -1924,12 +1924,16 @@ function loadBase() {
 const baseRows = () => { if (!BASE) loadBase(); return BASE || []; };
 const baseCount = () => BASE ? BASE.length : ((D && D.base && D.base.n) || 0);
 const bnorm = s => String(s || '').toLowerCase().replace(/ё/g, 'е');
+// 13.11e: поиск по основе слова без предлогов (сосиска ~ сосиски, «в тесте» ~ «тесто»), пусто — «похожее» по числу совпавших слов
+const BSTOP = new Set(['в', 'во', 'с', 'со', 'и', 'на', 'из', 'по', 'для', 'без', 'от', 'к', 'у', 'а']);
+const bstem = w => w.length >= 6 ? w.slice(0, -2) : w.length >= 4 ? w.slice(0, -1) : w;
 function baseInfo() {
   const m = (D && D.base && D.base.meta) || [], by = k => m.filter(x => x.kind === k);
   const line = x => `${esc(x.source)} — ${esc(x.n)} шт.${x.fetched ? ', собрано ' + esc(dm(x.fetched)) : ''}${x.note ? ' (' + esc(x.note) + ')' : ''}`;
   return `<div class="binfo"><b>Откуда цифры</b>
     <div>🍔 <b>Фастфуд</b> — таблицы КБЖУ самих сетей: ${by('ff').map(line).join('; ') || '—'}. Метка зелёная.</div>
     <div>🥩 <b>Базовые</b> — USDA FoodData Central, госбаза США (SR Legacy): ${by('basic').map(x => esc(x.n) + ' шт.').join('; ') || '—'}. Для «русских» продуктов — ближайший аналог, помечен «≈ аналог США» (напр. творог USDA: белка 10–12 г против 16–18 г у нашего — для творога лучше 🛒 Магазин). Метка зелёная.</div>
+    <div>🥐 <b>Выпечка</b> — типовые значения на 100 г для выпечки и уличной еды (сосиска в тесте, булочки, пирожки, самса…): ${by('typ').map(x => esc(x.n) + ' шт.').join('; ') || '—'}. Оценка по рецептурам, с этикеткой может не совпасть.</div>
     <div>🛒 <b>Магазин</b> — Open Food Facts, открытая база по штрихкодам: КБЖУ переписаны с этикеток людьми, бывают ошибки: ${by('shop').map(x => esc(x.n) + ' шт.' + (x.fetched ? ', собрано ' + esc(dm(x.fetched)) : '')).join('; ') || '—'}. Метка жёлтая; ⚠ — калории не сходятся с БЖУ, сверь с упаковкой.</div>
     <b>Как устроено</b>
     <div>База лежит у Дана на сервере (/data/food/base.json), копия — здесь в приложении, поиск идёт прямо в телефоне. Всё на 100 г. В Notion базы нет — туда попадает только съеденное («Питание»).</div>
@@ -1948,11 +1952,14 @@ function baseList() {
   const all = baseRows(), q = bnorm(bq).trim();
   if (!BASE) return '<div class="sub" style="margin-top:6px">Распаковываю базу…</div>';
   if (q.length < 2) return `<div class="sub" style="margin-top:6px">Начни вводить — ищу по ${all.length} продуктам${bk ? ' (' + BK[bk] + ')' : ''}.</div>`;
-  const ws = q.split(/\s+/), isCode = /^\d{6,}$/.test(q);
-  const hit = all.filter(x => (!bk || x.kind === bk) && (isCode ? x.code === q : ws.every(w => bnorm(x.name + ' ' + x.brand).includes(w))));
+  const w0 = bnorm(q).replace(/[^a-zа-я0-9 ]+/g, ' ').split(/\s+/).filter(Boolean), w1 = w0.filter(w => !BSTOP.has(w)), ws = (w1.length ? w1 : w0).map(bstem), isCode = /^\d{6,}$/.test(q);
+  const txt = x => bnorm(x.name + ' ' + x.brand), rk = x => (bnorm(x.name).startsWith(ws[0]) ? 0 : 2) + (x.kind === 'shop' ? 1 : 0) + x.name.length / 1000;
+  let hit = all.filter(x => (!bk || x.kind === bk) && (isCode ? x.code === q : ws.every(w => txt(x).includes(w)))).sort((a, b) => rk(a) - rk(b)), near = false;
+  if (!hit.length && !isCode && ws.length > 1) { near = true; const nh = x => ws.filter(w => txt(x).includes(w)).length;
+    hit = all.filter(x => !bk || x.kind === bk).map(x => [x, nh(x)]).filter(a => a[1] > 0).sort((a, b) => b[1] - a[1] || rk(a[0]) - rk(b[0])).slice(0, 30).map(a => a[0]); }
   const show = hit.slice(0, 60);
   if (!show.length) return '<div class="sub" style="margin-top:6px">Ничего не нашлось. Попробуй короче или другим словом.</div>';
-  return `<div class="sub" style="margin:4px 0">${hit.length > 60 ? `показаны 60 из ${hit.length} — уточни` : `найдено ${hit.length}`}</div>` + show.map(x =>
+  return `<div class="sub" style="margin:4px 0">${near ? 'точно не нашлось — вот похожее' : hit.length > 60 ? `показаны 60 из ${hit.length} — уточни` : `найдено ${hit.length}`}</div>` + show.map(x =>
     `<div class="pr${x.id === bsel ? ' on' : ''}" data-bid="${esc(x.id)}"><div class="prh"><span class="prn">${esc(x.name)}${x.brand ? `<span class="bsrc ${x.kind === 'shop' ? 'off' : 'of'}">${esc(x.brand)}</span>` : ''}</span><span class="pri">#${esc(x.id)}</span></div>`
     + `<div class="sub">100 г — ${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}${x.g ? ` · порция ${esc(x.g)} г` : ''}${x.chk ? ' · ⚠ сверь' : ''}${x.ap ? ' · ≈ аналог США' : ''}</div></div>`).join('');
 }
