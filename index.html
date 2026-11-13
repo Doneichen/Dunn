@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-13 09:06:30Z, sha 6a8257f6d796; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-13 14:37:44Z, sha 673242695971; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -517,7 +517,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '13.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '13.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
@@ -1345,9 +1345,10 @@ function cdCalc(c) {
   const min = mins > 0 ? mins : dist / v * 60;
   return {steps, kcal: Math.round(vo2 * W * min / 1000 * 5), v: Math.round(v * 10) / 10, W, km: Math.round(dist * 100) / 100};
 }
+const cdNet = (c, r) => { const m = cdMins(c) || (r.km / r.v * 60); return Math.max(0, Math.round(r.kcal - 0.0175 * r.W * m)); };
 function cdCalcTxt(c) { const r = cdCalc(c); if (!r) return 'Введи дистанцию — посчитаю шаги и калории.';
   return `≈ <b style="color:var(--tx)">${r.steps.toLocaleString('ru-RU')}</b> шагов · ≈ <b style="color:var(--tx)">${r.kcal}</b> ккал <span style="opacity:.7">(шаг ${(0.415 * CD_H).toFixed(0)} см, ${r.W} кг, ~${r.v} км/ч)</span>` +
-    (c.watch ? '<br>⌚ Шаги уже на часах — второй раз не прибавлю, калории учтутся через них.' : '<br>➕ Шаги прибавлю к шагам дня → цель по калориям подрастёт сама. Ккал отдельно не добавляю, чтобы не задвоить.'); }
+    `<br>🍽 В еду: <b style="color:var(--tx)">+${cdNet(c, r)}</b> ккал — это кардио минус то, что сжёг бы и так. Шаги дорожки за еду второй раз не считаются.` + (c.watch ? '<br>⌚ Шаги уже на часах — к шагам дня не прибавлю.' : '<br>➕ Шаги прибавлю к шагам дня.'); }
 function cardioView() {
   const c = cdGet(), left = cdLeft(c), mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && left != null ? Math.floor((c.dur * 60 - left) / 60) : 0);
   const st = c.phase === 'work' ? (c.startAt ? 'идёт' : 'пауза') : c.phase === 'rest' ? (c.startAt ? 'отдых мотора' : 'пауза отдыха') : c.phase === 'done' ? 'готово — дай дорожке 10 минут' : c.phase === 'restdone' ? 'мотор отдохнул — можно ещё круг' : 'не начато';
@@ -1370,7 +1371,7 @@ function cardioView() {
 }
 function cdPhrase(c) { const mins = c.rounds.reduce((a, b) => a + b, 0) + (c.phase === 'work' && cdLeft(c) != null ? Math.floor((c.dur * 60 - cdLeft(c)) / 60) : 0);
   const P = [`${mins} мин`]; if (String(c.speed).trim()) P.push(`${String(c.speed).trim()} км/ч`); const r0 = cdCalc(c); if (String(c.dist).trim()) P.push(`${r0 ? String(r0.km).replace('.', ',') : String(c.dist).trim()} км`); const r = cdCalc(c); if (String(c.steps).trim()) P.push(`${String(c.steps).trim()} шагов`); else if (r) P.push(`≈${r.steps} шагов (из дистанции)`);
-  if (r) P.push(`≈${r.kcal} ккал`); if (String(c.dist).trim() || String(c.steps).trim()) P.push(c.watch ? '⌚ шаги уже на часах' : '➕ шаги к дню');
+  if (r) P.push(`≈${r.kcal} ккал (в еду +${cdNet(c, r)})`); if (String(c.dist).trim() || String(c.steps).trim()) P.push(c.watch ? '⌚ шаги уже на часах' : '➕ шаги к дню');
   return `Кардио ${dm(GD.today)} · ${CDN}: ${P.join(' · ')}${String(c.note || '').trim() ? ' · ' + String(c.note).trim() : ''}`.slice(0, 500); }
 $('workouts').addEventListener('input', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k) return; const c = cdGet(); c[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); const sb = document.querySelector('[data-cd="save"]'); if (sb) sb.disabled = !(cdMins(c) || String(c.dist || '').trim() || String(c.steps || '').trim()); });
 $('workouts').addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.cf; if (!k || e.target.type !== 'checkbox') return; const c = cdGet(); c[k] = e.target.checked; cdSet(c); const el = $('cd-calc'); if (el) el.innerHTML = cdCalcTxt(c); const sb = document.querySelector('[data-cd="save"]'); if (sb) sb.disabled = !(cdMins(c) || String(c.dist || '').trim() || String(c.steps || '').trim()); });
