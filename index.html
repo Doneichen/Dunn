@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-13 06:05:10Z, sha 99637def5873; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-13 07:53:45Z, sha b78919da4063; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -379,9 +379,12 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
 #thpop{position:fixed;top:64px;right:12px;z-index:7;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.45);min-width:210px}
 #thpop button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;width:100%;box-sizing:border-box;padding:9px 10px;border-radius:9px;color:var(--tx);font-size:14px}
 #thpop button.on{background:rgba(var(--cyr),.12);color:var(--cy)}#thpop button small{color:var(--mut);font-size:11px}
+#thpop .ph{font-size:11px;color:var(--mut);padding:8px 10px 2px;text-transform:uppercase;letter-spacing:.06em}#thpop .fd{font-size:11px;color:var(--mut);padding:0 10px 6px;max-width:250px;line-height:1.35}
+#ftoast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%);z-index:70;display:none;white-space:pre-line;width:min(92%,520px);box-sizing:border-box;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--cyd);color:var(--tx);font-size:13px;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.45)}
 </style>
 </head>
 <body>
+<div id="ftoast"></div>
 <div id="lock"><div class="box">
   <div class="eye"><i></i></div>
   <h1 style="margin-top:14px">D U N N</h1>
@@ -419,7 +422,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
 </div></div>
 
 <div class="wrap" id="app" hidden>
-  <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="thbtn" id="thbtn" aria-label="тема">🎨</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
+  <header><div class="logo">D</div><div><h1>DUNN</h1><div class="sub" id="upd"></div></div><button class="addbtn" id="addbtn" title="записать" aria-label="записать">+</button><button class="thbtn" id="thbtn" aria-label="настройки">⚙️</button><button class="lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="seg" id="btabs" style="grid-template-columns:repeat(4,1fr)"></div><div class="card" id="weight"></div><div class="card" id="fcast"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
@@ -513,7 +516,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '13.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '13.11b';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
@@ -1196,6 +1199,36 @@ const gDraft = () => { try { return JSON.parse(store.get('dunn_wdraft') || 'null
 const DAY_RR = {'А': '5-8', 'Б': '10-15'};
 const isBase = rr => { const lo = ((String(rr || '').match(/\d+/g) || []).map(Number))[0]; return lo != null && lo <= 8; };
 const dayReps = (rr0, day) => day && isBase(rr0) ? DAY_RR[day] : rr0;
+// ⚙️ Функции: включаются в меню шестерёнки, всё новое по умолчанию выкл (его идея 13.11)
+const FEATS = [['cmp', '📊 Сравнение с прошлым разом', 'Заполнил оба подхода — всплывает: прошлый раз → сейчас. Лёгкие дни не считаются.']];
+const featGet = () => { try { return JSON.parse(store.get('dunn_feat') || '{}') || {}; } catch (e) { return {}; } };
+const featOn = k => !!featGet()[k];
+function ftoast(m, ms) { const t = $('ftoast'); if (!t) return; t.textContent = m; t.style.display = 'block'; clearTimeout(ftoast.h); ftoast.h = setTimeout(() => { t.style.display = 'none'; }, ms || 2500); }
+function cmpPrev(ex, day, before) {
+  let any = null, legacy = null;
+  for (let i = GD.log.length - 1; i >= 0; i--) { const x = GD.log[i]; if (x.ex !== ex || x.day === 'Лёгкая' || (before && x.d >= before)) continue;
+    if (!day || x.day === day) return x; if (!legacy && !x.day) legacy = x; }
+  return day === 'Б' ? legacy : null;  // день А сравниваем только с прошлым днём А
+}
+const ldTot = l => { const P = parseLoad(l); return stepKg(P.bands) + (parseFloat(P.gf) || 0) + (P.kg || 0); };
+const povt = n => { n = Math.abs(n); const a = n % 10, b = n % 100; return n + ' ' + (a === 1 && b !== 11 ? 'повтор' : a >= 2 && a <= 4 && (b < 12 || b > 14) ? 'повтора' : 'повторов'); };
+function cmpTxt(name, pd, pl, pS, cl, cS) {
+  const n = Math.min(pS.length, cS.length); let dr = 0; for (let k = 0; k < n; k++) dr += (parseInt(cS[k]) || 0) - (parseInt(pS[k]) || 0);
+  const a = String(pl || '').trim(), b = String(cl || '').trim(), dl = a.toUpperCase() === b.toUpperCase() ? 0 : Math.sign(ldTot(b) - ldTot(a));
+  const v = dl > 0 ? '🟢 нагрузка выше' + (dr < 0 ? ' (повторов меньше — после шага это нормально)' : dr > 0 ? ', и ещё +' + povt(dr) : '')
+          : dl < 0 ? '🟡 нагрузка ниже' + (dr ? ', ' + (dr > 0 ? '+' : '−') + povt(dr) : '')
+          : dr > 0 ? '🟢 +' + povt(dr) : dr < 0 ? '🔴 −' + povt(dr) + ' — бывает, глянь на готовность' : '⚪ так же, как в прошлый раз';
+  return name + '\nпрошлый раз ' + dm(pd) + ': ' + (a || 'свой вес') + ' × ' + pS.join(', ') + '\nсейчас: ' + (b || 'свой вес') + ' × ' + cS.join(', ') + '\n' + v;
+}
+let CMP_SEEN = '';
+function cmpExToast(f, i) {
+  if (!featOn('cmp') || !f) return; const e = f.ex[i]; if (!e) return;
+  const cS = [e.s1, e.s2].map(v => String(v ?? '').trim()); if (cS.some(v => v === '') || isLite(f)) return;
+  const sig = f.date + '|' + e.name + '|' + cS.join(',') + '|' + (e.load || ''); if (sig === CMP_SEEN) return; CMP_SEEN = sig;
+  const l = cmpPrev(e.name, f.day, f.date); if (!l) return ftoast(e.name + '\n' + (f.day ? 'первый день ' + f.day + ' с этим упражнением' : 'первый раз') + ' — сравнивать не с чем', 3500);
+  const pS = [l.s1, l.s2].filter(v => v != null && String(v).trim() !== '').map(v => String(v).trim());
+  ftoast(cmpTxt(e.name, l.d, l.load, pS, e.load, cS), 6000); hap();
+}
 function lastDayOf(ex, day) {
   let any = null, legacy = null;
   for (let i = GD.log.length - 1; i >= 0; i--) { const x = GD.log[i]; if (x.ex !== ex || x.day === 'Лёгкая') continue;
@@ -1530,6 +1563,7 @@ $('workouts').addEventListener('input', e => {
   saveDraftFromDom();
 });
 $('workouts').addEventListener('change', e => {
+  { const k = e.target.dataset && e.target.dataset.k, box = e.target.closest('.fex'); if (gv === 'new' && box && (k === 's1' || k === 's2' || k === 'load')) { const f = saveDraftFromDom(); cmpExToast(f, Number(box.dataset.i)); } }
   if (e.target.id === 'w-ramp') { saveDraftFromDom(); store.set('dunn_ramp', e.target.checked ? '1' : '0'); const y = window.scrollY; renderGym(); window.scrollTo(0, y); hap(); return; }
   if (e.target.id === 'g-ex') { gEx = e.target.value; gPi = null; renderGym(); return; }
   if (e.target.id === 'w-tpl') { const cur = saveDraftFromDom(), touched = cur && cur.ex.some(x => String(x.s1 || x.s2).trim());
@@ -2305,14 +2339,19 @@ function applyTheme() {
     if (tg && bg) { tg.setHeaderColor && tg.setHeaderColor(bg); tg.setBackgroundColor && tg.setBackgroundColor(bg); } } catch (e) {}
 }
 applyTheme(); setInterval(() => { if (theme === 'auto') applyTheme(); }, 600000);
+function thFill(p) { const F = featGet();
+  p.innerHTML = '<div class="ph">🎨 Тема</div>' + Object.keys(THEMES).map(k => `<button data-th="${k}" class="${k === theme ? 'on' : ''}"><span>${THEMES[k][0]}</span><small>${THEMES[k][1]}</small></button>`).join('')
+    + '<div class="ph">🎛 Функции</div>' + FEATS.map(([k, t, d]) => `<button data-feat="${k}" class="${F[k] ? 'on' : ''}"><span>${t}</span><small>${F[k] ? 'вкл' : 'выкл'}</small></button><div class="fd">${d}</div>`).join(''); }
 $('thbtn').addEventListener('click', e => {
   e.stopPropagation(); let p = $('thpop');
   if (p) { p.remove(); return; }
   p = document.createElement('div'); p.id = 'thpop';
-  p.innerHTML = Object.keys(THEMES).map(k => `<button data-th="${k}" class="${k === theme ? 'on' : ''}"><span>${THEMES[k][0]}</span><small>${THEMES[k][1]}</small></button>`).join('');
-  document.body.appendChild(p);
+  thFill(p); document.body.appendChild(p);
 });
+$('ftoast').addEventListener('click', () => { $('ftoast').style.display = 'none'; });
 document.addEventListener('click', e => {
+  const fb = e.target.closest('#thpop [data-feat]');
+  if (fb) { const F = featGet(), k = fb.dataset.feat; F[k] = !F[k]; store.set('dunn_feat', JSON.stringify(F)); thFill($('thpop')); hap(); ftoast(F[k] ? 'Включено' : 'Выключено', 1500); return; }
   const b = e.target.closest('#thpop [data-th]');
   if (b) { theme = b.dataset.th; try { store.set('dunn_theme', theme); } catch (err) {} applyTheme(); $('thpop').remove(); return; }
   const p = $('thpop'); if (p && !e.target.closest('#thpop')) p.remove();
