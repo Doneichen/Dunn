@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-14 04:20:52Z, sha 81aa32af48b1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-14 10:46:56Z, sha 72039b899f42; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -381,7 +381,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
 #thpop button.on{background:rgba(var(--cyr),.12);color:var(--cy)}#thpop button small{color:var(--mut);font-size:11px}
 #thpop .ph{font-size:11px;color:var(--mut);padding:8px 10px 2px;text-transform:uppercase;letter-spacing:.06em}#thpop .fd{font-size:11px;color:var(--mut);padding:0 10px 6px;max-width:250px;line-height:1.35}
 #ftoast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%);z-index:70;display:none;white-space:pre-line;width:min(92%,520px);box-sizing:border-box;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--cyd);color:var(--tx);font-size:13px;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.45)}
-header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .hb{all:unset;cursor:pointer;box-sizing:border-box;width:36px;height:36px;flex:none;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--mut);display:grid;place-items:center;-webkit-tap-highlight-color:transparent}header .hb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}header .hb:active{background:rgba(var(--cyr),.15)}header .hb.hb-add{border-color:var(--cy);color:var(--cy);box-shadow:0 0 10px rgba(var(--cyr),.25)}header .hb.hb-add svg{stroke-width:2.4}header .htx{min-width:0}header .htx .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header .logo{width:36px;height:36px;font-size:17px;flex:none}header h1{font-size:19px;margin:0;letter-spacing:.32em}
+header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .hb{all:unset;cursor:pointer;box-sizing:border-box;width:36px;height:36px;flex:none;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--mut);display:grid;place-items:center;-webkit-tap-highlight-color:transparent}header .hb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}header .hb:active{background:rgba(var(--cyr),.15)}header .hb.hb-add{border-color:var(--cy);color:var(--cy);box-shadow:0 0 10px rgba(var(--cyr),.25)}header .hb.hb-add svg{stroke-width:2.4}header .htx{min-width:0}header .htx .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ldi{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;box-sizing:border-box;font-style:normal;font-size:12px;line-height:11px;text-align:center}.ldi.ldi-spin{border:2px solid var(--line);border-top-color:var(--cy);border-radius:50%;animation:ldi .8s linear infinite}.ldi.ldi-ok::before{content:'';display:block;width:4px;height:8px;margin:0 auto;border:solid var(--ok);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}.ldi.ldi-err{border-radius:50%;background:var(--amb);color:#fff;font-weight:800;font-size:9px;line-height:11px}.ldi.ldi-err::before{content:'!'}@keyframes ldi{to{transform:rotate(360deg)}}header .logo{width:36px;height:36px;font-size:17px;flex:none}header h1{font-size:19px;margin:0;letter-spacing:.32em}
 </style>
 </head>
 <body>
@@ -423,7 +423,7 @@ header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .h
 </div></div>
 
 <div class="wrap" id="app" hidden>
-  <header><div class="logo">D</div><div class="htx"><h1>DUNN</h1><div class="sub" id="upd"></div></div><div class="hbtns"><button class="hb hb-add" id="addbtn" title="записать" aria-label="записать"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="hb" id="thbtn" aria-label="настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="hb lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div></header>
+  <header><div class="logo">D</div><div class="htx"><h1>DUNN</h1><div class="sub"><i id="ldi" class="ldi ldi-spin" title="загружаю…"></i><span id="upd"></span></div></div><div class="hbtns"><button class="hb hb-add" id="addbtn" title="записать" aria-label="записать"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="hb" id="thbtn" aria-label="настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="hb lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="seg" id="btabs" style="grid-template-columns:repeat(4,1fr)"></div><div class="card" id="weight"></div><div class="card" id="fcast"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
@@ -517,9 +517,11 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '14.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '14.11b';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
-const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
+// 14.11b: вместо «· экран … · данные … с» в шапке — значок: крутится, пока качаются свежие данные; ✓ — загрузилось; ⚠ — нет связи (показаны сохранённые)
+const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
+const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
 function applyFresh(d) {
   const a = document.activeElement;
   if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) { PEND = d; return; }  // не мешаем вводу — обновим, когда уйдёт фокус
@@ -595,7 +597,6 @@ function streakTile(s) {
 function render(d) {
   { const [dd, tt] = String(d.updated || '').split(' '), td = new Date().toLocaleDateString('ru-RU', {day: '2-digit', month: '2-digit'}), wd = ['вс','пн','вт','ср','чт','пт','сб'][new Date().getDay()];
     $('upd').textContent = $('upd').dataset.base = (dd === td ? 'данные на ' + tt : 'данные ' + d.updated); }
- if (TM.length) $('upd').textContent += ' · ' + TM.join(' · ') + ' с';
   const f = d.food, a = d.activity, t = a.target, left = t.kcal - f.kcal;
   const w = d.weight, last = w[w.length - 1], df = d.deficit, k = d.tasks, m = d.money;
 
@@ -1313,7 +1314,8 @@ function wuCard(f, key, title) {
 let gmode = store.get('dunn_gmode') || 'str', cdT = null, cdAudio = null, cdLock = null;
 const CDN = 'Беговая дорожка ZENECO';
 const cdGet = () => { try { return JSON.parse(store.get('dunn_cardio') || 'null') || {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } catch (e) { return {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } };
-const cdSet = c => store.set('dunn_cardio', JSON.stringify(c));
+// 14.11b: таймеры дублируются в облако Telegram — на iPhone память страницы стирается при закрытии мини-приложения (у Алины пропадал таймер дорожки)
+const cdSet = c => { c.ts = Date.now(); kset('dunn_cardio', JSON.stringify(c)).catch(() => {}); };
 const mmss = s => Math.floor(s / 60) + ':' + String(Math.max(0, Math.floor(s % 60))).padStart(2, '0');
 function cdLeft(c) { if (c.phase !== 'work' && c.phase !== 'rest') return null; const total = (c.phase === 'rest' ? 10 : c.dur) * 60;
   const run = (c.acc || 0) + (c.startAt ? (Date.now() - c.startAt) / 1000 : 0); return Math.max(0, total - run); }
@@ -1391,7 +1393,7 @@ $('workouts').addEventListener('click', async e => {
     try { window.dunnLinks.bot(ph); $('cd-hint').textContent = 'Отправь фразу — и жми «Старт». Напишу, когда пройдёт время.'; } catch (er) { $('cd-hint').textContent = 'Открой чат с ботом и вставь фразу.'; } return; }
   if (a === 'save') { const ph = cdPhrase(c); try { await navigator.clipboard.writeText(ph); } catch (er) {}
     try { window.dunnLinks.bot('Кардио ' + dm(GD.today)); $('cd-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Потом «Сбросить».'; } catch (er) { $('cd-hint').textContent = 'Текст в буфере — открой чат с ботом и вставь.'; } return; }
-  if (a === 'reset') { if (!confirm('Сбросить кардио-сессию?')) return; store.del('dunn_cardio'); cdWake(false); renderGym(); return; }
+  if (a === 'reset') { if (!confirm('Сбросить кардио-сессию?')) return; cdSet({dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}); cdWake(false); renderGym(); return; }
 }, true);
 
 function gymNew() {
@@ -1599,13 +1601,14 @@ $('workouts').addEventListener('change', e => {
 });
 // таймер отдыха после ✓ подхода
 let rtEnd = 0, rtH = null;
+const rtSave = () => { kset('dunn_rest_t', String(rtEnd || 0)).catch(() => {}); };
 function restTick() { const el = $('rtimer'); if (!el) return; const left = Math.max(0, Math.round((rtEnd - Date.now()) / 1000));
   el.querySelector('b').textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
-  if (!left) { clearInterval(rtH); el.style.display = 'none'; hap(); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (err) {} } }
+  if (!left) { clearInterval(rtH); el.style.display = 'none'; rtEnd = 0; rtSave(); hap(); try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (err) {} } }
 function restStart(sec) { let el = $('rtimer');
   if (!el) { el = document.createElement('div'); el.id = 'rtimer'; el.innerHTML = '<span>Отдых</span><b>0:00</b><span style="flex:1"></span><button data-rt="30">+30 с</button><button data-rt="x">✕</button>'; document.body.appendChild(el);
-    el.addEventListener('click', ev => { const t = ev.target.closest('button'); if (!t) return; if (t.dataset.rt === 'x') { clearInterval(rtH); el.style.display = 'none'; } else { rtEnd += 30000; restTick(); } }); }
-  rtEnd = Date.now() + sec * 1000; el.style.display = 'flex'; clearInterval(rtH); rtH = setInterval(restTick, 250); restTick(); }
+    el.addEventListener('click', ev => { const t = ev.target.closest('button'); if (!t) return; if (t.dataset.rt === 'x') { clearInterval(rtH); el.style.display = 'none'; rtEnd = 0; rtSave(); } else { rtEnd += 30000; rtSave(); restTick(); } }); }
+  rtEnd = Date.now() + sec * 1000; rtSave(); el.style.display = 'flex'; clearInterval(rtH); rtH = setInterval(restTick, 250); restTick(); }
 $('workouts').addEventListener('toggle', e => { if (e.target.id === 'g-hist') gHist = e.target.open; if (e.target.id === 'g-best') gBest = e.target.open; }, true);
 $('workouts').addEventListener('click', async e => {
   if (gv === 'prog') {
@@ -2278,7 +2281,7 @@ async function openWith(priv, kid, fast) {
       render(d0); show(store.get('dunn_tab') || 'home'); shown = true; tmark('экран'); } catch (e) { cached = null; }
   }
   try { enc = await net; }
-  catch (e) { if (shown) return true; view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
+  catch (e) { ldi('err', 'нет связи — показаны сохранённые данные'); if (shown) return true; view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
   if (shown && cached && enc && enc.iv === cached.iv && enc.epk === cached.epk) { tmark('данные'); return true; }  // ничего нового
   if (fast && (!enc || enc.v !== 2 || enc.kid !== kid)) { if (shown) { $('lock').style.display = ''; $('app').hidden = true; $('nav').hidden = true; } return false; }
   if (enc.v !== 2 || !enc.kid) { showKey('Дан ещё не получил твой ключ. Отправь ему сообщение ниже целиком: в нём нет ничего секретного, это открытый ключ.'); return false; }
@@ -2400,6 +2403,14 @@ async function boot() {
   if ($('v-key').hidden && $('v-unlock').hidden) view('unlock');
 }
 try { FAST = fastBoot().catch(() => false); } catch (e) { FAST = null; }
+async function timersRestore() {
+  try { const cl = await kget('dunn_cardio'), o = cl ? JSON.parse(cl) : null, loc = cdGet();
+    if (o && o.phase && (o.ts || 0) > (loc.ts || 0)) { store.set('dunn_cardio', cl);
+      if (o.phase !== 'idle') { gmode = 'cardio'; store.set('dunn_gmode', 'cardio'); gv = 'new'; store.set('dunn_gv', 'new'); store.set('dunn_tab', 'gym');
+        if (!$('app').hidden) { show('gym'); renderGym(); } } } } catch (e) {}
+  try { const v = Math.max(+(store.get('dunn_rest_t') || 0), +((await kget('dunn_rest_t')) || 0)); if (v > Date.now() + 1000) { restStart(1); rtEnd = v; rtSave(); restTick(); } } catch (e) {}
+}
+window.addEventListener('load', () => setTimeout(timersRestore, 300));
 </script>
 </body>
 </html>
