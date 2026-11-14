@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-14 10:46:56Z, sha 72039b899f42; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-14 14:00:54Z, sha e46210853c94; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -357,17 +357,18 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .pt{font:12px ui-monospace,Menlo,monospace}
 .wline{font-size:13px;color:var(--mut);margin-top:8px}.wline b{color:var(--tx);font-weight:600}
 /* «+»: черновик в чат бота */
-#add{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
-#add[hidden]{display:none}
-#add .sheet{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+#add,#fpk{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:6;display:flex;align-items:flex-end;justify-content:center}
+#add[hidden],#fpk[hidden]{display:none}
+#add .sheet,#fpk .sheet{width:100%;max-width:560px;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
 #add .chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
 #add .chips button{all:unset;cursor:pointer;padding:7px 12px;border-radius:16px;border:1px solid var(--line);color:var(--mut);font-size:13px}
 #add .chips button.on{border-color:var(--cy);color:var(--cy);background:rgba(var(--cyr),.09)}
-#add input,#add textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--cyd);background:var(--bg2);color:var(--tx);font-size:16px;margin:0 0 8px;font-family:inherit}
+#add input,#add textarea,#fpk input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--cyd);background:var(--bg2);color:var(--tx);font-size:16px;margin:0 0 8px;font-family:inherit}
 #add textarea{height:84px;resize:none}
-#add .send{width:100%;padding:12px;border:0;border-radius:10px;background:var(--cy);color:var(--oncy);font-weight:700;font-size:15px;margin-top:4px}
-#add .hint{color:var(--mut);font-size:12px;margin-top:8px;min-height:16px}
-#add .x{all:unset;cursor:pointer;float:right;color:var(--mut);font-size:20px;line-height:1;padding:2px 6px}
+#add .send,#fpk .send{width:100%;padding:12px;border:0;border-radius:10px;background:var(--cy);color:var(--oncy);font-weight:700;font-size:15px;margin-top:4px}
+#add .hint,#fpk .hint{color:var(--mut);font-size:12px;margin-top:8px;min-height:16px}
+#fpk-l{max-height:42vh;overflow:auto;margin-top:4px}.fpr{padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr.on{color:var(--cy)}.fpb{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.fps{display:flex;justify-content:space-between;margin:10px 0 2px;font-size:14px}.fpi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}.fpi>span{flex:1}.fpi small{display:block;color:var(--mut);font-size:12px}.fpi.sent{opacity:.5}.fpi button,.fpadd button,.fpt button{all:unset;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:13px}.fpadd,.fpt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.fpt{grid-template-columns:repeat(3,1fr)}.fpadd button,.fpt button{text-align:center;color:var(--cy);border-color:var(--cyd)}.fpt button.on{background:rgba(var(--cyr),.12)}.fpw{margin-top:6px}
+#add .x,#fpk .x{all:unset;cursor:pointer;float:right;color:var(--mut);font-size:20px;line-height:1;padding:2px 6px}
 
 :root[data-theme="calm"] body{background-image:none}
 :root[data-theme="light"] .sbig .over,:root[data-theme="calm"] .sbig .over{background:transparent}
@@ -432,6 +433,7 @@ header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .h
   <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
 </div>
 
+<div id="fpk" hidden><div class="sheet"><button class="x" id="fpk-x" aria-label="закрыть">×</button><b id="fpk-t"></b><input id="fpk-q" type="search" placeholder="найти: творог, гречка, #p07" autocomplete="off" style="margin-top:10px"><div id="fpk-sel"></div><div id="fpk-l"></div><div class="hint" id="fpk-h"></div></div></div>
 <div id="add" hidden><div class="sheet">
   <button class="x" id="add-x" aria-label="закрыть">×</button>
   <h2 style="font:600 12px ui-monospace,Menlo,monospace;letter-spacing:.15em;color:var(--cyd);margin:2px 0 0;text-transform:uppercase">Записать Дану</h2>
@@ -517,7 +519,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '14.11b';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '14.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 // 14.11b: вместо «· экран … · данные … с» в шапке — значок: крутится, пока качаются свежие данные; ✓ — загрузилось; ⚠ — нет связи (показаны сохранённые)
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
@@ -732,27 +734,111 @@ const leftRow = (f, t) => {
 };
 function renderFood() {
   if (fv === 'vit') try { renderVits(); } catch (e) {}
-  const x = FD[fdi], f = x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}, t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
-  const left = t.kcal - f.kcal, isToday = fdi === 0, meals = x.meals || [];
+  const x = fdi < 0 ? fpDay(fdi) : FD[fdi], ps = fpSum(x.d), f = fdi < 0 ? ps : (x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}), t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
+  const left = t.kcal - f.kcal, isToday = fdi === 0, meals = x.meals || [], fc = isToday && ps.n ? {kcal: f.kcal + ps.kcal, p: f.p + ps.p, f: f.f + ps.f, c: f.c + ps.c} : null;
   const base = isToday && D.activity ? D.activity.steps_base : null;
   const wo = (D.workouts || []).find(w => w.d === x.d);
   $('fdays').innerHTML = `<div class="dnav"><button data-step="1" ${fdi >= FD.length - 1 ? 'disabled' : ''} aria-label="день назад">‹</button>
-    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${esc(x.type || '')}</small>
-    <input type="date" aria-label="выбрать дату" min="${esc(FD[FD.length - 1].d)}" max="${esc(FD[0].d)}" value="${esc(x.d)}"></div>
-    <button data-step="-1" ${isToday ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
+    <div class="dl">${esc(wd(x.d))}, ${esc(dm(x.d))}${isToday ? ' · сегодня' : ''}${fdi < 0 ? ' · план' : ''}<svg class="cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><small>${esc(x.type || '')}</small>
+    <input type="date" aria-label="выбрать дату" min="${esc(FD[FD.length - 1].d)}" max="${esc(dAdd(FD[0].d, 7))}" value="${esc(x.d)}"></div>
+    <button data-step="-1" ${fdi <= -7 ? 'disabled' : ''} aria-label="день вперёд">›</button></div>
     <div class="strip">${FD.map((y, i) => `<button data-i="${i}" class="${i === fdi ? 'on' : ''}"><b>${esc(y.d.slice(8, 10))}</b>${esc(wd(y.d))}<i class="${kcls(y)}"></i></button>`).join('')}</div>`;
-  $('food').innerHTML = `<h2>Питание · ${esc(x.type || '')}</h2>
-    <div class="row"><div class="big">${f.kcal}<small> / ${t.kcal} ккал</small></div><div class="${left < 0 ? 'bad' : 'ok'}">${left < 0 ? 'перебор ' + (-left) : (isToday ? 'осталось ' : 'недобор ') + left}</div></div>
+  $('food').innerHTML = `<h2>${fdi < 0 ? 'План' : 'Питание'} · ${esc(x.type || '')}</h2>
+    <div class="row"><div class="big">${f.kcal}<small> / ${t.kcal} ккал</small></div><div class="${left < 0 ? 'bad' : 'ok'}">${left < 0 ? 'перебор ' + (-left) : (isToday || fdi < 0 ? 'осталось ' : 'недобор ') + left}</div></div>
     <div class="bar"><i class="${f.kcal > t.kcal * 1.05 ? 'over' : ''}" style="width:${t.kcal ? Math.min(100, f.kcal / t.kcal * 100) : 0}%"></i></div>
-    ${isToday ? leftRow(f, t) : ''}${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
+    ${fc ? `<div class="sub fpw">📝 с черновиком: <b>${fc.kcal}</b> / ${t.kcal} ккал${fc.kcal > t.kcal ? ' · <b class="bad">перебор ' + (fc.kcal - t.kcal) + '</b>' : ''}</div>` + leftRow(fc, t) : (isToday || fdi < 0 ? leftRow(f, t) : '')}${bar('Белок', f.p, t.p, 'г', 'p')}${bar('Жиры', f.f, t.f, 'г', 'f')}${bar('Углеводы', f.c, t.c, 'г', 'c')}
     <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
     ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
-    ${!isToday ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
-  $('meals').innerHTML = `<h2>Приёмы пищи</h2>` + (meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`)
-    + `<button class="btn ghost" id="bc-go" style="margin-top:10px">📷 По штрих-коду → в чат</button><div class="sub" id="bc-hint" style="margin-top:4px">Откроется чат: пришли фото штрих-кода, подпись — граммы («150 г»). Найду продукт и запишу.</div>`;
+    ${fdi > 0 ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
+  $('meals').innerHTML = `<h2>${fdi < 0 ? 'План на день' : 'Приёмы пищи'}</h2>` + (fdi < 0 ? '' : meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`)
+    + (fdi <= 0 ? fpHtml(x.d, isToday) : '') + (fdi < 0 ? '' : `<button class="btn ghost" id="bc-go" style="margin-top:10px">📷 По штрих-коду → в чат</button><div class="sub" id="bc-hint" style="margin-top:4px">Откроется чат: пришли фото штрих-кода, подпись — граммы («150 г»). Найду продукт и запишу.</div>`);
 }
 const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус': '🍎', 'Ужин': '🌙', 'Без времени': '🕓'};
 const r1 = v => Math.round((v || 0) * 10) / 10;
+// ── 14.11c: план и черновик еды по приёмам, как у Алины (его просьба 14.11, сообщения 7213–7216).
+// Хранится в облаке Telegram (dunn_fplan): {дата: {t: тип дня, i: [[приём, id, граммы, отправлено, ts]]}}. В Notion пишу я —
+// по фразе «🥫 записать #pNN N г» (формат разрешил Al 07.11). Пачкой и #b… — только после его «да».
+const FSL = ['Завтрак', 'Обед', 'Ужин', 'Перекус'];
+let FP = {}, FPK = null;
+const fpGet = d => FP[d] || (FP[d] = {i: []});
+const fpX = id => /^p\d+$/.test(id) ? prBy(id) : baseRows().find(y => y.id === id);
+function fpSave() {
+  const t0 = FD[0] ? FD[0].d : '';
+  Object.keys(FP).forEach(d => { if (d < t0 || (!FP[d].i.length && !FP[d].t)) delete FP[d]; });
+  const v = JSON.stringify(FP); if (v.length > 4000) return false;
+  kset('dunn_fplan', v).catch(() => {}); return true;
+}
+async function fpLoad() { try { const v = await kget('dunn_fplan'); if (v) FP = JSON.parse(v) || {}; } catch (e) {} if (D && FD.length) try { renderFood(); } catch (e) {} }
+window.addEventListener('load', () => setTimeout(fpLoad, 400));
+// отправленное прячем, когда данные обновились позже отправки (значит, я уже записал и пересчитал)
+const fpUpd = () => { const m = /^(\d\d)\.(\d\d) (\d\d):(\d\d)$/.exec((D && D.updated) || ''); return m ? Date.parse(`${(D.date || '').slice(0, 4)}-${m[2]}-${m[1]}T${m[3]}:${m[4]}:00+05:00`) : 0; };
+function fpSum(d) {
+  const z = {n: 0, kcal: 0, p: 0, f: 0, c: 0, fib: 0}, e = FP[d]; if (!e) return z;
+  const up = fpUpd(); e.i = e.i.filter(it => !(it[3] && it[4] && up > it[4] + 30000));
+  e.i.forEach(it => { const x = fpX(it[1]); if (!x) return; const k = it[2] / 100; z.n++; z.kcal += (x.kcal || 0) * k; z.p += (x.p || 0) * k; z.f += (x.f || 0) * k; z.c += (x.c || 0) * k; });
+  z.kcal = Math.round(z.kcal); z.p = Math.round(z.p); z.f = Math.round(z.f); z.c = Math.round(z.c); return z;
+}
+function fpDay(i) {
+  const d = dAdd(FD[0].d, -i), e = FP[d] || {}, ty = e.t || (D.fut || {})[d] || 'Выходной';
+  return {d, type: ty, food: null, meals: [], steps: null, target: (D.tt || {})[ty] || FD[0].target};
+}
+function fpHtml(d, isToday) {
+  const e = FP[d] || {i: []}, rows = e.i.map((it, n) => [it, n]);
+  let h = `<div class="fpb"><div class="lbl"><span>📝 ${isToday ? 'Черновик — ещё не записано' : 'План'}</span></div>`;
+  if (!isToday && !(D.fut || {})[d]) h += `<div class="fpt">${['Смена', 'Выходной с силовой', 'Выходной'].map(t => `<button data-fpt="${esc(t)}" class="${(e.t || 'Выходной') === t ? 'on' : ''}">${t === 'Выходной с силовой' ? 'Силовая' : esc(t)}</button>`).join('')}</div>`;
+  FSL.forEach((sl, si) => { const r = rows.filter(([it]) => it[0] === si); if (!r.length) return;
+    const k = r.reduce((a, [it]) => { const x = fpX(it[1]); return a + (x ? (x.kcal || 0) * it[2] / 100 : 0); }, 0);
+    h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k)} ккал</span></div>` + r.map(([it, n]) => { const x = fpX(it[1]);
+      return `<div class="fpi${it[3] ? ' sent' : ''}"><span>${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
+        + (isToday && !it[3] ? `<button data-fps="${n}" aria-label="записать">🥫</button>` : '') + `<button data-fpx="${n}" aria-label="убрать">✕</button></div>`; }).join(''); });
+  if (!rows.length) h += `<div class="sub">${isToday ? 'Набери, что съел или собираешься съесть, — посчитаю, сколько останется.' : 'Распиши день заранее — увидишь, влезаешь ли в цель.'}</div>`;
+  h += `<div class="fpadd">${FSL.map((sl, si) => `<button data-fpa="${si}">＋ ${SLOT_ICO[sl]}</button>`).join('')}</div>`;
+  if (isToday && rows.some(([it]) => !it[3])) h += `<div class="sub" id="fp-h" style="margin-top:6px">🥫 — фраза в буфер и чат со мной: «Вставить» → «Отправить». Продукты из Базы (#b…) пока пиши мне сам: «#b0123 200 г».</div>`;
+  return h + '</div>';
+}
+$('meals').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const d = (fdi < 0 ? fpDay(fdi) : FD[fdi]).d;
+  if (b.dataset.fpa != null) { fpOpen(d, +b.dataset.fpa); return; }
+  if (b.dataset.fpt) { fpGet(d).t = b.dataset.fpt; fpSave(); renderFood(); return; }
+  if (b.dataset.fpx != null) { fpGet(d).i.splice(+b.dataset.fpx, 1); fpSave(); renderFood(); return; }
+  if (b.dataset.fps != null) { const it = fpGet(d).i[+b.dataset.fps]; if (!it) return;
+    const ph = prPhrase(it[1], String(it[2]));
+    if (!ph) { $('fp-h').textContent = `Это продукт из Базы — напиши мне сам: «#${it[1]} ${it[2]} г».`; return; }
+    try { navigator.clipboard && navigator.clipboard.writeText(ph).catch(() => {}); } catch (err) {}
+    try { window.dunnLinks.bot(ph); it[3] = 1; it[4] = Date.now(); fpSave(); renderFood(); }
+    catch (err) { $('fp-h').textContent = 'Чат не открылся. Фраза в буфере — вставь её мне сам.'; } }
+});
+function fpOpen(d, si) { FPK = {d, si, sel: null}; $('fpk-t').textContent = `＋ ${SLOT_ICO[FSL[si]]} ${FSL[si]} · ${wd(d)}, ${dm(d)}`; $('fpk-q').value = ''; $('fpk-h').textContent = ''; $('fpk').hidden = false; fpList(); }
+function fpList() {
+  const q = bnorm($('fpk-q').value.trim()).replace(/^#/, ''), ws = q.split(/\s+/).filter(w => w && !BSTOP.has(w)).map(bstem);
+  const hit = x => ws.every(w => bnorm(x.name + ' ' + (x.brand || '')).includes(w)) || x.id === q;
+  const mine = q ? PR.filter(hit).slice(0, 12) : prTop().slice(0, 15), B = q.length > 1 ? baseRows().filter(hit).slice(0, 25) : [];
+  if (q.length > 1 && !BASE) setTimeout(() => { if (FPK && !$('fpk').hidden) fpList(); }, 700);
+  const row = (x, tag) => `<div class="fpr${FPK.sel === x.id ? ' on' : ''}" data-fid="${esc(x.id)}">${esc(x.name)}<small>${tag}#${esc(x.id)} · 100 г — ${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}</small></div>`;
+  $('fpk-l').innerHTML = (mine.length ? `<div class="sub" style="margin-top:6px">${q ? 'Мои продукты' : 'Частые'}</div>` + mine.map(x => row(x, '')).join('') : '')
+    + (B.length ? '<div class="sub" style="margin-top:8px">База</div>' + B.map(x => row(x, x.brand ? esc(x.brand) + ' · ' : '')).join('') : '')
+    + (!mine.length && !B.length ? `<div class="sub" style="margin-top:8px">${q.length > 1 && !BASE ? 'гружу Базу…' : 'Ничего. Попробуй короче.'}</div>` : '');
+}
+function fpSel() {
+  const x = FPK && fpX(FPK.sel); if (!x) { $('fpk-sel').innerHTML = ''; return; } const g = Math.round(x.g || 100);
+  $('fpk-sel').innerHTML = `<div class="box" style="margin-top:8px"><b>${esc(x.name)}</b><div class="prc"><input class="prg" id="fpk-g" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${g}" style="width:90px;margin:6px 0"> г <span id="fpk-v">${prCalc(x, g)}</span></div><button class="send" id="fpk-ok">Добавить</button></div>`;
+}
+$('fpk').addEventListener('input', e => {
+  if (e.target.id === 'fpk-q') { FPK.sel = null; fpSel(); fpList(); return; }
+  if (e.target.id === 'fpk-g') { const v = e.target.value.replace(/\D+/g, '').slice(0, 4); if (v !== e.target.value) e.target.value = v; $('fpk-v').innerHTML = prCalc(fpX(FPK.sel), v); }
+});
+$('fpk').addEventListener('click', e => {
+  if (e.target.id === 'fpk-x' || e.target.id === 'fpk') { $('fpk').hidden = true; FPK = null; renderFood(); return; }
+  const r = e.target.closest('[data-fid]');
+  if (r) { FPK.sel = r.dataset.fid; fpSel(); fpList(); const i = $('fpk-g'); if (i) { i.focus(); i.select(); } return; }
+  if (e.target.id === 'fpk-ok') { const g = +$('fpk-g').value, x = fpX(FPK.sel);
+    if (!x || !(g >= 1 && g <= 5000)) { $('fpk-h').textContent = 'Граммы — целое число от 1 до 5000.'; return; }
+    const it = [FPK.si, x.id, g, 0, 0]; fpGet(FPK.d).i.push(it);
+    if (!fpSave()) { fpGet(FPK.d).i.pop(); $('fpk-h').textContent = 'Облако Telegram не вместит больше — убери старое из плана.'; return; }
+    try { tg() && tg().HapticFeedback.notificationOccurred('success'); } catch (err) {}
+    $('fpk-h').textContent = `✓ ${x.name}, ${g} г — добавлено. Можно ещё.`; FPK.sel = null; $('fpk-q').value = ''; fpSel(); fpList(); }
+});
 function mealsHtml(meals, f) {
   // группы по slot в порядке первого появления; старые записи без поля slot — одной группой
   const order = [], by = {};
@@ -1663,13 +1749,14 @@ $('workouts').addEventListener('click', async e => {
 });
 
 function pickDay(i) {
-  if (i < 0 || i >= FD.length || i === fdi) return;
+  if (i < -7 || i >= FD.length || i === fdi || (i < 0 && fv === 'vit')) return;
   fdi = i; renderFood();
   try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {}
   const on = document.querySelector('#fdays .strip button.on'); on && on.scrollIntoView({block: 'nearest', inline: 'center'});
 }
 $('fdays').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return;
-  const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) pickDay(i); else renderFood(); };
+  const v = e.target.value, fut = v > FD[0].d, i = fut ? -Math.round((Date.parse(v) - Date.parse(FD[0].d)) / 864e5) : FD.findIndex(y => y.d === v);
+  if (fut || i >= 0) pickDay(i); else renderFood(); };
 $('fdays').onclick = e => { if (e.target.type === 'date') { try { e.target.showPicker(); } catch (err) {} return; }
  const b = e.target.closest('button'); if (!b || b.disabled) return;
   if (b.dataset.step) pickDay(fdi + Number(b.dataset.step)); else if (b.dataset.i) pickDay(Number(b.dataset.i)); };
@@ -1891,6 +1978,7 @@ function renderProt() {
 }
 function applyFv() {
   if (!['diary', 'prod', 'vit', 'rec'].includes(fv)) fv = 'diary';
+  if (fv === 'vit' && fdi < 0) { fdi = 0; try { renderFood(); } catch (e) {} }
   $('fseg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.fv === fv));
   const diary = fv === 'diary', vit = fv === 'vit';
   $('fstreak').hidden = !diary || !(D && D.streak);
