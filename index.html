@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-13 17:09:27Z, sha 8510efda9bf1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-14 04:20:52Z, sha 81aa32af48b1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -517,7 +517,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '13.11e';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '14.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); const u = $('upd'); if (u && u.dataset.base) u.textContent = u.dataset.base + ' · ' + TM.join(' · ') + ' с'; };
 function applyFresh(d) {
@@ -1501,14 +1501,28 @@ function gymKb() {
 const dAdd = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
 const monOf = d => dAdd(d, -((new Date(d + 'T00:00:00Z').getUTCDay() + 6) % 7));
 const fr = x => String(+(+x).toFixed(1)).replace('.', ',');
+// 14.11: вес подхода по RPE — 7–10 → 1, 6 → 0,5, ≤5 → 0 (разминка); без RPE → 1, но помечается. Границы — наше правило
+// (направление: ближе к отказу — больше роста, Robinson 2024; норма 10–20 — из исследований с тяжёлыми подходами).
+const rpeW = v => v == null ? 1 : v >= 7 ? 1 : v >= 6 ? 0.5 : 0;
+function setRpes(r) {  // RPE каждого подхода: «RPE по подходам a / b» в заметке → строка «a / b» → одно число на оба
+  const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isFinite(x) ? x : null; };
+  const m = String(r.note || '').match(/RPE по подходам\s*([\d.,]+)\s*\/\s*([\d.,]+)/i);
+  if (m) return [num(m[1]), num(m[2])];
+  if (r.rpe != null && String(r.rpe).includes('/')) { const q = String(r.rpe).split('/').map(num); return [q[0], q[1] ?? q[0]]; }
+  const v = r.rpe == null || r.rpe === '' ? null : num(r.rpe); return [v, v];
+}
 function musAgg(a, b) {
-  const M = GD.mus, S = {}, by = {}, miss = {};
+  const M = GD.mus, S = {}, R = {}, by = {}, miss = {}; let raw = 0, noR = 0;
   GD.log.forEach(r => { if (!r.d || r.d < a || r.d > b) return;
-    const n = [r.s1, r.s2].filter(v => v != null && v !== '' && Number(v) !== 0).length; if (!n) return;
+    const rp = setRpes(r), sets = [r.s1, r.s2].map((v, i) => [v, rp[i]]).filter(([v]) => v != null && v !== '' && Number(v) !== 0);
+    const n = sets.length; if (!n) return;
+    const w = sets.reduce((t, [, q]) => t + rpeW(q), 0), nr = sets.filter(([, q]) => q == null).length;
     const m = M.map[r.ex]; if (!m) { miss[r.ex] = (miss[r.ex] || 0) + n; return; }
-    Object.entries(m).forEach(([k, c]) => { if (k[0] === '_') return; S[k] = (S[k] || 0) + n * c;
-      const e = (by[k] = by[k] || {}), x = (e[r.ex] = e[r.ex] || {n: 0, c, ask: !!m._ask}); x.n += n; }); });
-  return {S, by, miss};
+    raw += n; noR += nr;
+    Object.entries(m).forEach(([k, c]) => { if (k[0] === '_') return; S[k] = (S[k] || 0) + w * c; R[k] = (R[k] || 0) + n * c;
+      const e = (by[k] = by[k] || {}), x = (e[r.ex] = e[r.ex] || {n: 0, w: 0, nr: 0, c, ask: !!m._ask, rp: []}); x.n += n; x.w += w; x.nr += nr;
+      sets.forEach(([, q]) => { if (q != null) x.rp.push(q); }); }); });
+  return {S, R, by, miss, raw, noR};
 }
 function gymMus() {
   const M = GD.mus; if (!M || !M.map || !M.muscles) return '<div class="sub">Таблица мышц ещё не собрана — напиши Дану</div>';
@@ -1516,7 +1530,7 @@ function gymMus() {
   const R = gmv === 'w1' ? [dAdd(m0, -7), dAdd(m0, -1), 1, `${dm(dAdd(m0, -7))}–${dm(dAdd(m0, -1))}`]
     : gmv === 'w4' ? [dAdd(t, -27), t, 4, `${dm(dAdd(t, -27))}–${dm(t)} · в среднем за неделю`]
     : [m0, t, 1, `${dm(m0)}–${dm(t)}`];
-  const {S, by, miss} = musAgg(R[0], R[1]), div = R[2];
+  const {S, R: RW, by, miss, raw, noR} = musAgg(R[0], R[1]), div = R[2];
   const [lo, hi] = M.target || [10, 20], free = new Set(M.no_target || []);
   const nW = new Set(GD.log.filter(r => r.d >= R[0] && r.d <= R[1]).map(r => r.d)).size;
   const vals = M.muscles.map(k => [k, (S[k] || 0) / div]);
@@ -1525,10 +1539,11 @@ function gymMus() {
   const lbl = {low: 'мало', ok: 'норма', hi: 'много', free: 'без нормы'};
   let h = `<div class="seg mseg">${[['w0', 'Эта неделя'], ['w1', 'Прошлая'], ['w4', '4 недели']].map(([k, l]) => `<button data-gmv="${k}" class="${gmv === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   h += `<div class="sub">${R[3]} · ${nW ? `тренировок: ${nW}` : 'тренировок нет'} · тап по мышце — откуда подходы</div>`;
+  if (raw) h += `<div class="sub">Число у мышцы — <b>рабочие</b> подходы (по RPE), «из N» — все подходы.${noR ? ` Без RPE: ${fr(noR / div)} из ${fr(raw / div)} подх${div > 1 ? '/нед' : ''} — засчитаны целиком.` : ''}</div>`;
   h += '<div class="mus">' + vals.map(([k, v]) => { const c = cls(k, v), open = gMs === k;
     const det = open ? `<ul class="kbl mdet">${Object.entries(by[k] || {}).sort((a, b) => b[1].n * b[1].c - a[1].n * a[1].c)
-      .map(([e, x]) => `<li>${esc(e)}${x.ask ? ' <span class="warn">(?)</span>' : ''} — ${fr(x.n / div)} подх × ${fr(x.c)} = <b>${fr(x.n * x.c / div)}</b></li>`).join('') || '<li>за этот период ни одного подхода</li>'}</ul>` : '';
-    return `<button class="mr${v ? '' : ' z'}${open ? ' on' : ''}" data-ms="${esc(k)}"><span class="mn">${esc(k)}</span><b>${fr(v)}</b><small class="${c}">${lbl[c]}</small>`
+      .map(([e, x]) => `<li>${esc(e)}${x.ask ? ' <span class="warn">(?)</span>' : ''} — ${fr(x.n / div)} подх${x.w !== x.n ? ` (рабочих ${fr(x.w / div)})` : ''}${x.rp.length ? ` · RPE ${[...new Set(x.rp)].sort((p, q) => p - q).map(fr).join('–').replace(/^(.+)–.+–(.+)$/, '$1–$2')}` : ''}${x.nr ? ` · <span class="sub">без RPE: ${fr(x.nr / div)}</span>` : ''} × ${fr(x.c)} = <b>${fr(x.w * x.c / div)}</b></li>`).join('') || '<li>за этот период ни одного подхода</li>'}</ul>` : '';
+    return `<button class="mr${v ? '' : ' z'}${open ? ' on' : ''}" data-ms="${esc(k)}"><span class="mn">${esc(k)}${(RW[k] || 0) / div - v > 0.05 ? ` <small class="sub">из ${fr((RW[k] || 0) / div)}</small>` : ''}</span><b>${fr(v)}</b><small class="${c}">${lbl[c]}</small>`
       + `<span class="mb"><i class="${c}" style="width:${(v / mx * 100).toFixed(1)}%"></i>${free.has(k) ? '' : `<span class="tg" style="left:${(lo / mx * 100).toFixed(1)}%;width:${((hi - lo) / mx * 100).toFixed(1)}%"></span>`}</span></button>${det}`; }).join('') + '</div>';
   if (nW) {
     const tplEx = new Set(GD.tpl.flatMap(x => (x.exercises || []).map(e => e.name)));
@@ -1539,7 +1554,7 @@ function gymMus() {
   }
   const ms = Object.keys(miss);
   if (ms.length) h += `<div class="sub warn">Нет в таблице: ${ms.map(esc).join(', ')} — напиши Дану «мышцы: упражнение — …»</div>`;
-  return h + `<div class="sub" style="margin-top:8px">Подход в основную мышцу ×1, в помогающую ×0,5 (Pelland и соавт., 2024). Зелёная зона — ${lo}–${hi} подходов в неделю (Schoenfeld, Ogborn, Krieger, 2017). Разминка не считается. Поправить таблицу — напиши Дану «мышцы: …»</div>`;
+  return h + `<div class="sub" style="margin-top:8px">Подход в основную мышцу ×1, в помогающую ×0,5 (Pelland и соавт., 2024). Зелёная зона — ${lo}–${hi} подходов в неделю (Schoenfeld, Ogborn, Krieger, 2017). Подход по RPE: 7–10 — целиком, 6 — половина, 5 и ниже — разминка, 0 (границы — наше правило; что тяжёлые подходы растят больше — Robinson и соавт., 2024). Без RPE — целиком. Поправить таблицу — напиши Дану «мышцы: …»</div>`;
 }
 function renderGym() {
   if (!GD) return;
