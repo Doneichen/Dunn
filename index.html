@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-14 14:00:54Z, sha e46210853c94; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-15 05:35:12Z, sha dfa06a6faab8; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -519,7 +519,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '14.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '15.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 // 14.11b: вместо «· экран … · данные … с» в шапке — значок: крутится, пока качаются свежие данные; ✓ — загрузилось; ⚠ — нет связи (показаны сохранённые)
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
@@ -1125,7 +1125,7 @@ let gmv = 'w0', gMs = '';
 let GD = null, gv = store.get('dunn_gv') || 'cal', gMonth = null, gSel = null, gEx = null, gPi = null, gHist = false, gBest = false;
 const WDS = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
 const MON = ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'];
-const setStr = x => [x.s1, x.s2].filter(v => v != null && v !== '').join(', ') || '—';
+const setStr = x => [x.s1, x.s2].filter(v => v != null && v !== '').join(', ') || '—'; /* «было:» + RPE и до отказа прошлого раза (15.11) */ function lastTxt(l) { const [a, b] = setRpes(l); return `${l.load || '—'} × ${setStr(l)}${rpePair({rpe1: a ?? '', rpe2: b ?? ''})} · ${dmy(l.d)}`; } function lastLine(e) { const l = e.name ? lastOf(e.name) : null; return l ? lastTxt(l) : e.last; }
 function sessions() {  // дата → {rows, act}
   const m = {};
   GD.log.forEach(x => { (m[x.d] = m[x.d] || {rows: [], act: null}).rows.push(x); });
@@ -1376,7 +1376,7 @@ function newDraft(tplName, day) {
   const t = GD.tpl.find(x => x.name === tplName) || GD.tpl[0];
   if (!day) day = nextDay();
   return {date: GD.today, tpl: t ? t.name : '', min: '', rpe: '', note: '', wu: {}, day,
-          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastDayOf(e.name, day); return {rr0: e.reps || '', sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: dayReps(e.reps || '', day), load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}; })};
+          ex: (t ? t.exercises : []).map((e, k, A) => { const l = lastDayOf(e.name, day); return {rr0: e.reps || '', sec: e.sec || '', grp: e.grp || '', rest: !!e.rest, gi: e.sec === undefined ? null : A.slice(0, k + 1).filter((x, j) => !j || x.sec !== A[j - 1].sec || x.grp !== A[j - 1].grp || !!x.rest !== !!A[j - 1].rest).length, name: e.name, reps: dayReps(e.reps || '', day), load: l ? l.load : (e.load_hint || ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? lastTxt(l) : ''}; })};
 }
 // порядок и замена: двигается/меняется само упражнение, а место в круге (sec/grp/rest/gi) остаётся за позицией
 const SLOT = ['sec', 'grp', 'rest', 'gi'];
@@ -1506,7 +1506,7 @@ function gymNew() {
       return `${newSec ? `<div class="gsec">${esc(e.sec)}</div>` : ''}${newGrp && e.grp ? `<div class="ggrp${e.rest ? ' rest' : ''}">${esc(e.grp)}${e.rest ? ' <small>— в паузах между кругами</small>' : ''}</div>` : ''}
       <div class="fex${e.rest ? ' rest' : ''}" data-i="${i}"><div class="n"><span>${num}. ${esc(e.name)}${e.reps ? ` <small>${esc(e.reps)}</small>` : ''}</span><span class="acts"><button class="mv" data-up="${i}" ${i ? '' : 'disabled'} aria-label="выше">↑</button><button class="mv" data-dn="${i}" ${i < f.ex.length - 1 ? '' : 'disabled'} aria-label="ниже">↓</button><button class="mv" data-sw="${i}" aria-label="заменить">⇄</button><button class="mv" data-rm="${i}" aria-label="убрать">✕</button></span></div>
       ${e.swap ? `<select class="fsel swsel" data-swsel="${i}"><option value="">заменить на…</option>${allEx.filter(n => n !== e.name).map(n => `<option>${esc(n)}</option>`).join('')}</select>` : ''}
-      ${e.last ? `<div class="sub pt">было: ${esc(e.last)}</div>` : ''}${(() => { const h = hintAdj(progHint(e.name, e.reps, f.day), e, f); return h ? `<div class="phint ${h.cls}">${esc(h.txt)}</div>` : ''; })()}
+      ${e.last ? `<div class="sub pt">было: ${esc(lastLine(e))}</div>` : ''}${(() => { const h = hintAdj(progHint(e.name, e.reps, f.day), e, f); return h ? `<div class="phint ${h.cls}">${esc(h.txt)}</div>` : ''; })()}
       <input class="ld" data-k="load" value="${esc(e.load)}" placeholder="резина / вес — ГФ 4.5 + К1, пусто = свой вес">
       <div class="sl sh"><span>#</span><span>повторы</span><span>RPE</span><span>до отк.</span><span></span></div>
       ${store.get('dunn_ramp') === '1' ? `<div class="sl rmp${e.okp ? ' done' : ''}"><span class="no">П</span><input data-k="sp" inputmode="numeric" value="${esc(e.sp ?? '')}" placeholder="1–2"><span class="rt">рабочий вес, не до отказа</span><button class="ok" data-ok="${i}_p" aria-label="подводящий сделан">${e.okp ? '✓' : ''}</button></div>` : ''}
@@ -1679,10 +1679,10 @@ $('workouts').addEventListener('change', e => {
   if (e.target.dataset && e.target.dataset.swsel !== undefined && e.target.value) { const f = saveDraftFromDom(), i = Number(e.target.dataset.swsel), n = e.target.value, l = lastOf(n), x = f.ex[i];
     const tE = GD.tpl.flatMap(t => t.exercises || []).find(y => y.name === n);
     Object.assign(x, {name: n, reps: tE ? tE.reps || '' : '', load: l ? l.load : (tE ? tE.load_hint || '' : ''), s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', showNote: false,
-      p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''}); delete x.swap;
+      p1: l && l.s1 != null ? l.s1 : '', p2: l && l.s2 != null ? l.s2 : '', last: l ? lastTxt(l) : ''}); delete x.swap;
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); hap(); return; }
   if (e.target.id === 'w-add' && e.target.value) { const f = saveDraftFromDom(), n = e.target.value, l = lastOf(n);
-    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', last: l ? `${l.load || '—'} × ${setStr(l)} · ${dmy(l.d)}` : ''});
+    f.ex.push({...addSlot(f), name: n, reps: '', load: l ? l.load : '', s1: '', s2: '', rpe: '', rpe1: '', rpe2: '', ok1: false, ok2: false, sp: '', okp: false, note: '', last: l ? lastTxt(l) : ''});
     store.set('dunn_wdraft', JSON.stringify(f)); renderGym(); }
 });
 // таймер отдыха после ✓ подхода
