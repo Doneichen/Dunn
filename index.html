@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 09:51:52Z, sha 7c241a44cf43; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 10:02:03Z, sha 3ac104543d70; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -368,7 +368,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 #add textarea{height:84px;resize:none}
 #add .send,#fpk .send{width:100%;padding:12px;border:0;border-radius:10px;background:var(--cy);color:var(--oncy);font-weight:700;font-size:15px;margin-top:4px}
 #add .hint,#fpk .hint{color:var(--mut);font-size:12px;margin-top:8px;min-height:16px}
-#fpk-l{max-height:42vh;overflow:auto;margin-top:4px}.fpr{padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr.on{color:var(--cy)}.fpb{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.fps{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:10px 0 2px;font-size:14px}.fps button{all:unset;cursor:pointer;padding:4px 9px;border-radius:9px;border:1px solid var(--cyd);color:var(--cy);font-size:12px}.fpi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}.fpi>span{flex:1}.fpi small{display:block;color:var(--mut);font-size:12px}.fpi.sent{opacity:.5}.fpi button,.fpadd button,.fpt button{all:unset;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:13px}.fpadd,.fpt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.fpt{grid-template-columns:repeat(3,1fr)}.fpadd button,.fpt button{text-align:center;color:var(--cy);border-color:var(--cyd)}.fpt button.on{background:rgba(var(--cyr),.12)}.fpw{margin-top:6px}
+#fpk-l{max-height:42vh;overflow:auto;margin-top:4px}.fpr{padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr.on{color:var(--cy)}.fpb{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.fps{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:10px 0 2px;font-size:14px}.fps button{all:unset;cursor:pointer;padding:4px 9px;border-radius:9px;border:1px solid var(--cyd);color:var(--cy);font-size:12px}.fpi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}.fpi>span{flex:1}.fpi small{display:block;color:var(--mut);font-size:12px}.fpi.sent{opacity:.5}.fpi>span[data-fpe]{cursor:pointer}.fped{padding:6px 0 10px;border-bottom:1px solid var(--line)}.fpedr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px}.fpedr input{width:72px;margin:0}.fpedr button{all:unset;cursor:pointer;padding:6px 9px;border-radius:9px;border:1px solid var(--cyd);color:var(--cy);font-size:13px}.fpedr button.ok{background:rgba(var(--cyr),.14)}.fpi button,.fpadd button,.fpt button{all:unset;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:13px}.fpadd,.fpt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.fpt{grid-template-columns:repeat(3,1fr)}.fpadd button,.fpt button{text-align:center;color:var(--cy);border-color:var(--cyd)}.fpt button.on{background:rgba(var(--cyr),.12)}.fpw{margin-top:6px}
 #add .x,#fpk .x{all:unset;cursor:pointer;float:right;color:var(--mut);font-size:20px;line-height:1;padding:2px 6px}
 
 :root[data-theme="calm"] body{background-image:none}
@@ -803,11 +803,11 @@ function fpHtml(d, isToday) {
     const k = r.reduce((a, [it]) => { const x = fpX(it[1]), g = it[2] / 100; return x ? {k: a.k + (x.kcal || 0) * g, p: a.p + (x.p || 0) * g, f: a.f + (x.f || 0) * g, c: a.c + (x.c || 0) * g} : a; }, {k: 0, p: 0, f: 0, c: 0});
     const un = r.filter(([it]) => !it[3] && /^p\d+$/.test(it[1])).length;
     h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k.k)} ккал · Б ${Math.round(k.p)} · Ж ${Math.round(k.f)} · У ${Math.round(k.c)}</span>${isToday && un > 1 ? `<button data-fpm="${si}">🥫 весь приём</button>` : ''}</div>` + r.map(([it, n]) => { const x = fpX(it[1]);
-      return `<div class="fpi${it[3] ? ' sent' : ''}"><span>${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) + ' · Ж ' + r1((x.f || 0) * it[2] / 100) + ' · У ' + r1((x.c || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
-        + (isToday && !it[3] ? `<button data-fps="${n}" aria-label="записать">🥫</button>` : '') + `<button data-fpx="${n}" aria-label="убрать">✕</button></div>`; }).join(''); });
+      return `<div class="fpi${it[3] ? ' sent' : ''}"><span data-fpe="${n}">${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}${x ? ' <span class="sub">✎</span>' : ''}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) + ' · Ж ' + r1((x.f || 0) * it[2] / 100) + ' · У ' + r1((x.c || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
+        + (isToday && !it[3] ? `<button data-fps="${n}" aria-label="записать">🥫</button>` : '') + `<button data-fpx="${n}" aria-label="убрать">✕</button></div>` + (FPE && FPE.it === it && x ? fpEdHtml(it) : ''); }).join(''); });
   if (!rows.length) h += `<div class="sub">${isToday ? 'Набери, что съел или собираешься съесть, — посчитаю, сколько останется.' : 'Распиши день заранее — увидишь, влезаешь ли в цель.'}</div>`;
   h += `<div class="fpadd">${FSL.map((sl, si) => `<button data-fpa="${si}">＋ ${SLOT_ICO[sl]}</button>`).join('')}</div>`;
-  if (isToday && rows.some(([it]) => !it[3])) h += `<div class="sub" id="fp-h" style="margin-top:6px">🥫 — один продукт, «🥫 весь приём» — все неотправленные продукты приёма одной фразой. Фраза уйдёт в буфер и чат со мной: «Вставить» → «Отправить». Продукты из Базы (#b…) пока пиши мне сам: «#b0123 200 г».</div>`;
+  if (isToday && rows.some(([it]) => !it[3])) h += `<div class="sub" id="fp-h" style="margin-top:6px">Тап по продукту — поправить граммы или «+30». 🥫 — один продукт, «🥫 весь приём» — все неотправленные продукты приёма одной фразой. Фраза уйдёт в буфер и чат со мной: «Вставить» → «Отправить». Продукты из Базы (#b…) пока пиши мне сам: «#b0123 200 г».</div>`;
   return h + '</div>';
 }
 $('meals').addEventListener('click', e => {
@@ -829,19 +829,57 @@ $('meals').addEventListener('click', e => {
     try { window.dunnLinks.bot(ph); it[3] = 1; it[4] = Date.now(); fpSave(); renderFood(); }
     catch (err) { $('fp-h').textContent = 'Чат не открылся. Фраза в буфере — вставь её мне сам.'; } }
 });
-function fpOpen(d, si) { FPK = {d, si, sel: null}; $('fpk-t').textContent = `＋ ${SLOT_ICO[FSL[si]]} ${FSL[si]} · ${wd(d)}, ${dm(d)}`; $('fpk-q').value = ''; $('fpk-h').textContent = ''; $('fpk').hidden = false; fpList(); }
+// 16.11: тап по продукту черновика — граммы: поправить число или +10/+30/+50/+100 (его просьба msg 7488: второй бутерброд — +30 к окороку).
+// Уже отправленная строка не меняется (я её записал) — добавка ложится новой строкой. Ссылка на сам пункт, а не индекс: fpSum чистит отправленное.
+let FPE = null;
+const fpEdHtml = it => `<div class="fped"><div class="sub">${it[3] ? 'Уже отправлено мне — сколько добавить? Ляжет новой строкой.' : 'Сколько всего граммов?'}</div>`
+  + `<div class="fpedr"><input id="fpe-g" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="г" value="${it[3] ? '' : it[2]}"> г`
+  + [10, 30, 50, 100].map(v => `<button data-fpq="${v}">+${v}</button>`).join('') + `<button class="ok" data-fpok="1">Готово</button></div><div class="sub" id="fpe-v"></div></div>`;
+function fpeCalc() {
+  const i = $('fpe-g'), x = FPE && fpX(FPE.it[1]); if (!i || !x) return; const g = +i.value || 0;
+  $('fpe-v').textContent = g ? `${g} г — ${Math.round((x.kcal || 0) * g / 100)} ккал · Б ${r1((x.p || 0) * g / 100)} · Ж ${r1((x.f || 0) * g / 100)} · У ${r1((x.c || 0) * g / 100)}` : '';
+}
+$('meals').addEventListener('input', e => { if (e.target.id !== 'fpe-g') return; const v = e.target.value.replace(/\D+/g, '').slice(0, 4); if (v !== e.target.value) e.target.value = v; fpeCalc(); });
+$('meals').addEventListener('click', e => {
+  const x0 = fdi < 0 ? fpDay(fdi) : FD[fdi]; if (!x0) return; const d = x0.d;
+  const q = e.target.closest('[data-fpq]'), ok = e.target.closest('[data-fpok]'), ed = e.target.closest('span[data-fpe]');
+  if (q) { const i = $('fpe-g'); if (!i) return; i.value = String(Math.min(5000, (+i.value || 0) + +q.dataset.fpq)); fpeCalc(); try { tg() && tg().HapticFeedback.selectionChanged(); } catch (er) {} return; }
+  if (ok) { const ent = fpGet(d), it = FPE && FPE.it, k = it ? ent.i.indexOf(it) : -1, g = +($('fpe-g') || {}).value;
+    if (k < 0) { FPE = null; renderFood(); return; }
+    if (!(g >= 1 && g <= 5000)) { $('fpe-v').textContent = 'Граммы — целое число от 1 до 5000.'; return; }
+    const old = it[2]; let added = null;
+    if (it[3]) { added = [it[0], it[1], g, 0, 0]; ent.i.splice(k + 1, 0, added); } else it[2] = g;
+    if (!fpSave()) { if (added) ent.i.splice(k + 1, 1); else it[2] = old; $('fpe-v').textContent = 'Облако Telegram не вместит больше — убери старое из плана.'; return; }
+    try { tg() && tg().HapticFeedback.notificationOccurred('success'); } catch (er) {}
+    FPE = null; renderFood(); return; }
+  if (ed) { const n = +ed.dataset.fpe, it = fpGet(d).i[n]; if (!it) return;
+    FPE = FPE && FPE.it === it ? null : {d, it}; renderFood(); const i = $('fpe-g'); if (i) { i.focus(); i.select(); fpeCalc(); } }
+});
+// 16.11: «🕘 Недавние» в выборе продукта (его просьба msg 7489): 4 последних — сначала черновик, потом записанное (сегодня → назад), с последними граммами
+function fpRecent() {
+  const out = [], seen = new Set(), add = (id, g) => { if (!id || seen.has(id) || out.length >= 4) return; const x = fpX(id); if (!x) return; seen.add(id); out.push({x, g}); };
+  const days = Object.keys(FP).sort().reverse();
+  days.forEach(dd => (FP[dd].i || []).slice().reverse().forEach(it => add(it[1], it[2])));
+  const nn = t => String(t || '').toLowerCase().replace(/ё/g, 'е').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
+  const byName = new Map(); PR.forEach(x => { const k = nn(x.name); if (!byName.has(k) || x.n > byName.get(k).n) byName.set(k, x); });
+  ((D && D.food_days) || []).slice(0, 7).forEach(day => (day.meals || []).slice().sort((a, b) => String(b.t || '').localeCompare(String(a.t || ''))).forEach(m => { const x = byName.get(nn(m.pk || m.name)); if (x) add(x.id, Math.round(m.w || 0) || null); }));
+  return out;
+}
+function fpOpen(d, si) { FPK = {d, si, sel: null, rg: {}}; $('fpk-t').textContent = `＋ ${SLOT_ICO[FSL[si]]} ${FSL[si]} · ${wd(d)}, ${dm(d)}`; $('fpk-q').value = ''; $('fpk-h').textContent = ''; $('fpk').hidden = false; fpList(); }
 function fpList() {
   const q = bnorm($('fpk-q').value.trim()).replace(/^#/, ''), ws = q.split(/\s+/).filter(w => w && !BSTOP.has(w)).map(bstem);
   const hit = x => ws.every(w => bnorm(x.name + ' ' + (x.brand || '')).includes(w)) || x.id === q;
-  const mine = q ? PR.filter(hit).slice(0, 12) : prTop().slice(0, 15), B = q.length > 1 ? baseRows().filter(hit).slice(0, 25) : [];
+  const rec = q ? [] : fpRecent(); rec.forEach(r => { if (r.g) FPK.rg[r.x.id] = r.g; });
+  const mine = q ? PR.filter(hit).slice(0, 12) : prTop().filter(x => !rec.some(r => r.x.id === x.id)).slice(0, 15), B = q.length > 1 ? baseRows().filter(hit).slice(0, 25) : [];
   if (q.length > 1 && !BASE) setTimeout(() => { if (FPK && !$('fpk').hidden) fpList(); }, 700);
   const row = (x, tag) => `<div class="fpr${FPK.sel === x.id ? ' on' : ''}" data-fid="${esc(x.id)}">${esc(x.name)}<small>${tag}#${esc(x.id)} · 100 г — ${esc(x.kcal)} ккал · Б ${pr1(x.p)} · Ж ${pr1(x.f)} · У ${pr1(x.c)}</small></div>`;
-  $('fpk-l').innerHTML = (mine.length ? `<div class="sub" style="margin-top:6px">${q ? 'Мои продукты' : 'Частые'}</div>` + mine.map(x => row(x, '')).join('') : '')
+  $('fpk-l').innerHTML = (rec.length ? '<div class="sub" style="margin-top:6px">🕘 Недавние</div>' + rec.map(r => row(r.x, r.g ? `${r.g} г в прошлый раз · ` : '')).join('') : '')
+    + (mine.length ? `<div class="sub" style="margin-top:6px">${q ? 'Мои продукты' : 'Частые'}</div>` + mine.map(x => row(x, '')).join('') : '')
     + (B.length ? '<div class="sub" style="margin-top:8px">База</div>' + B.map(x => row(x, x.brand ? esc(x.brand) + ' · ' : '')).join('') : '')
     + (!mine.length && !B.length ? `<div class="sub" style="margin-top:8px">${q.length > 1 && !BASE ? 'гружу Базу…' : 'Ничего. Попробуй короче.'}</div>` : '');
 }
 function fpSel() {
-  const x = FPK && fpX(FPK.sel); if (!x) { $('fpk-sel').innerHTML = ''; return; } const g = Math.round(x.g || 100);
+  const x = FPK && fpX(FPK.sel); if (!x) { $('fpk-sel').innerHTML = ''; return; } const g = Math.round((FPK.rg || {})[x.id] || x.g || 100);
   $('fpk-sel').innerHTML = `<div class="box" style="margin-top:8px"><b>${esc(x.name)}</b><div class="prc"><input class="prg" id="fpk-g" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" value="${g}" style="width:90px;margin:6px 0"> г <span id="fpk-v">${prCalc(x, g)}</span></div><button class="send" id="fpk-ok">Добавить</button></div>`;
 }
 $('fpk').addEventListener('input', e => {
@@ -854,10 +892,12 @@ $('fpk').addEventListener('click', e => {
   if (r) { FPK.sel = r.dataset.fid; fpSel(); fpList(); const i = $('fpk-g'); if (i) { i.focus(); i.select(); } return; }
   if (e.target.id === 'fpk-ok') { const g = +$('fpk-g').value, x = fpX(FPK.sel);
     if (!x || !(g >= 1 && g <= 5000)) { $('fpk-h').textContent = 'Граммы — целое число от 1 до 5000.'; return; }
-    const it = [FPK.si, x.id, g, 0, 0]; fpGet(FPK.d).i.push(it);
-    if (!fpSave()) { fpGet(FPK.d).i.pop(); $('fpk-h').textContent = 'Облако Telegram не вместит больше — убери старое из плана.'; return; }
+    const same = fpGet(FPK.d).i.find(y => y[0] === FPK.si && y[1] === x.id && !y[3]);
+    if (same && same[2] + g > 5000) { $('fpk-h').textContent = `Вместе с уже добавленными ${same[2]} г выйдет больше 5000 г.`; return; }
+    const it = same || [FPK.si, x.id, g, 0, 0]; if (same) same[2] += g; else fpGet(FPK.d).i.push(it);
+    if (!fpSave()) { if (same) same[2] -= g; else fpGet(FPK.d).i.pop(); $('fpk-h').textContent = 'Облако Telegram не вместит больше — убери старое из плана.'; return; }
     try { tg() && tg().HapticFeedback.notificationOccurred('success'); } catch (err) {}
-    $('fpk-h').textContent = `✓ ${x.name}, ${g} г — добавлено. Можно ещё.`; FPK.sel = null; $('fpk-q').value = ''; fpSel(); fpList(); }
+    $('fpk-h').textContent = same ? `✓ ${x.name}: +${g} г, теперь ${same[2]} г. Можно ещё.` : `✓ ${x.name}, ${g} г — добавлено. Можно ещё.`; FPK.sel = null; $('fpk-q').value = ''; fpSel(); fpList(); }
 });
 function mealsHtml(meals, f) {
   // группы по slot в порядке первого появления; старые записи без поля slot — одной группой
