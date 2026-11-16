@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 05:10:14Z, sha 76e1dfd581e8; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 05:24:57Z, sha 110f20390d94; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -195,7 +195,7 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 #tasks .dn{flex:none;min-width:26px;text-align:center;color:var(--ok);font:700 13px ui-monospace,Menlo,monospace}
 /* еда: приёмы пищи */
 .mtot{display:flex;justify-content:space-between;gap:8px;font:13px ui-monospace,Menlo,monospace;color:var(--mut);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg2);margin-bottom:6px}
-.mtot b{color:var(--cy)}
+.mtot b{color:var(--cy)}.mtot{flex-wrap:wrap}.mtot span{white-space:nowrap}
 details.ml{border-top:1px solid var(--ln2)}
 details.ml:first-of-type{border-top:0}
 details.ml summary{list-style:none;cursor:pointer;padding:10px 0 8px;display:flex;align-items:baseline;gap:8px;-webkit-tap-highlight-color:transparent}
@@ -853,7 +853,7 @@ function mealsHtml(meals, f) {
     return `<details class="ml" open><summary><span class="ch">▶</span><span class="sl">${SLOT_ICO[k] || '·'} ${esc(onlyNoTime ? 'За день' : k)}</span><span class="tm">${esc(tm)}</span><span class="kc">${Math.round(s.kcal)} ккал</span></summary>
       ${hasM || s.w ? `<div class="bju">${s.w ? `<b>${gr(s.w)}</b>` + (hasM ? ' · ' : '') : ''}${hasM ? `Б ${r1(s.p)} · Ж ${r1(s.f)} · У ${r1(s.c)}` : ''}</div>` : ''}
       <ul>${arr.map(m => `<li><span class="nm">${esc(m.name)}</span><span class="due">${m.kcal}</span>${m.p != null || m.w ? `<span class="mm">${m.w ? `<b>${gr(m.w)}</b> · ` : ''}${m.t ? esc(m.t) + ' · ' : ''}${m.p != null ? `Б ${r1(m.p)} Ж ${r1(m.f)} У ${r1(m.c)}` : ''}</span>` : ''}</li>`).join('')}</ul></details>`; };
-  return `<div class="mtot"><span>Всего <b>${f.kcal}</b> ккал${dayW ? ` · ${gr(dayW)}` : ''}</span><span>Б ${f.p} · Ж ${f.f} · У ${f.c}</span></div>
+  return `<div class="mtot"><span>Всего <b>${f.kcal}</b> ккал${dayW ? ` · ${gr(dayW)} еды` : ''}</span><span>Б ${f.p} · Ж ${f.f} · У ${f.c}</span></div>
     ${order.map(sec).join('')}
     <div class="sub" style="margin-top:8px">Всего включает псиллиум (60 ккал, У 16). Тап по приёму сворачивает его.</div>`;
 }
