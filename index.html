@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 11:33:43Z, sha 5077ec565b78; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 13:44:03Z, sha a73290ade79f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -735,7 +735,7 @@ const leftRow = (f, t) => {
 };
 function renderFood() {
   if (fv === 'vit') try { renderVits(); } catch (e) {}
-  const x = fdi < 0 ? fpDay(fdi) : FD[fdi], ps = fpSum(x.d), f = fdi < 0 ? ps : (x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}), t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
+  const x = fdi < 0 ? fpDay(fdi) : FD[fdi], ps = fpSum(x.d), f = fdi < 0 ? (x.food ? {kcal: x.food.kcal + ps.kcal, p: x.food.p + ps.p, f: x.food.f + ps.f, c: x.food.c + ps.c, fib: x.food.fib} : ps) : (x.food || {kcal: 0, p: 0, f: 0, c: 0, fib: 0}), t = x.target || {kcal: 0, p: 0, f: 0, c: 0};
   const left = t.kcal - f.kcal, isToday = fdi === 0, meals = x.meals || [], fc = isToday && ps.n ? {kcal: f.kcal + ps.kcal, p: f.p + ps.p, f: f.f + ps.f, c: f.c + ps.c} : null;
   const base = isToday && D.activity ? D.activity.steps_base : null;
   const wo = (D.workouts || []).find(w => w.d === x.d);
@@ -751,7 +751,7 @@ function renderFood() {
     <div class="lbl"><span>${ico('fb')}Клетчатка <b>${f.fib} г</b></span><span>Шаги <b>${x.steps ?? '—'}</b>${base ? ' · база ' + base : ''}</span></div>
     ${wo ? `<div class="wline">Тренировка: <b>${esc((wo.kind || []).join(', ') || 'была')}</b>${wo.min ? ' · ' + esc(wo.min) + ' мин' : ''}</div>` : ''}
     ${fdi > 0 ? '<div class="sub" style="margin-top:8px">Б/Ж/У цели прошлых дней — по текущему плану</div>' : ''}`;
-  $('meals').innerHTML = `<h2>${fdi < 0 ? 'План на день' : 'Приёмы пищи'}</h2>` + (fdi < 0 ? '' : meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`)
+  $('meals').innerHTML = `<h2>${fdi < 0 ? 'План на день' : 'Приёмы пищи'}</h2>` + (fdi < 0 ? (meals.length ? `<div class="lbl"><span>✅ Уже записано наперёд</span></div>` + mealsHtml(meals, x.food) : '') : meals.length ? mealsHtml(meals, f) : `<div class="sub">${isToday ? 'сегодня ещё ничего' : 'в этот день ничего не записано'}</div>`)
     + (fdi <= 0 ? fpHtml(x.d, isToday) : '') + (fdi < 0 ? '' : `<button class="btn ghost" id="bc-go" style="margin-top:10px">📷 По штрих-коду → в чат</button><div class="sub" id="bc-hint" style="margin-top:4px">Откроется чат: пришли фото штрих-кода, подпись — граммы («150 г»). Найду продукт и запишу.</div>`);
 }
 const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус': '🍎', 'Ужин': '🌙', 'Без времени': '🕓'};
@@ -792,8 +792,8 @@ function fpMeal(d, si) {
   return /^🥫 записать #p\d+ \d+ г(, #p\d+ \d+ г){0,9}$/.test(ph) ? {its, ph} : {its, err: 'Фраза не сошлась с форматом — напиши мне сам.'};
 }
 function fpDay(i) {
-  const d = dAdd(FD[0].d, -i), e = FP[d] || {}, ty = e.t || (D.fut || {})[d] || 'Выходной';
-  return {d, type: ty, food: null, meals: [], steps: null, target: (D.tt || {})[ty] || FD[0].target};
+  const d = dAdd(FD[0].d, -i), e = FP[d] || {}, ty = e.t || (D.fut || {})[d] || 'Выходной', a = (D.ahead || {})[d];
+  return {d, type: ty, food: a ? a.food : null, meals: a ? a.meals : [], steps: null, target: (D.tt || {})[ty] || FD[0].target};
 }
 function fpHtml(d, isToday) {
   const e = FP[d] || {i: []}, rows = e.i.map((it, n) => [it, n]);
