@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 05:24:57Z, sha 110f20390d94; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 08:02:27Z, sha dabebef6237a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -367,7 +367,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 #add textarea{height:84px;resize:none}
 #add .send,#fpk .send{width:100%;padding:12px;border:0;border-radius:10px;background:var(--cy);color:var(--oncy);font-weight:700;font-size:15px;margin-top:4px}
 #add .hint,#fpk .hint{color:var(--mut);font-size:12px;margin-top:8px;min-height:16px}
-#fpk-l{max-height:42vh;overflow:auto;margin-top:4px}.fpr{padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr.on{color:var(--cy)}.fpb{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.fps{display:flex;justify-content:space-between;margin:10px 0 2px;font-size:14px}.fpi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}.fpi>span{flex:1}.fpi small{display:block;color:var(--mut);font-size:12px}.fpi.sent{opacity:.5}.fpi button,.fpadd button,.fpt button{all:unset;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:13px}.fpadd,.fpt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.fpt{grid-template-columns:repeat(3,1fr)}.fpadd button,.fpt button{text-align:center;color:var(--cy);border-color:var(--cyd)}.fpt button.on{background:rgba(var(--cyr),.12)}.fpw{margin-top:6px}
+#fpk-l{max-height:42vh;overflow:auto;margin-top:4px}.fpr{padding:9px 2px;border-bottom:1px solid var(--line);cursor:pointer}.fpr small{display:block;color:var(--mut);font-size:12px}.fpr.on{color:var(--cy)}.fpb{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}.fps{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:10px 0 2px;font-size:14px}.fps button{all:unset;cursor:pointer;padding:4px 9px;border-radius:9px;border:1px solid var(--cyd);color:var(--cy);font-size:12px}.fpi{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14px}.fpi>span{flex:1}.fpi small{display:block;color:var(--mut);font-size:12px}.fpi.sent{opacity:.5}.fpi button,.fpadd button,.fpt button{all:unset;cursor:pointer;padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:13px}.fpadd,.fpt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.fpt{grid-template-columns:repeat(3,1fr)}.fpadd button,.fpt button{text-align:center;color:var(--cy);border-color:var(--cyd)}.fpt button.on{background:rgba(var(--cyr),.12)}.fpw{margin-top:6px}
 #add .x,#fpk .x{all:unset;cursor:pointer;float:right;color:var(--mut);font-size:20px;line-height:1;padding:2px 6px}
 
 :root[data-theme="calm"] body{background-image:none}
@@ -757,7 +757,7 @@ const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус'
 const r1 = v => Math.round((v || 0) * 10) / 10;
 // ── 14.11c: план и черновик еды по приёмам, как у Алины (его просьба 14.11, сообщения 7213–7216).
 // Хранится в облаке Telegram (dunn_fplan): {дата: {t: тип дня, i: [[приём, id, граммы, отправлено, ts]]}}. В Notion пишу я —
-// по фразе «🥫 записать #pNN N г» (формат разрешил Al 07.11). Пачкой и #b… — только после его «да».
+// по фразе «🥫 записать #pNN N г» (формат разрешил Al 07.11) или «🥫 весь приём» — до 10 пунктов через «, » (Al 16.11). #b… — только после его «да».
 const FSL = ['Завтрак', 'Обед', 'Ужин', 'Перекус'];
 let FP = {}, FPK = null;
 const fpGet = d => FP[d] || (FP[d] = {i: []});
@@ -778,6 +778,18 @@ function fpSum(d) {
   e.i.forEach(it => { const x = fpX(it[1]); if (!x) return; const k = it[2] / 100; z.n++; z.kcal += (x.kcal || 0) * k; z.p += (x.p || 0) * k; z.f += (x.f || 0) * k; z.c += (x.c || 0) * k; });
   z.kcal = Math.round(z.kcal); z.p = Math.round(z.p); z.f = Math.round(z.f); z.c = Math.round(z.c); return z;
 }
+// 16.11: «🥫 весь приём» (разрешил Al 16.11, /dash/README.md): неотправленные #p приёма одной фразой, до 10 пунктов;
+// повтор номера — граммы складываем в один пункт, сумма > 5000 — не отправляем
+function fpMeal(d, si) {
+  const its = fpGet(d).i.filter(it => it[0] === si && !it[3] && /^p\d+$/.test(it[1])), m = new Map();
+  its.forEach(it => m.set(it[1], (m.get(it[1]) || 0) + (+it[2])));
+  if (!m.size) return {its, err: 'В этом приёме нечего отправлять.'};
+  if (m.size > 10) return {its, err: 'Больше 10 продуктов в приёме — отправь по одному 🥫.'};
+  const bad = [...m].find(([id, g]) => !prPhrase(id, String(g)));
+  if (bad) { const x = fpX(bad[0]); return {its, err: `${x ? x.name : '#' + bad[0]}: всего ${bad[1]} г — больше 5000, фразу не отправлю.`}; }
+  const ph = '🥫 записать ' + [...m].map(([id, g]) => `#${id} ${g} г`).join(', ');
+  return /^🥫 записать #p\d+ \d+ г(, #p\d+ \d+ г){0,9}$/.test(ph) ? {its, ph} : {its, err: 'Фраза не сошлась с форматом — напиши мне сам.'};
+}
 function fpDay(i) {
   const d = dAdd(FD[0].d, -i), e = FP[d] || {}, ty = e.t || (D.fut || {})[d] || 'Выходной';
   return {d, type: ty, food: null, meals: [], steps: null, target: (D.tt || {})[ty] || FD[0].target};
@@ -788,12 +800,13 @@ function fpHtml(d, isToday) {
   if (!isToday && !(D.fut || {})[d]) h += `<div class="fpt">${['Смена', 'Выходной с силовой', 'Выходной'].map(t => `<button data-fpt="${esc(t)}" class="${(e.t || 'Выходной') === t ? 'on' : ''}">${t === 'Выходной с силовой' ? 'Силовая' : esc(t)}</button>`).join('')}</div>`;
   FSL.forEach((sl, si) => { const r = rows.filter(([it]) => it[0] === si); if (!r.length) return;
     const k = r.reduce((a, [it]) => { const x = fpX(it[1]), g = it[2] / 100; return x ? {k: a.k + (x.kcal || 0) * g, p: a.p + (x.p || 0) * g, f: a.f + (x.f || 0) * g, c: a.c + (x.c || 0) * g} : a; }, {k: 0, p: 0, f: 0, c: 0});
-    h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k.k)} ккал · Б ${Math.round(k.p)} · Ж ${Math.round(k.f)} · У ${Math.round(k.c)}</span></div>` + r.map(([it, n]) => { const x = fpX(it[1]);
+    const un = r.filter(([it]) => !it[3] && /^p\d+$/.test(it[1])).length;
+    h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k.k)} ккал · Б ${Math.round(k.p)} · Ж ${Math.round(k.f)} · У ${Math.round(k.c)}</span>${isToday && un > 1 ? `<button data-fpm="${si}">🥫 весь приём</button>` : ''}</div>` + r.map(([it, n]) => { const x = fpX(it[1]);
       return `<div class="fpi${it[3] ? ' sent' : ''}"><span>${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) + ' · Ж ' + r1((x.f || 0) * it[2] / 100) + ' · У ' + r1((x.c || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
         + (isToday && !it[3] ? `<button data-fps="${n}" aria-label="записать">🥫</button>` : '') + `<button data-fpx="${n}" aria-label="убрать">✕</button></div>`; }).join(''); });
   if (!rows.length) h += `<div class="sub">${isToday ? 'Набери, что съел или собираешься съесть, — посчитаю, сколько останется.' : 'Распиши день заранее — увидишь, влезаешь ли в цель.'}</div>`;
   h += `<div class="fpadd">${FSL.map((sl, si) => `<button data-fpa="${si}">＋ ${SLOT_ICO[sl]}</button>`).join('')}</div>`;
-  if (isToday && rows.some(([it]) => !it[3])) h += `<div class="sub" id="fp-h" style="margin-top:6px">🥫 — фраза в буфер и чат со мной: «Вставить» → «Отправить». Продукты из Базы (#b…) пока пиши мне сам: «#b0123 200 г».</div>`;
+  if (isToday && rows.some(([it]) => !it[3])) h += `<div class="sub" id="fp-h" style="margin-top:6px">🥫 — один продукт, «🥫 весь приём» — все неотправленные продукты приёма одной фразой. Фраза уйдёт в буфер и чат со мной: «Вставить» → «Отправить». Продукты из Базы (#b…) пока пиши мне сам: «#b0123 200 г».</div>`;
   return h + '</div>';
 }
 $('meals').addEventListener('click', e => {
@@ -802,6 +815,12 @@ $('meals').addEventListener('click', e => {
   if (b.dataset.fpa != null) { fpOpen(d, +b.dataset.fpa); return; }
   if (b.dataset.fpt) { fpGet(d).t = b.dataset.fpt; fpSave(); renderFood(); return; }
   if (b.dataset.fpx != null) { fpGet(d).i.splice(+b.dataset.fpx, 1); fpSave(); renderFood(); return; }
+  if (b.dataset.fpm != null) { const r = fpMeal(d, +b.dataset.fpm);
+    if (!r.ph) { $('fp-h').textContent = r.err; return; }
+    try { navigator.clipboard && navigator.clipboard.writeText(r.ph).catch(() => {}); } catch (err) {}
+    try { window.dunnLinks.bot(r.ph); const now = Date.now(); r.its.forEach(it => { it[3] = 1; it[4] = now; }); fpSave(); renderFood(); }
+    catch (err) { $('fp-h').textContent = 'Чат не открылся. Фраза в буфере — вставь её мне сам.'; }
+    return; }
   if (b.dataset.fps != null) { const it = fpGet(d).i[+b.dataset.fps]; if (!it) return;
     const ph = prPhrase(it[1], String(it[2]));
     if (!ph) { $('fp-h').textContent = `Это продукт из Базы — напиши мне сам: «#${it[1]} ${it[2]} г».`; return; }
