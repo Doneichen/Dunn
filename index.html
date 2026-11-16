@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 08:02:27Z, sha dabebef6237a; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 09:51:52Z, sha 7c241a44cf43; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -195,6 +195,7 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 #tasks .dn{flex:none;min-width:26px;text-align:center;color:var(--ok);font:700 13px ui-monospace,Menlo,monospace}
 /* еда: приёмы пищи */
 .mtot{display:flex;justify-content:space-between;gap:8px;font:13px ui-monospace,Menlo,monospace;color:var(--mut);padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg2);margin-bottom:6px}
+.strat summary{cursor:pointer;list-style:none;font-weight:600;font-size:16px}.strat summary::-webkit-details-marker{display:none}.strat h3{font-size:14px;margin:14px 0 4px;color:var(--cy)}.strat p,.strat li{font-size:14px;line-height:1.45}.strat ul{margin:4px 0;padding-left:18px}.stt{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}.stt th,.stt td{padding:6px 3px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.stt th{color:var(--mut);font-weight:500}.stt td:first-child{white-space:normal}
 .mtot b{color:var(--cy)}.mtot{flex-wrap:wrap}.mtot span{white-space:nowrap}
 details.ml{border-top:1px solid var(--ln2)}
 details.ml:first-of-type{border-top:0}
@@ -426,7 +427,7 @@ header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .h
 <div class="wrap" id="app" hidden>
   <header><div class="logo">D</div><div class="htx"><h1>DUNN</h1><div class="sub"><i id="ldi" class="ldi ldi-spin" title="загружаю…"></i><span id="upd"></span></div></div><div class="hbtns"><button class="hb hb-add" id="addbtn" title="записать" aria-label="записать"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="hb" id="thbtn" aria-label="настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="hb lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div></header>
   <section class="tab" data-tab="home"><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
-  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
+  <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card strat" id="strat" hidden></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="seg" id="btabs" style="grid-template-columns:repeat(4,1fr)"></div><div class="card" id="weight"></div><div class="card" id="fcast"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="seg" id="tseg" style="margin-top:12px;grid-template-columns:repeat(2,1fr)"><button data-tv="list">📋 Задачи</button><button data-tv="dl">🔁 Дейлики</button></div><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
@@ -1995,6 +1996,36 @@ function renderProt() {
   if (nodata.length) s += `<div class="sub" style="margin-top:8px">Ждут цифр: ${nodata.map(x => esc(x.name) + (x.status ? ' — ' + esc(x.status) : '')).join('; ')}</div>`;
   $('protbox').innerHTML = s;
 }
+// 16.11: «📉 Стратегия похудения» (его просьба msg 7479/7481): цели из D.tt, расход и шаги из D.strategy (collect.py ← nutrition-ration-plan.json).
+// Подробная версия с источниками — страница Notion D.strategy.page. Разница «если есть ровно в цель» = цель − расход при норме шагов.
+function renderStrat() {
+  const S = D && D.strategy, T = D && D.tt, el = $('strat'); if (!el) return;
+  if (!S || !T) { el.innerHTML = ''; el.hidden = true; return; }
+  const ty = [['Смена', 'Смена'], ['Выходной с силовой', 'Силовая'], ['Выходной', 'Выходной']];
+  const df = k => { const t = T[k], m = ((S.types || {})[k] || {}).tdee; return t && m ? Math.round((t.kcal - m) / 25) * 25 : null; };
+  const sg = v => v == null ? '—' : v > 0 ? '+' + v : v < 0 ? '−' + (-v) : '0';
+  const wk = ['Смена', 'Выходной с силовой', 'Выходной'].every(k => df(k) != null) ? Math.round((2 * df('Смена') + df('Выходной с силовой') + df('Выходной')) * 7 / 4 / 50) * 50 : null;
+  const kg = wk != null ? Math.abs(wk / 7700).toFixed(2).replace('.', ',') : '';
+  const st = k => (((S.types || {})[k] || {}).steps || 0).toLocaleString('ru-RU');
+  el.innerHTML = `<details${store.get('dunn_strat') === '1' ? ' open' : ''}><summary>📉 Стратегия похудения <span class="sub">${esc(S.ver || '')} ▾</span></summary>
+    <p style="margin-top:8px">Дефицит набираем на сменах, на выходных едим примерно в поддержку. ${wk != null ? `Если есть ровно в цель, за неделю 2/2 выходит <b>${wk < 0 ? '−' : '+'}${Math.abs(wk)} ккал ≈ ${kg} кг</b> жира.` : ''} Не доел бонус за шаги на смене — дефицит больше, это твой запас.</p>
+    <h3>Цели и расход по дням</h3>
+    <table class="stt"><tr><th>День</th><th>Цель</th><th>Б/Ж/У</th><th>Расход</th><th>±</th></tr>${ty.map(([k, lb]) => { const t = T[k] || {}, m = ((S.types || {})[k] || {}).tdee;
+      return `<tr><td>${lb}</td><td><b>${t.kcal ?? '—'}</b></td><td>${t.p ?? '—'}/${t.f ?? '—'}/${t.c ?? '—'}</td><td>≈${m ?? '—'}</td><td>${sg(df(k))}</td></tr>`; }).join('')}</table>
+    <div class="sub" style="margin-top:4px">Расход — при норме шагов: смена ${st('Смена')}, выходные ${st('Выходной')}. Базовый обмен ≈1830 (Кэтч–Макардл, сухая масса 66–69 кг) плюс движение.</div>
+    <h3>Шаги двигают цель</h3>
+    <ul><li>+${esc(S.per_k || 35)} ккал за каждую 1000 шагов сверх нормы дня, меньше нормы — столько же минус.</li><li>Дорожка идёт в цель чистыми ккал из карточки кардио.</li><li>Прибавка уходит в углеводы, белок и жиры не меняются.</li></ul>
+    <h3>Почему такие Б/Ж/У</h3>
+    <ul><li><b>Белок 150 г</b> (≈1,8 г/кг): держит мышцы на дефиците и лучше всего насыщает. Нижняя граница 130–135.</li><li><b>Жиры 70–75 г</b>: не ниже, нужны гормонам.</li><li><b>Углеводы</b> — остальное, топливо для смен и тренировок. Клетчатка 30–40 г.</li></ul>
+    <h3>Как проверяем</h3>
+    <ul><li>Судья — средний вес за 7 дней, не вес одного утра.</li><li>Раз в 2 недели: −0,25…0,5 кг/нед и сила держится → не трогаем; быстрее или сила падает → +150; вес и талия стоят → −150.</li></ul>
+    <h3>Если очень голодно</h3>
+    <ul><li>40–50 г белка на завтрак и в обед.</li><li>Супы, овощи, фрукты; сладкое — одна вкусняшка в плане.</li><li>Сон 7–8 часов.</li><li>Тяжело неделю подряд — неделя на поддержке.</li><li>Один срыв неделю не ломает — дальше по плану.</li></ul>
+    ${(S.versions || []).length ? `<h3>Версии</h3><ul>${S.versions.slice(-3).reverse().map(v => `<li>${esc(v)}</li>`).join('')}</ul>` : ''}
+    ${S.page ? '<button class="btn ghost" id="strat-n" style="margin-top:8px">Подробно и с источниками — в Notion</button>' : ''}</details>`;
+}
+$('strat').addEventListener('toggle', e => { try { store.set('dunn_strat', e.target.open ? '1' : '0'); } catch (er) {} }, true);
+$('strat').addEventListener('click', e => { if (e.target.id !== 'strat-n') return; try { window.dunnLinks.notion(D.strategy.page); } catch (er) {} });
 function applyFv() {
   if (!['diary', 'prod', 'vit', 'rec'].includes(fv)) fv = 'diary';
   if (fv === 'vit' && fdi < 0) { fdi = 0; try { renderFood(); } catch (e) {} }
@@ -2003,6 +2034,7 @@ function applyFv() {
   $('fstreak').hidden = !diary || !(D && D.streak);
   $('fdays').hidden = !(diary || vit);  // выбор дня общий: дневник и витамины
   ['food', 'meals'].forEach(i => $(i).hidden = !diary);
+  try { renderStrat(); } catch (e) {} $('strat').hidden = !diary || !(D && D.strategy);
   $('prods').hidden = fv !== 'prod';
   $('vits').hidden = !vit;
   $('recs').hidden = fv !== 'rec';
