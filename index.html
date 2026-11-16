@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 10:04:24Z, sha 98f8db0ccfb5; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 11:33:43Z, sha 5077ec565b78; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1459,7 +1459,10 @@ function wuCard(f, key, title) {
 // ── 🏃 Кардио: беговая дорожка с таймером (инструкция X2A-1: 30 мин работы → 10 мин пауза мотору)
 let gmode = store.get('dunn_gmode') || 'str', cdT = null, cdAudio = null, cdLock = null;
 const CDN = 'Беговая дорожка ZENECO';
-const cdGet = () => { try { return JSON.parse(store.get('dunn_cardio') || 'null') || {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } catch (e) { return {dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}; } };
+const cdFresh = dur => ({dur: dur || 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''});
+const cdGet = () => { let c; try { c = JSON.parse(store.get('dunn_cardio') || 'null'); } catch (e) { c = null; } if (!c) return cdFresh();
+  const today = typeof GD !== 'undefined' && GD && GD.today; if (today && c.phase !== 'work' && c.phase !== 'rest' && c.rounds && c.rounds.length && (c.day ? c.day !== today : true)) { const f = cdFresh(c.dur); f.speed = c.speed || ''; f.day = today; return f; }
+  return c; };
 // 14.11b: таймеры дублируются в облако Telegram — на iPhone память страницы стирается при закрытии мини-приложения (у Алины пропадал таймер дорожки)
 const cdSet = c => { c.ts = Date.now(); kset('dunn_cardio', JSON.stringify(c)).catch(() => {}); };
 const mmss = s => Math.floor(s / 60) + ':' + String(Math.max(0, Math.floor(s % 60))).padStart(2, '0');
@@ -1530,6 +1533,8 @@ $('workouts').addEventListener('click', async e => {
   if (b.dataset.cdd) { c.dur = Number(b.dataset.cdd); cdSet(c); renderGym(); hap(); return; }
   const a = b.dataset.cd;
   if (a === 'start' || a === 'rest') { try { cdAudio = cdAudio || new (window.AudioContext || window.webkitAudioContext)(); cdAudio.resume(); } catch (er) {}
+    if (a === 'start' && (c.sent || (c.day && c.day !== GD.today))) { c.rounds = []; c.dist = ''; c.steps = ''; c.note = ''; c.watch = false; c.sent = false; }
+    if (a === 'start') c.day = GD.today;
     c.phase = a === 'rest' ? 'rest' : 'work'; c.acc = 0; c.startAt = Date.now(); cdSet(c); cdWake(true); renderGym(); hap(); return; }
   if (a === 'pause') { c.acc = (c.acc || 0) + (Date.now() - c.startAt) / 1000; c.startAt = null; cdSet(c); renderGym(); return; }
   if (a === 'resume') { c.startAt = Date.now(); cdSet(c); renderGym(); return; }
@@ -1537,7 +1542,7 @@ $('workouts').addEventListener('click', async e => {
     c.phase = c.rounds.length ? 'done' : 'idle'; c.acc = 0; c.startAt = null; cdSet(c); cdWake(false); renderGym(); return; }
   if (a === 'remind') { const ph = `⏱ дорожка ${c.dur} мин`; try { await navigator.clipboard.writeText(ph); } catch (er) {}
     try { window.dunnLinks.bot(ph); $('cd-hint').textContent = 'Отправь фразу — и жми «Старт». Напишу, когда пройдёт время.'; } catch (er) { $('cd-hint').textContent = 'Открой чат с ботом и вставь фразу.'; } return; }
-  if (a === 'save') { const ph = cdPhrase(c); try { await navigator.clipboard.writeText(ph); } catch (er) {}
+  if (a === 'save') { const ph = cdPhrase(c); c.sent = true; cdSet(c); try { await navigator.clipboard.writeText(ph); } catch (er) {}
     try { window.dunnLinks.bot('Кардио ' + dm(GD.today)); $('cd-hint').textContent = 'Текст в буфере: в чате зажми поле → «Вставить» → отправить. Потом «Сбросить».'; } catch (er) { $('cd-hint').textContent = 'Текст в буфере — открой чат с ботом и вставь.'; } return; }
   if (a === 'reset') { if (!confirm('Сбросить кардио-сессию?')) return; cdSet({dur: 30, phase: 'idle', rounds: [], speed: '', dist: '', steps: '', note: ''}); cdWake(false); renderGym(); return; }
 }, true);
