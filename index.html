@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-15 05:39:02Z, sha 92a571960dbd; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-16 05:10:14Z, sha 76e1dfd581e8; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -787,9 +787,9 @@ function fpHtml(d, isToday) {
   let h = `<div class="fpb"><div class="lbl"><span>📝 ${isToday ? 'Черновик — ещё не записано' : 'План'}</span></div>`;
   if (!isToday && !(D.fut || {})[d]) h += `<div class="fpt">${['Смена', 'Выходной с силовой', 'Выходной'].map(t => `<button data-fpt="${esc(t)}" class="${(e.t || 'Выходной') === t ? 'on' : ''}">${t === 'Выходной с силовой' ? 'Силовая' : esc(t)}</button>`).join('')}</div>`;
   FSL.forEach((sl, si) => { const r = rows.filter(([it]) => it[0] === si); if (!r.length) return;
-    const k = r.reduce((a, [it]) => { const x = fpX(it[1]); return a + (x ? (x.kcal || 0) * it[2] / 100 : 0); }, 0);
-    h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k)} ккал</span></div>` + r.map(([it, n]) => { const x = fpX(it[1]);
-      return `<div class="fpi${it[3] ? ' sent' : ''}"><span>${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
+    const k = r.reduce((a, [it]) => { const x = fpX(it[1]), g = it[2] / 100; return x ? {k: a.k + (x.kcal || 0) * g, p: a.p + (x.p || 0) * g, f: a.f + (x.f || 0) * g, c: a.c + (x.c || 0) * g} : a; }, {k: 0, p: 0, f: 0, c: 0});
+    h += `<div class="fps"><b>${SLOT_ICO[sl]} ${sl}</b><span class="sub">${Math.round(k.k)} ккал · Б ${Math.round(k.p)} · Ж ${Math.round(k.f)} · У ${Math.round(k.c)}</span></div>` + r.map(([it, n]) => { const x = fpX(it[1]);
+      return `<div class="fpi${it[3] ? ' sent' : ''}"><span>${x ? esc(x.name) : '#' + esc(it[1]) + ' — нет в данных'}<small>${it[2]} г${x ? ' · ' + Math.round((x.kcal || 0) * it[2] / 100) + ' ккал · Б ' + r1((x.p || 0) * it[2] / 100) + ' · Ж ' + r1((x.f || 0) * it[2] / 100) + ' · У ' + r1((x.c || 0) * it[2] / 100) : ''}${it[3] ? ' · отправлено, жду записи' : ''}</small></span>`
         + (isToday && !it[3] ? `<button data-fps="${n}" aria-label="записать">🥫</button>` : '') + `<button data-fpx="${n}" aria-label="убрать">✕</button></div>`; }).join(''); });
   if (!rows.length) h += `<div class="sub">${isToday ? 'Набери, что съел или собираешься съесть, — посчитаю, сколько останется.' : 'Распиши день заранее — увидишь, влезаешь ли в цель.'}</div>`;
   h += `<div class="fpadd">${FSL.map((sl, si) => `<button data-fpa="${si}">＋ ${SLOT_ICO[sl]}</button>`).join('')}</div>`;
