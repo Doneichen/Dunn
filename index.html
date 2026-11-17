@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-17 14:51:12Z, sha caf830a00dbe; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-17 14:54:32Z, sha afdcadb556c9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -520,7 +520,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '17.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '17.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
@@ -654,7 +654,7 @@ const okId = id => /^[0-9a-f]{32}$/i.test(String(id || '').replace(/-/g, ''));
 const tli = (x, right, ck) => { const go = okId(x.id), cid = go ? String(x.id).replace(/-/g, '').toLowerCase() : '';
   const btn = x.done ? '<span class="dn">✓</span>' : (ck && go ? `<button class="ck${CLOSED[cid] ? ' sent' : ''}" data-cid="${esc(cid)}" data-ct="${esc(x.t)}" aria-label="закрыть задачу">✓</button>` : '');
   const cls = [go ? 'go' : '', x.done ? 'done' : ''].filter(Boolean).join(' ');
-  return `<li${cls ? ` class="${cls}"` : ''}${go ? ` data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${x.p ? `<span class="sub"> · 📁 ${esc(x.p)}</span>` : ''}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
+  return `<li${cls ? ` class="${cls}"` : ''}${go ? ` data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${x.p ? `<span class="sub"> · ${esc(x.p)}</span>` : ''}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
 const tdCls = (y, isPast) => { const all = (y.cal || []).concat(y.due || []); if (!all.length) return '';
   const open = all.filter(z => !z.done).length; return !open ? 'ok' : (isPast ? 'over' : 'low'); };
 // 08.11: «🔁 Дейлики» — отдельная вкладка внутри Задач (кнопка сверху), выбор запоминается
@@ -673,8 +673,8 @@ function renderTasks() {
   if (tv === 'dl') { applyTv(); return; }
   const days = k.days || [], today = D && D.date;
   const ti = days.findIndex(y => y.d === today);
-  // 17.11: 📁 проекты и их шаги — своя кнопка и на «сегодня» после Текущих (его просьба)
-  const pjL = `<h2 style="margin-top:14px">Проекты</h2><ul>${(k.projects || []).map(p => tli({time: '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`;
+  // 17.11: проекты (🏗 большой / 📁 мини) и их шаги (📅 календарь / ▶ текущее / ⏳ ждём) — своя кнопка и на «сегодня» после Текущих (его просьба)
+  const pjL = `<h2 style="margin-top:14px">Проекты</h2><ul>${(k.projects || []).map(p => tli({time: p.big ? '🏗' : '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: ({CALENDAR: '📅', WAITING: '⏳'}[y.tag] || '▶') + ' ' + y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`;
   if (tv === 'pj') { $('tdays').hidden = true; $('tasks').innerHTML = pjL; applyTv(); return; }
   const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>` + pjL + `
     <div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа)</div>`;
@@ -831,7 +831,6 @@ $('meals').addEventListener('click', e => {
     try { window.dunnLinks.bot(ph); it[3] = 1; it[4] = Date.now(); fpSave(); renderFood(); }
     catch (err) { $('fp-h').textContent = 'Чат не открылся. Фраза в буфере — вставь её мне сам.'; } }
 });
-// 16.11: тап по продукту черновика — граммы: поправить число или +10/+30/+50/+100 (его просьба msg 7488: второй бутерброд — +30 к окороку).
 // Уже отправленная строка не меняется (я её записал) — добавка ложится новой строкой. Ссылка на сам пункт, а не индекс: fpSum чистит отправленное.
 let FPE = null;
 const fpEdHtml = it => `<div class="fped"><div class="sub">${it[3] ? 'Уже отправлено мне — сколько добавить? Ляжет новой строкой.' : 'Сколько всего граммов?'}</div>`
