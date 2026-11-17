@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-16 13:44:03Z, sha a73290ade79f; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-17 06:20:55Z, sha 20f540cc36e1; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1936,6 +1936,8 @@ $('mcats').onclick = e => { const b = e.target.closest('button[data-cv]'); if (!
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
 const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
+// старт: Обзор (17.11), при кардио — Зал
+function startTab() { try { const c = cdGet(); if (c && c.phase && c.phase !== 'idle') return 'gym'; } catch (e) {} return 'home'; }
 function show(tab) {
   if (!TABS.includes(tab)) tab = 'home';
   document.querySelectorAll('.tab').forEach(s => s.hidden = s.dataset.tab !== tab);
@@ -2462,7 +2464,7 @@ async function openWith(priv, kid, fast) {
   try { cached = await encGet(); } catch (e) {}
   if (cached && cached.v === 2 && cached.kid === kid) {
     try { const d0 = await decrypt(cached, priv); $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
-      render(d0); show(store.get('dunn_tab') || 'home'); shown = true; tmark('экран'); } catch (e) { cached = null; }
+      render(d0); show(startTab()); shown = true; tmark('экран'); } catch (e) { cached = null; }
   }
   try { enc = await net; }
   catch (e) { ldi('err', 'нет связи — показаны сохранённые данные'); if (shown) return true; view('unlock'); msg('Нет связи с витриной. Попробуй позже.'); return false; }
@@ -2475,7 +2477,7 @@ async function openWith(priv, kid, fast) {
   encSet(enc); tmark('данные');
   if (shown) { applyFresh(d); return true; }
   $('lock').style.display = 'none'; $('app').hidden = false; $('nav').hidden = false;
-  render(d); show(store.get('dunn_tab') || 'home');
+  render(d); show(startTab());
   return true;
 }
 
