@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-17 14:54:32Z, sha afdcadb556c9; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-17 14:56:02Z, sha 184b5293bb11; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -520,7 +520,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '17.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '17.11e';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
@@ -1935,8 +1935,9 @@ $('mcats').onclick = e => { const b = e.target.closest('button[data-cv]'); if (!
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
 const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
-// старт: Обзор (17.11); Зал — только пока таймер кардио идёт (work/rest), законченная сессия не в счёт
-function startTab() { try { const c = cdGet(); if (c && (c.phase === 'work' || c.phase === 'rest')) return 'gym'; } catch (e) {} return 'home'; }
+// старт: Обзор (17.11); Зал — только пока таймер кардио тикает
+const cdLive = c => !!(c && c.startAt && cdLeft(c) > 0);  // таймер реально тикает (не пауза, не истёк)
+function startTab() { try { if (cdLive(cdGet())) return 'gym'; } catch (e) {} return 'home'; }
 function show(tab) {
   if (!TABS.includes(tab)) tab = 'home';
   document.querySelectorAll('.tab').forEach(s => s.hidden = s.dataset.tab !== tab);
@@ -2590,7 +2591,7 @@ try { FAST = fastBoot().catch(() => false); } catch (e) { FAST = null; }
 async function timersRestore() {
   try { const cl = await kget('dunn_cardio'), o = cl ? JSON.parse(cl) : null, loc = cdGet();
     if (o && o.phase && (o.ts || 0) > (loc.ts || 0)) { store.set('dunn_cardio', cl);
-      if (o.phase === 'work' || o.phase === 'rest') { gmode = 'cardio'; store.set('dunn_gmode', 'cardio'); gv = 'new'; store.set('dunn_gv', 'new'); store.set('dunn_tab', 'gym');
+      if (cdLive(o)) { gmode = 'cardio'; store.set('dunn_gmode', 'cardio'); gv = 'new'; store.set('dunn_gv', 'new'); store.set('dunn_tab', 'gym');
         if (!$('app').hidden) { show('gym'); renderGym(); } } } } catch (e) {}
   try { const v = Math.max(+(store.get('dunn_rest_t') || 0), +((await kget('dunn_rest_t')) || 0)); if (v > Date.now() + 1000) { restStart(1); rtEnd = v; rtSave(); restTick(); } } catch (e) {}
 }
