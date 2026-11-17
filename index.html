@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-17 14:49:21Z, sha 364d65fcfa59; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-17 14:51:12Z, sha caf830a00dbe; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -520,7 +520,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '17.11b';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '17.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
@@ -673,9 +673,10 @@ function renderTasks() {
   if (tv === 'dl') { applyTv(); return; }
   const days = k.days || [], today = D && D.date;
   const ti = days.findIndex(y => y.d === today);
-  if (tv === 'pj') { $('tdays').hidden = true; const pj = k.projects || [];  // 17.11: 📁 проекты и их открытые шаги
-    $('tasks').innerHTML = `<h2>Проекты</h2><ul>${pj.map(p => tli({time: '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`; applyTv(); return; }
-  const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>
+  // 17.11: 📁 проекты и их шаги — своя кнопка и на «сегодня» после Текущих (его просьба)
+  const pjL = `<h2 style="margin-top:14px">Проекты</h2><ul>${(k.projects || []).map(p => tli({time: '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`;
+  if (tv === 'pj') { $('tdays').hidden = true; $('tasks').innerHTML = pjL; applyTv(); return; }
+  const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>` + pjL + `
     <div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа)</div>`;
   if (!days.length || ti < 0) {  // старые данные без tasks.days — как раньше, только сегодня
     $('tdays').hidden = true;
