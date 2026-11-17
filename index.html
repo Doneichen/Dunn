@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-17 14:29:10Z, sha b925af549679; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-17 14:48:21Z, sha 86db753addde; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1934,8 +1934,8 @@ $('mcats').onclick = e => { const b = e.target.closest('button[data-cv]'); if (!
 
 // ── переключение вкладок; последняя открытая запоминается на устройстве
 const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
-// старт: Обзор (17.11), при кардио — Зал
-function startTab() { try { const c = cdGet(); if (c && c.phase && c.phase !== 'idle') return 'gym'; } catch (e) {} return 'home'; }
+// старт: Обзор (17.11); Зал — только пока таймер кардио идёт (work/rest), законченная сессия не в счёт
+function startTab() { try { const c = cdGet(); if (c && (c.phase === 'work' || c.phase === 'rest')) return 'gym'; } catch (e) {} return 'home'; }
 function show(tab) {
   if (!TABS.includes(tab)) tab = 'home';
   document.querySelectorAll('.tab').forEach(s => s.hidden = s.dataset.tab !== tab);
@@ -2589,7 +2589,7 @@ try { FAST = fastBoot().catch(() => false); } catch (e) { FAST = null; }
 async function timersRestore() {
   try { const cl = await kget('dunn_cardio'), o = cl ? JSON.parse(cl) : null, loc = cdGet();
     if (o && o.phase && (o.ts || 0) > (loc.ts || 0)) { store.set('dunn_cardio', cl);
-      if (o.phase !== 'idle') { gmode = 'cardio'; store.set('dunn_gmode', 'cardio'); gv = 'new'; store.set('dunn_gv', 'new'); store.set('dunn_tab', 'gym');
+      if (o.phase === 'work' || o.phase === 'rest') { gmode = 'cardio'; store.set('dunn_gmode', 'cardio'); gv = 'new'; store.set('dunn_gv', 'new'); store.set('dunn_tab', 'gym');
         if (!$('app').hidden) { show('gym'); renderGym(); } } } } catch (e) {}
   try { const v = Math.max(+(store.get('dunn_rest_t') || 0), +((await kget('dunn_rest_t')) || 0)); if (v > Date.now() + 1000) { restStart(1); rtEnd = v; rtSave(); restTick(); } } catch (e) {}
 }
