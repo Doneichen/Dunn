@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-18 10:51:07Z, sha 8150f1aa3737; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-18 10:52:58Z, sha e1c62c23f4ac; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -148,13 +148,13 @@ li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
 .sdots span{flex:1;text-align:center;font:600 10px ui-monospace,Menlo,monospace;color:var(--mut)}
 .sdots i{display:block;height:8px;border-radius:4px;background:var(--line);margin-bottom:3px}
 .sdots .ok i{background:var(--ok)}.sdots .over i{background:var(--red)}.sdots .none i{background:#2a3b48}
-.sdots .today i{background:transparent;box-shadow:inset 0 0 0 2px var(--cy)}
+.sdots .today i{background:transparent;box-shadow:inset 0 0 0 2px var(--cy)}.sdots .party i{background:var(--amb)}
 .sbig{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
 .sbig div{background:#08111b;border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;font:600 10px ui-monospace,Menlo,monospace;color:var(--mut)}
 .sbig div b{display:block;font-size:12px;margin-top:3px;color:var(--tx)}
 .sbig .ok{border-color:#1f7a52;background:#0b2219}.sbig .ok b{color:var(--ok)}
 .sbig .over{border-color:#7a1f28;background:#220b0f}.sbig .over b{color:var(--red)}
-.sbig .today{border-color:var(--cy)}.sbig .none b{color:#3d5566}
+.sbig .today{border-color:var(--cy)}.sbig .none b{color:#3d5566}.sbig .party{border-color:#7a5a1f}.sbig .party b{color:var(--amb)}
 .shist{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .shist span{font:600 11px ui-monospace,Menlo,monospace;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:4px 7px}
 .shist span b{color:var(--amb)}
@@ -565,9 +565,10 @@ function streakCard(s, fd) {
   if (!s || !s.days) return '';
   const wdn = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   const cells = wdn.map((n, i) => { const x = s.days[i];
-    return x ? `<div class="${x.st}">${n}<b>${x.st === 'none' ? '—' : x.kcal}${x.fix ? '↺' : x.tol ? '≈' : ''}</b></div>` : `<div>${n}<b>·</b></div>`; }).join('');
+    return x ? `<div class="${x.st}">${n}<b>${x.st === 'none' ? '—' : x.kcal}${x.st === 'party' ? '🎉' : x.fix ? '↺' : x.tol ? '≈' : ''}</b></div>` : `<div>${n}<b>·</b></div>`; }).join('');
   const td = s.days[s.days.length - 1] || {}, L = s.today_left;
-  const st = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} ккал — серия с нуля, завтра день 1</span>`
+  const st = td.st === 'party' ? `<span class="warn">🎉 ${td.hol || 'праздник'}: +${-L} ккал — серия на паузе, не сгорает</span>`
+    : td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} ккал — серия с нуля, завтра день 1</span>`
     : L < 0 ? `<span class="ok">сегодня +${-L} ккал, но в допуске ${s.tol || 0} → станет ${s.cur + 1}</span>`
     : `<span class="ok">сегодня пока в норме: осталось ${L} ккал → станет ${s.cur + 1}</span>`;
   // прошлые недели: рекорд по тем же правилам, считается из food_days (30 дней)
@@ -582,7 +583,7 @@ function streakCard(s, fd) {
     <div class="sbig">${cells}</div>
     <div class="s" style="margin-top:8px;font-size:13px">${st}</div>
     ${hist ? `<div class="sub" style="margin-top:10px">рекорды прошлых недель (с пн)</div><div class="shist">${hist}</div>` : ''}
-    <div class="sub" style="margin-top:8px">засчитан день ≤ цели ккал (с шагами) + ${s.tol || 0} допуска (≈); перебор больше или пустой день — с нуля; в конце недели, если за неделю съедено ≤ суммы целей, переборы прощаются (↺); каждый пн заново${s.week_plan ? ` · неделя пока ${s.week_eaten} / ${s.week_plan}` : ''}</div>`;
+    <div class="sub" style="margin-top:8px">засчитан день ≤ цели ккал (с шагами) + ${s.tol || 0} допуска (≈); перебор больше или пустой день — с нуля; в конце недели, если за неделю съедено ≤ суммы целей, переборы прощаются (↺); запланированный праздник (🎉) серию не рвёт, если в неделе нет других переборов; каждый пн заново${s.week_plan ? ` · неделя пока ${s.week_eaten} / ${s.week_plan}` : ''}</div>`;
 }
 
 function streakTile(s) {
@@ -591,7 +592,8 @@ function streakTile(s) {
   s.days.forEach((x, i) => st[i] = x);
   const dots = wd.map((n, i) => { const x = st[i]; return `<span class="${x ? x.st : ''}" title="${x ? x.kcal + ' / ' + x.target : ''}"><i></i>${n}</span>`; }).join('');
   const td = s.days[s.days.length - 1] || {}, L = s.today_left;
-  const sub = td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} — серия с нуля</span>`
+  const sub = td.st === 'party' ? `<span class="warn">🎉 ${td.hol || 'праздник'} — серия на паузе</span>`
+    : td.st === 'over' ? `<span class="bad">сегодня перебор ${-L} — серия с нуля</span>`
     : L < 0 ? `сегодня +${-L}, в допуске → станет ${s.cur + 1}` : `сегодня в норме: осталось ${L} → станет ${s.cur + 1}`;
   return `<div class="tile wide" data-go="food"><div class="k">🔥 Ударный режим</div><div class="v">${s.cur}<small> дн подряд · рекорд недели ${s.best}</small></div><div class="s">${sub}</div><div class="sdots">${dots}</div></div>`;
 }
@@ -673,7 +675,7 @@ function renderTasks() {
   if (tv === 'dl') { applyTv(); return; }
   const days = k.days || [], today = D && D.date;
   const ti = days.findIndex(y => y.d === today);
-  // 17.11: проекты (🏗 большой / 📁 мини) и их шаги (📅 календарь / ▶ текущее / ⏳ ждём) — своя кнопка и на «сегодня» после Текущих (его просьба)
+  // 17.11: проекты (🏗 большой / 📁 мини) и их шаги (📅 календарь / ▶ текуще…
   const pjL = `<h2 style="margin-top:14px">Проекты</h2><ul>${(k.projects || []).map(p => tli({time: p.big ? '🏗' : '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: ({CALENDAR: '📅', WAITING: '⏳'}[y.tag] || '▶') + ' ' + y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`;
   if (tv === 'pj') { $('tdays').hidden = true; $('tasks').innerHTML = pjL; applyTv(); return; }
   const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>` + pjL + `
@@ -760,7 +762,7 @@ const SLOT_ICO = {'Завтрак': '🍳', 'Обед': '🍲', 'Перекус'
 const r1 = v => Math.round((v || 0) * 10) / 10;
 // ── 14.11c: план и черновик еды по приёмам, как у Алины (его просьба 14.11, сообщения 7213–7216).
 // Хранится в облаке Telegram (dunn_fplan): {дата: {t: тип дня, i: [[приём, id, граммы, отправлено, ts]]}}. В Notion пишу я —
-// по фразе «🥫 записать #pNN N г» (формат разрешил Al 07.11) или «🥫 весь приём» — до 10 пунктов через «, » (Al 16.11). #b… — только после его «да».
+// по фразе «🥫 записать #pNN N г» (формат разрешил Al 07.11) или «🥫 весь…
 const FSL = ['Завтрак', 'Обед', 'Ужин', 'Перекус'];
 let FP = {}, FPK = null;
 const fpGet = d => FP[d] || (FP[d] = {i: []});
@@ -831,7 +833,7 @@ $('meals').addEventListener('click', e => {
     try { window.dunnLinks.bot(ph); it[3] = 1; it[4] = Date.now(); fpSave(); renderFood(); }
     catch (err) { $('fp-h').textContent = 'Чат не открылся. Фраза в буфере — вставь её мне сам.'; } }
 });
-// Уже отправленная строка не меняется (я её записал) — добавка ложится новой строкой. Ссылка на сам пункт, а не индекс: fpSum чистит отправленное.
+// Уже отправленная строка не меняется (я её записал) — добавка ложится…
 let FPE = null;
 const fpEdHtml = it => `<div class="fped"><div class="sub">${it[3] ? 'Уже отправлено мне — сколько добавить? Ляжет новой строкой.' : 'Сколько всего граммов?'}</div>`
   + `<div class="fpedr"><input id="fpe-g" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="г" value="${it[3] ? '' : it[2]}"> г`
@@ -1002,7 +1004,7 @@ $('steps').onclick = e => { if (e.target.type === 'date') { try { e.target.showP
   const b = e.target.closest('button'); if (b && !b.disabled && b.dataset.step) { ssel = Math.max(0, Math.min(FD.length - 1, ssel - Number(b.dataset.step))); renderSteps(); hap(); } };
 $('steps').onchange = e => { if (e.target.type !== 'date' || !e.target.value) return; const i = FD.findIndex(y => y.d === e.target.value); if (i >= 0) { ssel = i; renderSteps(); hap(); } };
 // ── 📉 Прогноз веса (Тело): ползунки активности/питания → расход, дефицит, вес через N недель
-// Модель: BMR Миффлина (рост 175, 23 года) × 1,15 + 10 % ТЭП + шаги + силовые + дорожка; вес пересчитывается каждую неделю (7700 ккал ≈ 1 кг).
+// Модель: BMR Миффлина (рост 175, 23 года) × 1,15 + 10 % ТЭП + шаги + с…
 const FC_H = 175, FC_AGE = 23;
 const FC_DEF_KEYS = ['kcal', 'sh', 'ss', 'os', 'st', 'sm', 'tm', 'goal', 'cal'];
 function fcDefaults() {
@@ -1318,7 +1320,7 @@ function gymProg() {
   const pk = rows[gPi];
   const pick = `<div class="ppick"><div class="row"><b>${esc(wd(pk.d))}, ${esc(dmy(pk.d))}</b><span class="sub">${esc(pk.type || '')}</span></div>
     <div class="v">${esc(pk.load || '—')} × ${esc(setStr(pk))}${pk.rpe != null ? ' · RPE ' + esc(pk.rpe) + esc(rirTxt(pk.rpe)) : ''}</div>${pk.note ? `<div class="nt">${esc(pk.note)}</div>` : ''}</div>`;
-  // лучшее за всё время: больше всего повторов + лучший результат на каждой нагрузке (резины по кг не сравнить честно — см. «База»)
+  // лучшее за всё время: больше всего повторов + лучший результат на кажд…
   const lk = x => (x.load || '—').toUpperCase().replace(/[\s.]/g, '');
   let top = 0; rows.forEach((x, i) => { if (vals[i] >= vals[top]) top = i; });
   const per = {}; rows.forEach((x, i) => { const k = lk(x); const c = per[k];
@@ -1948,7 +1950,7 @@ function show(tab) {
 $('nav').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.tab); };
 $('tiles').onclick = e => { const x = e.target.closest('[data-go]'); if (x) show(x.dataset.go); };
 // задача → Notion. Вызов прямо в обработчике нажатия: Telegram открывает ссылки только в ответ на действие
-// ✓ закрыть задачу (разрешил Al 04.11): фраза строго «✓ закрыть «<название>» #<id>», в буфер + чат с ботом, отправляет Данич сам
+// ✓ закрыть задачу (разрешил Al 04.11): фраза строго «✓ закрыть «<назва…
 const CLOSED = {};
 let ckArm = null;
 const ckPhrase = (t, id) => { let n = String(t || '').replace(/\s+/g, ' ').trim(); if (n.length > 100) n = n.slice(0, 99) + '…'; return `✓ закрыть «${n}» #${id}`; };
@@ -1999,7 +2001,7 @@ $('add-go').onclick = () => {
 };
 
 // ── Еда → «🥫 Мои продукты» (07.11, v2): переключатель «Дневник | Мои продукты» над разделом Еда.
-// Внутри меню-кнопки, как Трени → База: Частые / Все продукты (поиск) / Как записать; тап по продукту → граммы и КБЖУ порции.
+// Внутри меню-кнопки, как Трени → База: Частые / Все продукты (поиск) /…
 // Только просмотр: записывает он сам, сообщением «#p07 82 г» (в буфер/чат витрина ничего из данных не кладёт).
 let PR = [], prq = '', psel = null, fv = ['prod', 'vit', 'rec'].includes(store.get('dunn_fv')) ? store.get('dunn_fv') : 'diary';
 const pr1 = n => n == null ? '—' : fmt(Math.round(n * 10) / 10);
@@ -2044,7 +2046,7 @@ function renderProt() {
   $('protbox').innerHTML = s;
 }
 // 16.11: «📉 Стратегия похудения» (его просьба msg 7479/7481): цели из D.tt, расход и шаги из D.strategy (collect.py ← nutrition-ration-plan.json).
-// Подробная версия с источниками — страница Notion D.strategy.page. Разница «если есть ровно в цель» = цель − расход при норме шагов.
+// Подробная версия с источниками — страница Notion D.strategy.page. Раз…
 function renderStrat() {
   const S = D && D.strategy, T = D && D.tt, el = $('strat'); if (!el) return;
   if (!S || !T) { el.innerHTML = ''; el.hidden = true; return; }
@@ -2106,7 +2108,7 @@ const prBar = () => { const cs = prCats(); if (pcat && !cs.includes(pcat)) pcat 
   return `<label class="pcw${pcat ? ' on' : ''}"><span>Категория</span><select class="pcsel">${['', ...cs].map(c => `<option value="${esc(c)}"${pcat === c ? ' selected' : ''}>${c ? esc(c) : 'Все продукты'}${c ? ` (${PR.filter(x => (x.cat || 'Другое') === c).length})` : ''}</option>`).join('')}</select><i>▾</i></label>`
     + `<div class="psort">${Object.keys(PSORT).map(k => `<button data-ps="${k}" class="${psort === k ? 'on' : ''}">${k === 'az' && pv === 'top' ? 'Частота' : PSORT[k]}</button>`).join('')}</div>`; };
 // 🔎 База продуктов (его просьба 08.11): D.base.rows из /data/food/base.json — поиск в телефоне, весь список не показываем.
-// Записи кнопкой нет: во фразу для бота можно класть только то, что Данич ввёл сам (README, правило Al) — он пишет «#b0123 270 г» сам.
+// Записи кнопкой нет: во фразу для бота можно класть только то, что Дан…
 let BASE = null, bq = '', bk = '', bsel = null, binfo = false;
 const BK = {'': 'Все', ff: '🍔 Фастфуд', shop: '🛒 Магазин', basic: '🥩 Базовые', typ: '🥐 Выпечка'};
 // 08.11: строки Базы приходят сжатыми (D.base.gz = base64 gzip) — распаковка в фоне при первом обращении, потом из памяти
@@ -2128,7 +2130,7 @@ function loadBase() {
 const baseRows = () => { if (!BASE) loadBase(); return BASE || []; };
 const baseCount = () => BASE ? BASE.length : ((D && D.base && D.base.n) || 0);
 const bnorm = s => String(s || '').toLowerCase().replace(/ё/g, 'е');
-// 13.11e: поиск по основе слова без предлогов (сосиска ~ сосиски, «в тесте» ~ «тесто»), пусто — «похожее» по числу совпавших слов
+// 13.11e: поиск по основе слова без предлогов (сосиска ~ сосиски, «в те…
 const BSTOP = new Set(['в', 'во', 'с', 'со', 'и', 'на', 'из', 'по', 'для', 'без', 'от', 'к', 'у', 'а']);
 const bstem = w => w.length >= 6 ? w.slice(0, -2) : w.length >= 4 ? w.slice(0, -1) : w;
 function baseInfo() {
@@ -2181,7 +2183,7 @@ $('prods').addEventListener('input', e => {
     const v = e.target.value.replace(/\D+/g, '').slice(0, 4); if (v !== e.target.value) e.target.value = v;
     $('bsel').querySelector('.bv').innerHTML = prCalc(x, v); $('bsel').querySelector('.bgv').textContent = v || '…'; }
 });
-// 🕘 Недавние (его просьба 08.11): последние 7 дней по дням из food_days[].meals; строка → «Мои продукты» по pk (= название продукта)
+// 🕘 Недавние (его просьба 08.11): последние 7 дней по дням из food_days…
 function recentView() {
   const days = (D && D.food_days || []).slice(0, 7), today = D && D.date;
   const nn = t => String(t || '').toLowerCase().replace(/ё/g, 'е').replace(/\s*\([^)]*\)/g, '').replace(/\s+/g, ' ').trim();
@@ -2319,7 +2321,7 @@ $('prods').addEventListener('input', e => {
   $('prsel').querySelector('.prgv').textContent = e.target.value || '…';
 });
 
-// ── Еда → «💊 Витамины» (07.11): % нормы за выбранный день (полоса дней — та же, что в дневнике) или за его неделю пн–вс.
+// ── Еда → «💊 Витамины» (07.11): % нормы за выбранный день (полоса дней…
 // Еда из food_days[].mic + БАД (micro.supp) за каждый день с записями; клетчатка из food.fib (псиллиум уже внутри).
 let vmode = store.get('dunn_vmode') === 'week' ? 'week' : 'day';
 const vfmt = n => fmt(n >= 100 ? Math.round(n) : Math.round(n * 10) / 10);
