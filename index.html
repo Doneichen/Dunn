@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-19 09:06:14Z, sha 50593b47fa73; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-19 09:06:24Z, sha 19e3d5d4171e; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -1559,7 +1559,7 @@ function gymNew() {
   const allEx = [...new Set([...GD.log.map(x => x.ex), ...GD.tpl.flatMap(t => (t.exercises || []).map(e => e.name))])].filter(Boolean).sort();
   const startH = f.saved ? '' : f.t1 ? `<div class="sub" style="margin:0 0 8px">⏱ идёт с ${new Date(f.t1).toTimeString().slice(0, 5)}</div>`
     : `<button class="btn" id="w-start" style="margin:0 0 4px">▶ Начать тренировку</button><div class="sub" style="margin-bottom:8px">Не нажмёшь — время пойдёт само с первой галочки разминки или первого подхода.</div>`;
-  const daySeg = f.saved ? '' : `<div class="dseg">${['А', 'Б'].map(d => `<button data-wday="${d}" class="${f.day === d ? 'on' : ''}">День ${d} · ${d === 'А' ? 'тяжёлый 5–8' : 'объём 10–15'}</button>`).join('')}</div>`;
+  const daySeg = f.saved ? '' : `<div class="dseg">${['А', 'Б'].map(d => `<button data-wday="${d}" class="${f.day === d ? 'on' : ''}">День ${d} · ${d === 'А' ? 'тяжёлый 5–8' : 'объём 10–15'}</button>`).join('')}</div><div class="sub" style="margin:-4px 2px 10px">База — по дню: А 5–8, Б 10–15. Изоляция (дельты, бицепс, трицепс) — 12–16 в любой день.</div>`;
   return modeSeg() + (f.saved && f.sum ? sumCard(f.sum) : '') + (f.saved ? '' : dlCard(f.date) + earlyCard() + rdCard(f)) + daySeg + startH + `<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
       <select class="fsel" id="w-tpl">${GD.tpl.map(t => `<option${t.name === f.tpl ? ' selected' : ''}>${esc(t.name)}</option>`).join('') || '<option>без шаблона</option>'}</select>
       <input class="finp" type="date" id="w-date" value="${esc(f.date)}"></div>
