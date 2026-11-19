@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-19 12:49:54Z, sha 963b1cc50551; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-19 12:57:34Z, sha 9d531039d347; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -384,7 +384,7 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
 #thpop .ph{font-size:11px;color:var(--mut);padding:8px 10px 2px;text-transform:uppercase;letter-spacing:.06em}#thpop .fd{font-size:11px;color:var(--mut);padding:0 10px 6px;max-width:250px;line-height:1.35}
 #ftoast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translateX(-50%);z-index:70;display:none;white-space:pre-line;width:min(92%,520px);box-sizing:border-box;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--cyd);color:var(--tx);font-size:13px;line-height:1.45;box-shadow:0 8px 28px rgba(0,0,0,.45)}
 header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .hb{all:unset;cursor:pointer;box-sizing:border-box;width:36px;height:36px;flex:none;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--mut);display:grid;place-items:center;-webkit-tap-highlight-color:transparent}header .hb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}header .hb:active{background:rgba(var(--cyr),.15)}header .hb.hb-add{border-color:var(--cy);color:var(--cy);box-shadow:0 0 10px rgba(var(--cyr),.25)}header .hb.hb-add svg{stroke-width:2.4}header .htx{min-width:0}header .htx .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ldi{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;box-sizing:border-box;font-style:normal;font-size:12px;line-height:11px;text-align:center}.ldi.ldi-spin{border:2px solid var(--line);border-top-color:var(--cy);border-radius:50%;animation:ldi .8s linear infinite}.ldi.ldi-ok::before{content:'';display:block;width:4px;height:8px;margin:0 auto;border:solid var(--ok);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}.ldi.ldi-err{border-radius:50%;background:var(--amb);color:#fff;font-weight:800;font-size:9px;line-height:11px}.ldi.ldi-err::before{content:'!'}@keyframes ldi{to{transform:rotate(360deg)}}header .logo{width:36px;height:36px;font-size:17px;flex:none}header h1{font-size:19px;margin:0;letter-spacing:.32em}
-@media(min-width:900px){.wrap{max-width:1100px;padding-top:calc(16px + var(--tg-content-safe-area-inset-top,0px))}nav{max-width:600px}.tiles{grid-template-columns:repeat(4,1fr)}.tab:not([data-tab=gym]):not([data-tab=home]):not([hidden]){display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}.tab>.seg,#prods,#vits,#recs,#dailies{grid-column:1/-1}.tab:not(:has(>.card:not([hidden]):not([style*=none])~.card:not([hidden]):not([style*=none])))>.card{grid-column:1/-1}.tab>.card{margin:12px 0 0}[data-tab=gym]{max-width:820px;margin:0 auto}}
+@media(min-width:900px){.wrap{max-width:1100px;padding-top:calc(16px + var(--tg-content-safe-area-inset-top,0px))}nav{max-width:600px}.tiles{grid-template-columns:repeat(4,1fr)}.tab:not([data-tab=gym]):not([data-tab=home]):not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start}.tab>*{min-width:0}.tab>.seg,#prods,#vits,#recs,#dailies{grid-column:1/-1}.tab:not(:has(>.card:not([hidden]):not([style*=none])~.card:not([hidden]):not([style*=none])))>.card{grid-column:1/-1}.tab>.card{margin:12px 0 0}[data-tab=gym]{max-width:820px;margin:0 auto}}
 </style>
 </head>
 <body>
@@ -520,7 +520,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '19.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '19.11e';  // версия страницы — видно в шапке; менять при каждой выкладке
 // 08.11 диагностика медленного старта: секунды от открытия окна — видно в шапке «обновлено … · старт N с»
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
