@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-20 09:53:41Z, sha 1228f38e4ff4; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-20 10:20:43Z, sha 030b1996b209; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -236,7 +236,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .kbm button:active{background:rgba(var(--cyr),.1)}
 .kbm b{font-weight:600;color:var(--tx);font-size:15px}.kbm small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
 .kbm .tx{flex:1;min-width:0}.kbm .ch{color:var(--cy);font-size:20px;line-height:1}
-.mer{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.mer[data-ri]{cursor:pointer}.mel{margin:8px 0 2px;font-size:13px}.mel .mlm{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--cy)}.mel .mld{display:flex;justify-content:space-between;gap:8px;padding:3px 0 3px 10px;border-bottom:1px dashed var(--line)}.mel .mld i{font-style:normal;color:var(--mut);white-space:nowrap}.mel .mld i.g5{color:var(--ok)}.mer>b{font-size:22px;line-height:1.25}.kbback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--cy);font-size:14px;padding:4px 2px 10px;-webkit-tap-highlight-color:transparent}
+.mer{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.mer[data-ri]{cursor:pointer}.mel{margin:8px 0 2px;font-size:13px}.psl{margin:6px 0 0;padding-left:18px;font-size:13px}.psl li{margin:3px 0}.psk{padding:8px 0;border-top:1px solid var(--line);cursor:pointer}.psu{margin-top:6px;font-size:13px;color:var(--cy)}.mel .mlm{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--cy)}.mel .mld{display:flex;justify-content:space-between;gap:8px;padding:3px 0 3px 10px;border-bottom:1px dashed var(--line)}.mel .mld i{font-style:normal;color:var(--mut);white-space:nowrap}.mel .mld i.g5{color:var(--ok)}.mer>b{font-size:22px;line-height:1.25}.kbback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--cy);font-size:14px;padding:4px 2px 10px;-webkit-tap-highlight-color:transparent}
 .kb{border-top:1px solid var(--ln2);padding:10px 0 4px}.kb:first-child{border-top:0}.kb h3{margin:0 0 6px;font-size:14px}
 .bscale{position:relative;margin-top:8px;padding-bottom:16px}.bi{margin:8px 0}.bh{display:flex;gap:8px;align-items:center;font-size:13.5px}.bh b{margin-left:auto;white-space:nowrap}
 .bc{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;border-radius:6px;color:#05080e;font:700 12px ui-monospace,Menlo,monospace}
@@ -711,6 +711,11 @@ const el = $('prof'); el.hidden = !p; renderMe(p); if (!p) return;
 const pc = (v, a, b) => Math.max(2, Math.min(100, Math.round((v - a) / ((b - a) || 1) * 100)));
 el.innerHTML = `<div class="pf0" data-pf="1"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(p.title)} <span class="sub">· уровень ${p.lv}</span></div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div><span class="sub">›</span></div>`;
 }
+function psyHtml(y) { if (!y) return '';
+const li = a => (a || []).map(t => `<li>${esc(t)}</li>`).join('');
+const sk = (y.skills || []).map((s, k) => { const o = MEX.has('p' + k);
+return `<div class="psk" data-pk="${k}"><div class="lbl"><span>${s.i} ${esc(s.t)}</span><span>${s.lv}/10 ${o ? '▴' : '▾'}</span></div><div class="bar"><i style="width:${s.lv * 10}%"></i></div><div class="sub pfh">${esc(s.h)}</div>${o ? `<div class="psu">⬆ Как прокачать: ${esc(s.up)}</div>` : ''}</div>`; }).join('');
+return `<h2 style="margin-top:14px">🧠 Психология</h2><div class="sub">${esc(y.type)}</div><div class="lbl" style="margin-top:10px"><span>✅ Помогает</span></div><ul class="psl">${li(y.plus)}</ul><div class="lbl" style="margin-top:8px"><span>⛔ Выбивает</span></div><ul class="psl">${li(y.minus)}</ul><div class="lbl" style="margin-top:10px"><span>Навыки · тапни — как прокачать</span></div>${sk}<div class="sub" style="margin-top:6px">${esc(y.ver || '')}</div>`; }
 function renderMe(p) {
 const el = $('me'); if (!p) { el.innerHTML = '<div class="sub">Профиль ещё не посчитан</div>'; return; }
 const pc = (v, a, b) => Math.max(2, Math.min(100, Math.round((v - a) / ((b - a) || 1) * 100)));
@@ -723,10 +728,11 @@ if (x.until) { const n = dl(x.until); u = `<div class="sub" style="color:var(${n
 return `<div class="mer"${L.length ? ` data-ri="${k}"` : ''}><b>${x.i}</b><div style="flex:1;min-width:0"><div class="sub">${esc(x.kind)} · ${esc(x.y)}${L.length ? ` · <span style="color:var(--cy)">${open ? 'свернуть ▴' : 'дисциплины ▾'}</span>` : ''}</div><div class="pft" style="font-size:15px">${esc(x.t)}</div><div class="sub">${esc(x.org)}</div><div class="sub pfh">${esc(x.h)}</div>${u}${ls}</div></div>`; }).join('');
 const sk = p.skills.map(s => `<div class="lbl"><span>${s.i} ${esc(s.t)} · ур ${s.lv}</span><span>${s.xp} XP</span></div><div class="bar"><i style="width:${pc(s.xp, s.c0, s.c1)}%"></i></div><div class="sub pfh">${esc(s.h)}</div>`).join('');
 const ac = p.ach.map(a => `<div class="pfa${a.got ? ' on' : ''}"><b>${a.i}</b><span>${esc(a.t)}</span><i>${a.v}${a.u ? ' ' + esc(a.u) : ''}${a.g != null ? ' / ' + a.g : ' ✓'}</i><em>${'★'.repeat(a.got)}${'☆'.repeat(a.of - a.got)}</em></div>`).join('');
-el.innerHTML = `<button class="kbback" data-meback="1">‹ Назад</button><div class="pf0"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(w.name || 'Мой профиль')}</div><div class="sub">${esc(w.role || '')}</div><div class="sub">${esc(p.title)} · уровень ${p.lv}</div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div></div>` + (rg ? `<h2 style="margin-top:14px">🎖 Регалии</h2>${rg}` : '') + `<h2 style="margin-top:14px">Навыки</h2>${sk}<h2 style="margin-top:14px">Достижения</h2><div class="pfg">${ac}</div><div class="sub" style="margin-top:10px">${esc(p.note || '')}</div>`;
+el.innerHTML = `<button class="kbback" data-meback="1">‹ Назад</button><div class="pf0"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(w.name || 'Мой профиль')}</div><div class="sub">${esc(w.role || '')}</div><div class="sub">${esc(p.title)} · уровень ${p.lv}</div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div></div>` + (rg ? `<h2 style="margin-top:14px">🎖 Регалии</h2>${rg}` : '') + psyHtml(p.psy) + `<h2 style="margin-top:14px">Навыки</h2>${sk}<h2 style="margin-top:14px">Достижения</h2><div class="pfg">${ac}</div><div class="sub" style="margin-top:10px">${esc(p.note || '')}</div>`;
 }
 $('prof').addEventListener('click', e => { if (e.target.closest('[data-pf]')) show('me'); });
 $('me').addEventListener('click', e => { if (e.target.closest('[data-meback]')) { show(PREV || 'home'); return; }
+const q = e.target.closest('[data-pk]'); if (q) { const k = 'p' + q.dataset.pk; MEX.has(k) ? MEX.delete(k) : MEX.add(k); renderMe(D && D.profile); return; }
 const m = e.target.closest('[data-ri]'); if (!m) return; const k = +m.dataset.ri; MEX.has(k) ? MEX.delete(k) : MEX.add(k); renderMe(D && D.profile);
 try { tg() && tg().HapticFeedback.selectionChanged(); } catch (err) {} });
 $('mebtn').addEventListener('click', () => show('me'));
