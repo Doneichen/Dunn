@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-19 15:47:14Z, sha cfb12298eb50; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-20 09:38:40Z, sha 7cf8453dd521; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -236,7 +236,7 @@ details.ml li .mm{width:100%;font:11px ui-monospace,Menlo,monospace;color:var(--
 .kbm button:active{background:rgba(var(--cyr),.1)}
 .kbm b{font-weight:600;color:var(--tx);font-size:15px}.kbm small{display:block;color:var(--mut);font-size:12px;margin-top:2px}
 .kbm .tx{flex:1;min-width:0}.kbm .ch{color:var(--cy);font-size:20px;line-height:1}
-.kbback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--cy);font-size:14px;padding:4px 2px 10px;-webkit-tap-highlight-color:transparent}
+.mer{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.mer>b{font-size:22px;line-height:1.25}.kbback{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:var(--cy);font-size:14px;padding:4px 2px 10px;-webkit-tap-highlight-color:transparent}
 .kb{border-top:1px solid var(--ln2);padding:10px 0 4px}.kb:first-child{border-top:0}.kb h3{margin:0 0 6px;font-size:14px}
 .bscale{position:relative;margin-top:8px;padding-bottom:16px}.bi{margin:8px 0}.bh{display:flex;gap:8px;align-items:center;font-size:13.5px}.bh b{margin-left:auto;white-space:nowrap}
 .bc{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;border-radius:6px;color:#05080e;font:700 12px ui-monospace,Menlo,monospace}
@@ -427,13 +427,13 @@ header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .h
 </div></div>
 
 <div class="wrap" id="app" hidden>
-  <header><div class="logo">D</div><div class="htx"><h1>DUNN</h1><div class="sub"><i id="ldi" class="ldi ldi-spin" title="загружаю…"></i><span id="upd"></span></div></div><div class="hbtns"><button class="hb hb-add" id="addbtn" title="записать" aria-label="записать"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="hb" id="thbtn" aria-label="настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="hb lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div></header>
+  <header><div class="logo">D</div><div class="htx"><h1>DUNN</h1><div class="sub"><i id="ldi" class="ldi ldi-spin" title="загружаю…"></i><span id="upd"></span></div></div><div class="hbtns"><button class="hb hb-add" id="addbtn" title="записать" aria-label="записать"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button class="hb" id="mebtn" title="мой профиль" aria-label="мой профиль"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></button><button class="hb" id="thbtn" aria-label="настройки"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="hb lockbtn" id="lockbtn" title="заблокировать" aria-label="заблокировать"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button></div></header>
   <section class="tab" data-tab="home"><div class="card" id="prof" hidden></div><div class="tiles" id="tiles"></div><div class="card" id="rel"></div></section>
   <section class="tab" data-tab="food" hidden><div class="seg" id="fseg" style="margin-top:12px;grid-template-columns:repeat(4,1fr)"><button data-fv="diary">Дневник</button><button data-fv="prod">🥫 Продукты</button><button data-fv="vit">💊 Витамины</button><button data-fv="rec">📖 Рецепты</button></div><div class="card" id="fstreak"></div><div class="card" id="fdays"></div><div class="card strat" id="strat" hidden></div><div class="card" id="food"></div><div class="card" id="meals"></div><div class="card" id="prods" hidden></div><div class="card" id="vits" hidden></div><div class="card" id="recs" hidden></div></section>
   <section class="tab" data-tab="body" hidden><div class="seg" id="btabs" style="grid-template-columns:repeat(4,1fr)"></div><div class="card" id="weight"></div><div class="card" id="fcast"></div><div class="card" id="meas"></div><div class="card" id="steps"></div></section>
   <section class="tab" data-tab="gym" hidden><div class="card" id="workouts"></div></section>
   <section class="tab" data-tab="tasks" hidden><div class="seg" id="tseg" style="margin-top:12px;grid-template-columns:repeat(3,1fr)"><button data-tv="list">📋 Задачи</button><button data-tv="pj">📁 Проекты</button><button data-tv="dl">🔁 Дейлики</button></div><div class="card" id="tdays"></div><div class="card" id="tasks"></div><div class="card" id="dailies" hidden></div></section>
-  <section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
+  <section class="tab" data-tab="me" hidden><div class="card" id="me"></div></section><section class="tab" data-tab="money" hidden><div class="card" id="money"></div><div class="card" id="mfc"></div><div class="card" id="mdays"></div><div class="card" id="mcats"></div><div class="card" id="mdebts"></div><div class="card" id="mlast"></div></section>
 </div>
 
 <div id="fpk" hidden><div class="sheet"><button class="x" id="fpk-x" aria-label="закрыть">×</button><b id="fpk-t"></b><input id="fpk-q" type="search" placeholder="найти: творог, гречка, #p07" autocomplete="off" style="margin-top:10px"><div id="fpk-sel"></div><div id="fpk-l"></div><div class="hint" id="fpk-h"></div></div></div>
@@ -705,14 +705,27 @@ const on = document.querySelector('#tdays .strip button.on'); on && on.scrollInt
 
 let D = null, FD = [], fdi = 0;
 let PFO = store.get('dunn_pf') === '1';
+var PREV = 'home';
 function renderProf(p) {
-const el = $('prof'); el.hidden = !p; if (!p) return;
+const el = $('prof'); el.hidden = !p; renderMe(p); if (!p) return;
 const pc = (v, a, b) => Math.max(2, Math.min(100, Math.round((v - a) / ((b - a) || 1) * 100)));
+el.innerHTML = `<div class="pf0" data-pf="1"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(p.title)} <span class="sub">· уровень ${p.lv}</span></div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div><span class="sub">›</span></div>`;
+}
+function renderMe(p) {
+const el = $('me'); if (!p) { el.innerHTML = '<div class="sub">Профиль ещё не посчитан</div>'; return; }
+const pc = (v, a, b) => Math.max(2, Math.min(100, Math.round((v - a) / ((b - a) || 1) * 100)));
+const r = p.reg || {}, w = r.who || {};
+const dl = x => Math.round((new Date(x + 'T00:00:00') - new Date()) / 864e5);
+const rg = (r.items || []).map(x => { let u = '';
+if (x.until) { const n = dl(x.until); u = `<div class="sub" style="color:var(${n < 60 ? '--amb' : '--ok'})">действует до ${x.until.split('-').reverse().join('.')}${n >= 0 ? ' · ещё ' + n + ' дн' : ' · истекло'}</div>`; }
+return `<div class="mer"><b>${x.i}</b><div style="flex:1;min-width:0"><div class="sub">${esc(x.kind)} · ${esc(x.y)}</div><div class="pft" style="font-size:15px">${esc(x.t)}</div><div class="sub">${esc(x.org)}</div><div class="sub pfh">${esc(x.h)}</div>${u}</div></div>`; }).join('');
 const sk = p.skills.map(s => `<div class="lbl"><span>${s.i} ${esc(s.t)} · ур ${s.lv}</span><span>${s.xp} XP</span></div><div class="bar"><i style="width:${pc(s.xp, s.c0, s.c1)}%"></i></div><div class="sub pfh">${esc(s.h)}</div>`).join('');
 const ac = p.ach.map(a => `<div class="pfa${a.got ? ' on' : ''}"><b>${a.i}</b><span>${esc(a.t)}</span><i>${a.v}${a.u ? ' ' + esc(a.u) : ''}${a.g != null ? ' / ' + a.g : ' ✓'}</i><em>${'★'.repeat(a.got)}${'☆'.repeat(a.of - a.got)}</em></div>`).join('');
-el.innerHTML = `<div class="pf0" data-pf="1"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(p.title)} <span class="sub">· уровень ${p.lv}</span></div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div><span class="sub">${PFO ? '▴' : '▾'}</span></div>` + (PFO ? `<h2 style="margin-top:14px">Навыки</h2>${sk}<h2 style="margin-top:14px">Достижения</h2><div class="pfg">${ac}</div><div class="sub" style="margin-top:10px">${esc(p.note)}</div>` : '');
+el.innerHTML = `<button class="kbback" data-meback="1">‹ Назад</button><div class="pf0"><div class="pflv">${p.lv}</div><div style="flex:1;min-width:0"><div class="pft">${esc(w.name || 'Мой профиль')}</div><div class="sub">${esc(w.role || '')}</div><div class="sub">${esc(p.title)} · уровень ${p.lv}</div><div class="bar" style="margin:6px 0 2px"><i style="width:${pc(p.xp, p.c0, p.c1)}%"></i></div><div class="sub">${p.xp} XP · до ${p.lv + 1}-го ещё ${p.c1 - p.xp}</div></div></div>` + (rg ? `<h2 style="margin-top:14px">🎖 Регалии</h2>${rg}` : '') + `<h2 style="margin-top:14px">Навыки</h2>${sk}<h2 style="margin-top:14px">Достижения</h2><div class="pfg">${ac}</div><div class="sub" style="margin-top:10px">${esc(p.note || '')}</div>`;
 }
-$('prof').addEventListener('click', e => { if (!e.target.closest('[data-pf]')) return; PFO = !PFO; store.set('dunn_pf', PFO ? '1' : '0'); renderProf(D && D.profile); });
+$('prof').addEventListener('click', e => { if (e.target.closest('[data-pf]')) show('me'); });
+$('me').addEventListener('click', e => { if (e.target.closest('[data-meback]')) show(PREV || 'home'); });
+$('mebtn').addEventListener('click', () => show('me'));
 const WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const wd = s => WD[new Date(s + 'T00:00:00Z').getUTCDay()];
 const kcls = (x) => { const k = x.food && x.food.kcal, tk = x.target && x.target.kcal;
@@ -1876,14 +1889,14 @@ $('mlast').onclick = e => { const l = e.target.closest('li[data-id]'); if (!l) r
 try { window.dunnLinks.notion(l.dataset.id); } catch (err) {} };
 $('mcats').onclick = e => { const b = e.target.closest('button[data-cv]'); if (!b) return; mcv = b.dataset.cv; renderMoney(); };
 
-const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money'];
+const TABS = ['home', 'food', 'body', 'gym', 'tasks', 'money', 'me'];
 const cdLive = c => !!(c && c.startAt && cdLeft(c) > 0);  // таймер реально тикает (не пауза, не истёк)
 function startTab() { try { if (cdLive(cdGet())) return 'gym'; } catch (e) {} return 'home'; }
 function show(tab) {
 if (!TABS.includes(tab)) tab = 'home';
 document.querySelectorAll('.tab').forEach(s => s.hidden = s.dataset.tab !== tab);
 document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
-store.set('dunn_tab', tab); window.scrollTo(0, 0);
+if (tab !== 'me') { PREV = tab; store.set('dunn_tab', tab); } window.scrollTo(0, 0);
 try { tg() && tg().HapticFeedback.selectionChanged(); } catch (e) {}
 }
 $('nav').onclick = e => { const b = e.target.closest('button'); if (b) show(b.dataset.tab); };
