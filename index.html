@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-20 10:20:43Z, sha 030b1996b209; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-23 09:30:15Z, sha a9eafd09cac6; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -143,6 +143,7 @@ li button.ck{all:unset;flex:none;min-width:26px;height:26px;padding:0 6px;box-si
 li button.ck.arm{color:var(--bg3);background:var(--amb);border-color:var(--amb);font-size:11px}
 li button.ck.sent{color:var(--bg3);background:var(--ok);border-color:var(--ok)}
 li.go .arr{color:var(--cyd);font-size:12px;margin-left:6px}
+li.go.op{background:rgba(var(--cyr),.05)}li.tb{display:block;padding:4px 0 10px 36px;border-top:none}li.tb .tp{padding:3px 0;font-size:14px;line-height:1.4;white-space:pre-wrap}li.tb .tp.h{font-weight:700;color:var(--cy)}.tst{display:flex;gap:8px;padding:6px 0;font-size:14px;line-height:1.4;cursor:pointer;-webkit-tap-highlight-color:transparent}.tst i{flex:none;width:18px;height:18px;box-sizing:border-box;border:1px solid var(--line);border-radius:5px;font:700 12px/16px ui-monospace,monospace;text-align:center;color:var(--ok);font-style:normal}.tst.c{cursor:default}.tst.c span{text-decoration:line-through;opacity:.55}.tst.arm i{background:var(--amb);border-color:var(--amb);color:var(--bg3)}.tst.sent i{background:var(--ok);border-color:var(--ok);color:var(--bg3)}li.tb button.tn{all:unset;display:inline-block;margin-top:8px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;color:var(--cyd);font-size:13px;cursor:pointer}
 .tile.wide{grid-column:1/-1}
 .sdots{display:flex;gap:5px;margin-top:8px}
 .sdots span{flex:1;text-align:center;font:600 10px ui-monospace,Menlo,monospace;color:var(--mut)}
@@ -514,7 +515,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '19.11g';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '23.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
 function applyFresh(d) {
@@ -636,8 +637,16 @@ let TK = null, tdi = -1;
 const okId = id => /^[0-9a-f]{32}$/i.test(String(id || '').replace(/-/g, ''));
 const tli = (x, right, ck) => { const go = okId(x.id), cid = go ? String(x.id).replace(/-/g, '').toLowerCase() : '';
 const btn = x.done ? '<span class="dn">✓</span>' : (ck && go ? `<button class="ck${CLOSED[cid] ? ' sent' : ''}" data-cid="${esc(cid)}" data-ct="${esc(x.t)}" aria-label="закрыть задачу">✓</button>` : '');
-const cls = [go ? 'go' : '', x.done ? 'done' : ''].filter(Boolean).join(' ');
-return `<li${cls ? ` class="${cls}"` : ''}${go ? ` data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${x.p ? `<span class="sub"> · ${esc(x.p)}</span>` : ''}${go ? '<span class="arr">↗</span>' : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>`; };
+const bd = go && TBD()[cid], op = go && TOPEN[cid];
+const cls = [go ? 'go' : '', x.done ? 'done' : '', op ? 'op' : ''].filter(Boolean).join(' ');
+return `<li${cls ? ` class="${cls}"` : ''}${go ? ` data-id="${esc(x.id)}"` : ''}>${btn}<span class="t">${esc(x.time) || '·'}</span><span>${esc(x.t)}${x.p ? `<span class="sub"> · ${esc(x.p)}</span>` : ''}${go ? `<span class="arr">${bd ? '📝' : ''}${op ? '▴' : '▾'}</span>` : ''}</span>${right ? `<span class="due">${right}</span>` : ''}</li>${op ? tBody(cid) : ''}`; };
+const TBD = () => (TK && TK.bodies) || {};
+const TOPEN = {}, STEP_SENT = {};
+const STEP_OK = false;  // фраза «☑ шаг …» — включить только после «ок» от Al (23.11)
+const tBody = cid => { const it = (TBD()[cid] || []).map(z => z.k === 'td'
+? `<div class="tst${z.c ? ' c' : STEP_SENT[z.b] ? ' sent' : ''}"${!z.c && okId(z.b) ? ` data-b="${esc(z.b)}" data-tid="${esc(cid)}" data-x="${esc(z.x)}"` : ''}><i>${z.c || STEP_SENT[z.b] ? '✓' : ''}</i><span>${esc(z.x)}</span></div>`
+: `<div class="tp${z.k === 'h' ? ' h' : ''}">${z.k === 'li' || z.k === 'nl' ? '• ' : ''}${esc(z.x)}</div>`).join('');
+return `<li class="tb">${it || '<div class="sub">в аппе тела нет — смотри в Notion</div>'}<button class="tn" data-nid="${esc(cid)}">Открыть в Notion ↗</button></li>`; };
 const tdCls = (y, isPast) => { const all = (y.cal || []).concat(y.due || []); if (!all.length) return '';
 const open = all.filter(z => !z.done).length; return !open ? 'ok' : (isPast ? 'over' : 'low'); };
 let tv = (() => { try { return ['dl', 'pj'].includes(store.get('dunn_tv')) ? store.get('dunn_tv') : 'list'; } catch (e) { return 'list'; } })();
@@ -658,7 +667,7 @@ const ti = days.findIndex(y => y.d === today);
 const pjL = `<h2 style="margin-top:14px">Проекты</h2><ul>${(k.projects || []).map(p => tli({time: p.big ? '🏗' : '📁', t: p.t, id: p.id}, p.steps.length ? '' : 'нет шага') + p.steps.map(y => tli({time: ({CALENDAR: '📅', WAITING: '⏳'}[y.tag] || '▶') + ' ' + y.time, t: '↳ ' + y.t, id: y.id}, dm(y.d), true)).join('')).join('') || '<li class="sub">пусто</li>'}</ul>`;
 if (tv === 'pj') { $('tdays').hidden = true; $('tasks').innerHTML = pjL; applyTv(); return; }
 const curList = `<h2 style="margin-top:14px">Текущие действия</h2><ul>${k.next.map(x => tli({time: '', t: x.t, id: x.id}, dm(x.due), true)).join('') || '<li class="sub">пусто</li>'}</ul>` + pjL + `
-    <div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа)</div>`;
+    <div class="sub" id="ck-hint" style="margin-top:10px">тап по задаче — тело (📝 — там что-то есть) · ✓ — закрыть всю задачу (два тапа)</div>`;
 if (!days.length || ti < 0) {  // старые данные без tasks.days — как раньше, только сегодня
 $('tdays').hidden = true;
 $('tasks').innerHTML = `<h2>Сегодня</h2><ul>${k.calendar.map(x => tli(x, '', true)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
@@ -676,7 +685,7 @@ $('tdays').innerHTML = `<div class="dnav"><button data-step="-1" ${tdi <= 0 ? 'd
 const cal = x.cal || [], due = x.due || [];
 $('tasks').innerHTML = `<h2>${isToday ? 'Сегодня' : 'Календарь'}</h2><ul>${cal.map(y => tli(y, '', true)).join('') || '<li class="sub">в календаре пусто</li>'}</ul>
     ${due.length ? `<h2 style="margin-top:14px">Срок в этот день</h2><ul>${due.map(y => tli({...y, time: ''}, '', true)).join('')}</ul>` : ''}
-    ${isToday ? `<h2 style="margin-top:14px">Дейлики</h2><ul>${k.daily.map(y => tli(y)).join('')}</ul>` : ''}` + (isToday ? curList : `<div class="sub" id="ck-hint" style="margin-top:10px">↗ тап по задаче открывает её в Notion · ✓ — закрыть (два тапа) · текущие действия — на «сегодня»</div>`);
+    ${isToday ? `<h2 style="margin-top:14px">Дейлики</h2><ul>${k.daily.map(y => tli(y)).join('')}</ul>` : ''}` + (isToday ? curList : `<div class="sub" id="ck-hint" style="margin-top:10px">тап по задаче — тело (📝 — там что-то есть) · ✓ — закрыть всю задачу (два тапа) · текущие действия — на «сегодня»</div>`);
 }
 function renderDailies(dl) {
 const el = $('dailies'); if (!el) return;
@@ -1924,8 +1933,28 @@ try { window.dunnLinks.bot(ph); CLOSED[id] = 1; c.classList.remove('arm'); c.cla
 $('ck-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить. Закрою и отвечу.'; }
 catch (err) { $('ck-hint').textContent = 'Не открылся чат. Фраза в буфере — вставь её боту сам.'; }
 return; }
+const n = e.target.closest('button.tn');
+if (n) { try { window.dunnLinks.notion(n.dataset.nid); } catch (err) {} return; }
+const st = e.target.closest('.tst[data-b]');
+if (st) { stepTap(st); return; }
+if (e.target.closest('li.tb')) return;
 const x = e.target.closest('li[data-id]'); if (!x) return;
-try { window.dunnLinks.notion(x.dataset.id); } catch (err) { /* нет dunnLinks или id не тот — ничего не открываем */ } };
+const id = String(x.dataset.id).replace(/-/g, '').toLowerCase(); if (!/^[0-9a-f]{32}$/.test(id)) return;
+if (TOPEN[id]) delete TOPEN[id]; else TOPEN[id] = 1;
+try { tg() && tg().HapticFeedback.selectionChanged(); } catch (err) {}
+renderTasks(); };
+let stArm = null;
+const stPhrase = (t, tid, b) => { let n = String(t || '').replace(/[«»]/g, '"').replace(/\s+/g, ' ').trim(); if (n.length > 100) n = n.slice(0, 99) + '…'; return `☑ шаг «${n}» #${tid} #${b}`; };
+function stepTap(st) { const b = st.dataset.b, tid = st.dataset.tid, h = $('ck-hint');
+if (!/^[0-9a-f]{32}$/.test(b) || !/^[0-9a-f]{32}$/.test(tid) || STEP_SENT[b]) return;
+if (!STEP_OK) { if (h) h.textContent = 'Отметка шагов из аппа включится, когда Al разрешит фразу. Пока — «Открыть в Notion ↗».'; return; }
+if (stArm !== b) { document.querySelectorAll('#tasks .tst.arm').forEach(z => z.classList.remove('arm')); stArm = b; st.classList.add('arm');
+if (h) h.textContent = 'Ещё тап по шагу — фраза уйдёт в буфер и откроется чат. Отмечу только этот шаг.'; return; }
+stArm = null; const ph = stPhrase(st.dataset.x, tid, b);
+try { navigator.clipboard && navigator.clipboard.writeText(ph).catch(() => {}); } catch (err) {}
+try { window.dunnLinks.bot(ph); STEP_SENT[b] = 1; st.classList.remove('arm'); st.classList.add('sent'); st.querySelector('i').textContent = '✓';
+if (h) h.textContent = 'Фраза в буфере: вставь в чат и отправь. Отмечу шаг и отвечу.'; }
+catch (err) { if (h) h.textContent = 'Не открылся чат. Фраза в буфере — вставь её боту сам.'; } }
 
 const ADD = {
 w: {f: '<input id="a1" inputmode="decimal" placeholder="вес, кг (83.2)">', mk: () => num('a1') && 'Вес ' + num('a1')},
