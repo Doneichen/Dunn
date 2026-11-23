@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-23 12:38:46Z, sha 20dc8b8a382b; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-23 13:52:50Z, sha c3bedfc6914d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -515,7 +515,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '23.11c';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '23.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
 function applyFresh(d) {
@@ -644,9 +644,11 @@ const TBD = () => (TK && TK.bodies) || {};
 const TOPEN = {}, STEP_SENT = {};
 const STEP_OK = true;
 const tBody = cid => { const it = (TBD()[cid] || []).map(z => z.k === 'td'
-? `<div class="tst${z.c ? ' c' : STEP_SENT[z.b] ? ' sent' : ''}"${!z.c && okId(z.b) ? ` data-b="${esc(z.b)}" data-tid="${esc(cid)}" data-x="${esc(z.x)}"` : ''}><i>${z.c || STEP_SENT[z.b] ? '✓' : ''}</i><span>${esc(z.x)}</span></div>`
+? `<div class="tst${z.c ? ' c' : STEP_SENT[z.b] ? ' sent' : SEL.tid === cid && SEL.ids.includes(z.b) ? ' arm' : ''}"${!z.c && okId(z.b) ? ` data-b="${esc(z.b)}" data-tid="${esc(cid)}" data-x="${esc(z.x)}"` : ''}><i>${z.c || STEP_SENT[z.b] ? '✓' : ''}</i><span>${esc(z.x)}</span></div>`
 : `<div class="tp${z.k === 'h' ? ' h' : ''}">${z.k === 'li' || z.k === 'nl' ? '• ' : ''}${esc(z.x)}</div>`).join('');
-return `<li class="tb">${it || '<div class="sub">в аппе тела нет — смотри в Notion</div>'}<button class="tn" data-nid="${esc(cid)}">Открыть в Notion ↗</button></li>`; };
+const nS = SEL.tid === cid ? SEL.ids.length : 0;
+return `<li class="tb">${it || '<div class="sub">в аппе тела нет — смотри в Notion</div>'}${nS ? `<button class="tn tsb" data-sid="${esc(cid)}">☑ Отметить (${nS})</button> ` : ''}<button class="tn" data-nid="${esc(cid)}">Открыть в Notion ↗</button></li>`; };
+const SEL = {tid: '', ids: []};
 const tdCls = (y, isPast) => { const all = (y.cal || []).concat(y.due || []); if (!all.length) return '';
 const open = all.filter(z => !z.done).length; return !open ? 'ok' : (isPast ? 'over' : 'low'); };
 let tv = (() => { try { return ['dl', 'pj'].includes(store.get('dunn_tv')) ? store.get('dunn_tv') : 'list'; } catch (e) { return 'list'; } })();
@@ -1933,6 +1935,8 @@ try { window.dunnLinks.bot(ph); CLOSED[id] = 1; c.classList.remove('arm'); c.cla
 $('ck-hint').textContent = 'Фраза в буфере: в чате зажми поле ввода → «Вставить» → отправить. Закрою и отвечу.'; }
 catch (err) { $('ck-hint').textContent = 'Не открылся чат. Фраза в буфере — вставь её боту сам.'; }
 return; }
+const sb = e.target.closest('button.tsb');
+if (sb) { stepSend(sb.dataset.sid); return; }
 const n = e.target.closest('button.tn');
 if (n) { try { window.dunnLinks.notion(n.dataset.nid); } catch (err) {} return; }
 const st = e.target.closest('.tst[data-b]');
@@ -1945,14 +1949,26 @@ try { tg() && tg().HapticFeedback.selectionChanged(); } catch (err) {}
 renderTasks(); };
 let stArm = null;
 const stPhrase = (t, tid, b) => { let n = String(t || '').replace(/[«»]/g, '"').replace(/\s+/g, ' ').trim(); if (n.length > 100) n = n.slice(0, 99) + '…'; return `☑ шаг «${n}» #${tid} #${b}`; };
-function stepTap(st) { const b = st.dataset.b, tid = st.dataset.tid, h = $('ck-hint');
+const stLbl = t => { let c = [...String(t || '').replace(/[«»]/g, '').replace(/\s+/g, ' ').trim()]; if (c.length > 15) c = c.slice(0, 14).concat('…'); return c.join('') || '·'; };
+function stepTap(st) { const b = String(st.dataset.b).toLowerCase(), tid = String(st.dataset.tid).toLowerCase(), h = $('ck-hint');
 if (!/^[0-9a-f]{32}$/.test(b) || !/^[0-9a-f]{32}$/.test(tid) || STEP_SENT[b]) return;
-if (!STEP_OK) { if (h) h.textContent = 'Отметка шагов из аппа включится, когда Al разрешит фразу. Пока — «Открыть в Notion ↗».'; return; }
-const ph = stPhrase(st.dataset.x, tid, b);
+if (!STEP_OK) { if (h) h.textContent = 'Отметка шагов из аппа выключена. Пока — «Открыть в Notion ↗».'; return; }
+if (SEL.tid !== tid) { SEL.tid = tid; SEL.ids = []; }
+const i = SEL.ids.indexOf(b); if (i >= 0) SEL.ids.splice(i, 1); else SEL.ids.push(b);
+try { tg() && tg().HapticFeedback.selectionChanged(); } catch (err) {}
+renderTasks(); const h2 = $('ck-hint'); if (h2) h2.textContent = SEL.ids.length > 8 ? 'Выделено больше 8 — сними лишние, за раз до 8 пунктов.' : 'Выдели пункты и жми «☑ Отметить» — отмечу только их.'; }
+function stepSend(tid) { const h = () => $('ck-hint'), say = t => { const x = h(); if (x) x.textContent = t; };
+if (SEL.tid !== tid || !SEL.ids.length) return;
+if (SEL.ids.length > 8) { say('Выделено больше 8 — сними лишние, за раз до 8 пунктов.'); return; }
+const txt = {}; (TBD()[tid] || []).forEach(z => { if (z.k === 'td' && z.b) txt[String(z.b).toLowerCase()] = z.x; });
+if (SEL.ids.some(b => !(b in txt) || !/^[0-9a-f]{32}$/.test(b))) return;
+const ph = SEL.ids.length === 1 ? stPhrase(txt[SEL.ids[0]], tid, SEL.ids[0])
+: `☑ шаги #${tid}: ` + SEL.ids.map(b => `«${stLbl(txt[b])}» #${b}`).join('; ');
+if (ph.length > 500) { say('Фраза длиннее 500 символов (эмодзи в пунктах) — выдели меньше.'); return; }
 try { navigator.clipboard && navigator.clipboard.writeText(ph).catch(() => {}); } catch (err) {}
-try { window.dunnLinks.bot(ph); STEP_SENT[b] = 1; st.classList.remove('arm'); st.classList.add('sent'); st.querySelector('i').textContent = '✓';
-if (h) h.textContent = 'Фраза в буфере: вставь в чат и отправь. Отмечу шаг и отвечу.'; }
-catch (err) { if (h) h.textContent = 'Не открылся чат. Фраза в буфере — вставь её боту сам.'; } }
+try { window.dunnLinks.bot(ph); SEL.ids.forEach(b => STEP_SENT[b] = 1); SEL.ids = []; renderTasks();
+say('Фраза в буфере: вставь в чат и отправь. Отмечу и отвечу.'); }
+catch (err) { say('Не открылся чат. Фраза в буфере — вставь её боту сам.'); } }
 
 const ADD = {
 w: {f: '<input id="a1" inputmode="decimal" placeholder="вес, кг (83.2)">', mk: () => num('a1') && 'Вес ' + num('a1')},
