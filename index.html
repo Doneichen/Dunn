@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<!-- dash-promoter: принято 2026-11-23 13:52:50Z, sha c3bedfc6914d; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
+<!-- dash-promoter: принято 2026-11-27 11:28:03Z, sha 0eac70b6618b; CSP и скрипт dunnLinks ниже ставит приёмщик, правки в них не сохраняются -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://telegram.org; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <script id="dash-promoter-links">
 /* dunnLinks — единственные ссылки наружу. Ставит приёмщик, правки здесь не сохраняются. См. /dash/README.md */
@@ -387,6 +387,40 @@ header .thbtn{all:unset;cursor:pointer;padding:6px;font-size:18px;line-height:1;
 header .hbtns{margin-left:auto;display:flex;gap:6px;align-items:center}header .hb{all:unset;cursor:pointer;box-sizing:border-box;width:36px;height:36px;flex:none;border-radius:11px;border:1px solid var(--line);background:var(--card);color:var(--mut);display:grid;place-items:center;-webkit-tap-highlight-color:transparent}header .hb svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}header .hb:active{background:rgba(var(--cyr),.15)}header .hb.hb-add{border-color:var(--cy);color:var(--cy);box-shadow:0 0 10px rgba(var(--cyr),.25)}header .hb.hb-add svg{stroke-width:2.4}header .htx{min-width:0}header .htx .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ldi{display:inline-block;width:11px;height:11px;margin-right:6px;vertical-align:-1px;box-sizing:border-box;font-style:normal;font-size:12px;line-height:11px;text-align:center}.ldi.ldi-spin{border:2px solid var(--line);border-top-color:var(--cy);border-radius:50%;animation:ldi .8s linear infinite}.ldi.ldi-ok::before{content:'';display:block;width:4px;height:8px;margin:0 auto;border:solid var(--ok);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}.ldi.ldi-err{border-radius:50%;background:var(--amb);color:#fff;font-weight:800;font-size:9px;line-height:11px}.ldi.ldi-err::before{content:'!'}@keyframes ldi{to{transform:rotate(360deg)}}header .logo{width:36px;height:36px;font-size:17px;flex:none}header h1{font-size:19px;margin:0;letter-spacing:.32em}
 @media(min-width:900px){.wrap{max-width:1100px;padding-top:calc(16px + var(--tg-content-safe-area-inset-top,0px))}nav{max-width:600px}.tiles{grid-template-columns:repeat(4,1fr)}.tab:not([data-tab=gym]):not([data-tab=home]):not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px;align-items:start;grid-auto-flow:dense}.tab>*{min-width:0}.tab>.seg,#fdays,#prods,#vits,#recs,#dailies{grid-column:1/-1}.tab:not(:has(>.card:not([hidden]):not([style*=none])~.card:not([hidden]):not([style*=none])))>.card{grid-column:1/-1}.tab>.card{margin:12px 0 0}[data-tab=gym]{max-width:820px;margin:0 auto}}
 .pf0{display:flex;gap:12px;align-items:center;cursor:pointer}.pflv{width:52px;height:52px;border-radius:50%;border:2px solid var(--cy);display:flex;align-items:center;justify-content:center;font:700 22px ui-monospace,Menlo,monospace;color:var(--cy);box-shadow:0 0 12px rgba(var(--cyr),.35);flex:none}.pft{font-weight:600;font-size:16px;color:var(--tx)}.pfh{margin:-6px 0 8px}.pfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}.pfa{border:1px solid var(--line);border-radius:10px;padding:8px;opacity:.55;display:flex;flex-direction:column;gap:2px;font-size:12px}.pfa.on{opacity:1;border-color:var(--cyd)}.pfa b{font-size:18px}.pfa span{color:var(--tx);font-weight:600}.pfa i{font-style:normal;color:var(--mut)}.pfa em{font-style:normal;color:var(--amb);letter-spacing:1px}
+:root[data-theme="notiond"]{--bg:#191919;--card:#202020;--line:#2f2f2f;--cy:#5aa9e6;--cyd:#9b9b9b;--tx:#e6e6e4;--mut:#9b9b9b;--red:#ff7369;--amb:#ffa344;--ok:#4dab9a;--bg2:#202020;--bg3:#262626;--ln2:#2a2a2a;--ln3:#2c2c2c;--tx2:#cfcfcd;--oncy:#191919;--cyr:90,169,230;--okr:77,171,154;--ambr:255,163,68;--nav:rgba(25,25,25,.95);--nfont:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+:root[data-theme="notionl"]{--bg:#ffffff;--card:#ffffff;--line:#e9e9e7;--cy:#2383e2;--cyd:#787774;--tx:#37352f;--mut:#787774;--red:#e03e3e;--amb:#d9730d;--ok:#0f7b6c;--bg2:#f7f7f5;--bg3:#f1f1ef;--ln2:#ededeb;--ln3:#ececea;--tx2:#55534e;--oncy:#ffffff;--cyr:35,131,226;--okr:15,123,108;--ambr:217,115,13;--nav:rgba(255,255,255,.96);--nfont:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+:root[data-theme^="notion"] body{background-image:none}
+:root[data-theme^="notion"] .wrap *{font-family:var(--nfont)!important;text-shadow:none!important}
+:root[data-theme^="notion"] .wrap *{box-shadow:none!important}
+:root[data-theme^="notion"] .card{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:16px 2px 6px;margin:6px 0}
+:root[data-theme^="notion"] .card h2{font-size:17px!important;font-weight:700!important;letter-spacing:0!important;text-transform:none!important;color:var(--tx)!important;margin-bottom:12px}
+:root[data-theme^="notion"] .big{color:var(--tx)!important;font-weight:700}
+:root[data-theme^="notion"] .bar{height:6px;background:var(--bg3)}
+:root[data-theme^="notion"] .bar i{background:var(--cy)}
+:root[data-theme^="notion"] .ps,:root[data-theme^="notion"] .lft .lc,:root[data-theme^="notion"] .tile{border-color:var(--line);border-radius:6px;background:var(--bg2)}
+:root[data-theme^="notion"] .seg{background:var(--bg2);border-color:var(--line);border-radius:6px}
+
+/* Notion-тёмная/светлая (27.11): Notion-интерфейс + минимальный неон: линия сверху, «D», метки заголовков, цифры, полоски */
+:root[data-theme^="notion"]{--neon:0,225,255}
+:root[data-theme="notionl"]{--neon:0,170,210}
+:root[data-theme^="notion"] .wrap{position:relative;padding-top:22px}
+:root[data-theme^="notion"] .wrap::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:rgb(var(--neon));box-shadow:0 0 10px 1px rgba(var(--neon),.85)}
+:root[data-theme^="notion"] .logo{border:1.5px solid rgb(var(--neon));box-shadow:0 0 8px rgba(var(--neon),.6)!important;color:rgb(var(--neon));background:transparent}
+:root[data-theme^="notion"] h1{font-size:24px!important;font-weight:700!important;letter-spacing:0!important;color:var(--tx)!important}
+:root[data-theme^="notion"] .card h2::before{content:"";display:inline-block;width:3px;height:15px;margin-right:9px;vertical-align:-2px;border-radius:2px;background:rgb(var(--neon));box-shadow:0 0 6px rgba(var(--neon),.9)!important}
+:root[data-theme^="notion"] .big{color:rgb(var(--neon))!important;text-shadow:0 0 10px rgba(var(--neon),.45)!important}
+:root[data-theme="notionl"] .big{text-shadow:none!important;color:#0091b8!important}
+:root[data-theme^="notion"] .bar i{background:rgb(var(--neon));box-shadow:0 0 6px rgba(var(--neon),.7)!important}
+:root[data-theme^="notion"] .sbig div{background:var(--bg2);border-color:var(--line)}
+:root[data-theme^="notion"] .sbig .ok{background:rgba(var(--okr),.12);border-color:rgba(var(--okr),.45)}
+:root[data-theme^="notion"] .sbig .over{background:rgba(224,62,62,.10);border-color:rgba(224,62,62,.45)}
+:root[data-theme^="notion"] .sbig .today{border-color:rgb(var(--neon));box-shadow:0 0 8px rgba(var(--neon),.6)!important}
+:root[data-theme^="notion"] .tile .k{letter-spacing:.02em!important;text-transform:none!important;font-size:12.5px!important;color:var(--mut)}
+:root[data-theme^="notion"] .tile .v{color:rgb(var(--neon))!important;text-shadow:0 0 8px rgba(var(--neon),.4)!important}
+:root[data-theme="notionl"] .tile .v{color:#0091b8!important;text-shadow:none!important}
+:root[data-theme="notionl"] .bar i{box-shadow:none!important;background:#00a5cf}
+:root[data-theme^="notion"] nav button.on{color:rgb(var(--neon));background:rgba(var(--neon),.10)}
+:root[data-theme="notionl"] nav button.on{color:#0091b8}
 </style>
 </head>
 <body>
@@ -515,7 +549,7 @@ const encGet = () => idb('readonly', s => s.get('enc')).catch(() => null);
 const encSet = v => idb('readwrite', s => s.put(v, 'enc')).catch(() => {});
 const encFetch = () => fetch('data.enc.json?t=' + Date.now(), {cache: 'no-store'}).then(r => r.json());
 let ENCP = null, PEND = null, TM = [];
-const APP_V = '23.11d';  // версия страницы — видно в шапке; менять при каждой выкладке
+const APP_V = '27.11a';  // версия страницы — видно в шапке; менять при каждой выкладке
 const ldi = (st, t) => { const i = $('ldi'); if (!i) return; i.className = 'ldi ldi-' + st; i.title = t + (TM.length ? ' · ' + TM.join(' · ') + ' с' : ''); };
 const tmark = l => { TM.push(l + ' ' + (performance.now() / 1000).toFixed(1)); if (l === 'данные') ldi('ok', 'загружено'); };
 function applyFresh(d) {
@@ -1546,6 +1580,8 @@ if (f && f.ex.length && f.ex.every(x => x.gi == null) && !f.ex.some(x => String(
 const d = f.date, wu = f.wu; f = newDraft(f.tpl); f.date = d; f.wu = wu || {}; store.set('dunn_wdraft', JSON.stringify(f)); }
 if (!f) { f = newDraft(GD.tpl.length ? (GD.tpl.find(t => t.name === 'Базовый минимум') || GD.tpl[0]).name : ''); store.set('dunn_wdraft', JSON.stringify(f)); }
 if (f && !f.day && !f.saved && !f.ex.some(x => String(x.s1 || x.s2 || '').trim())) { const g = newDraft(f.tpl); g.date = f.date; g.wu = f.wu || {}; g.t1 = f.t1; g.tl = f.tl; g.rd = f.rd; f = g; store.set('dunn_wdraft', JSON.stringify(f)); }
+{ const nd = new Date(), td = new Date(nd - nd.getTimezoneOffset() * 6e4).toISOString().slice(0, 10), t1d = f.t1 ? new Date(new Date(f.t1) - nd.getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '';
+if (f && !f.saved && f.date && f.date < td && (!f.ex.some(x => String(x.s1 || x.s2 || '').trim()) || t1d === td)) { f.date = td; store.set('dunn_wdraft', JSON.stringify(f)); } }  // 27.11: старый неначатый черновик → сегодняшняя дата
 const allEx = [...new Set([...GD.log.map(x => x.ex), ...GD.tpl.flatMap(t => (t.exercises || []).map(e => e.name))])].filter(Boolean).sort();
 const startH = f.saved ? '' : f.t1 ? `<div class="sub" style="margin:0 0 8px">⏱ идёт с ${new Date(f.t1).toTimeString().slice(0, 5)}</div>`
 : `<button class="btn" id="w-start" style="margin:0 0 4px">▶ Начать тренировку</button><div class="sub" style="margin-bottom:8px">Не нажмёшь — время пойдёт само с первой галочки разминки или первого подхода.</div>`;
@@ -2520,15 +2556,15 @@ if (!await openWith(priv, kid)) return;
 $('lockbtn').onclick = async () => { await remDel(); view('unlock'); msg(''); };
 
 
-const THEMES = {auto: ['🌓 Авто', 'днём светлая, вечером неон'], neon: ['🌌 Неон', 'как было'], light: ['☀️ Светлая', 'для дня и солнца'], calm: ['🌙 Спокойная', 'тёмная без неона'], matrix: ['🟢 Матрица', 'зелёный терминал'], amber: ['🟠 Янтарь', 'ламповый терминал']};
+const THEMES = {auto: ['🌓 Авто', 'днём светлая, вечером неон'], neon: ['🌌 Неон', 'как было'], light: ['☀️ Светлая', 'для дня и солнца'], calm: ['🌙 Спокойная', 'тёмная без неона'], matrix: ['🟢 Матрица', 'зелёный терминал'], amber: ['🟠 Янтарь', 'ламповый терминал'], notiond: ['⬛ Notion тёмная', 'как Notion + капля неона'], notionl: ['⬜ Notion светлая', 'как Notion + капля неона'], notiona: ['🌗 Notion авто', 'днём светлая, вечером тёмная']};
 let theme = (() => { try { const t = store.get('dunn_theme'); return THEMES[t] ? t : 'neon'; } catch (e) { return 'neon'; } })();
 function applyTheme() {
-const h = new Date().getHours(), t = theme === 'auto' ? (h >= 7 && h < 19 ? 'light' : 'neon') : theme;
+const h = new Date().getHours(), day = h >= 7 && h < 19, t = theme === 'auto' ? (day ? 'light' : 'neon') : theme === 'notiona' ? (day ? 'notionl' : 'notiond') : theme;
 const de = document.documentElement; if (t === 'neon') delete de.dataset.theme; else de.dataset.theme = t;
 try { const tg = window.Telegram && Telegram.WebApp, bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
 if (tg && bg) { tg.setHeaderColor && tg.setHeaderColor(bg); tg.setBackgroundColor && tg.setBackgroundColor(bg); } } catch (e) {}
 }
-applyTheme(); setInterval(() => { if (theme === 'auto') applyTheme(); }, 600000);
+applyTheme(); setInterval(() => { if (theme === 'auto' || theme === 'notiona') applyTheme(); }, 600000);
 function thFill(p) { const F = featGet();
 p.innerHTML = '<div class="ph">🎨 Тема</div>' + Object.keys(THEMES).map(k => `<button data-th="${k}" class="${k === theme ? 'on' : ''}"><span>${THEMES[k][0]}</span><small>${THEMES[k][1]}</small></button>`).join('')
 + '<div class="ph">🎛 Функции</div>' + FEATS.map(([k, t, d]) => `<button data-feat="${k}" class="${F[k] ? 'on' : ''}"><span>${t}</span><small>${F[k] ? 'вкл' : 'выкл'}</small></button><div class="fd">${d}</div>`).join('')
